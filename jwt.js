@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 // const BlacklistedToken = require('./models/BlacklistedToken');
 
 const generateToken = (payload) => {
-    return jwt.sign(payload, 'muj7021', { expiresIn: '1h' });
+    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 };
 
 const verifyToken = async (token) => {
@@ -17,7 +17,7 @@ const verifyToken = async (token) => {
         // }
 
         
-        const decoded = jwt.verify(token, 'muj7021');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         return decoded;
     } catch (error) {
         return null;

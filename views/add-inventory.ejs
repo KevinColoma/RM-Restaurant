@@ -14,8 +14,8 @@
         <!-- Inventory Form -->
         <div class="page-header">
             <div class="page-title">
-                <h4>Item Add</h4>
-                <h6>Create new Item</h6>
+                <h4 data-i18n="form.add_title">Item Add</h4>
+                <h6 data-i18n="form.add_sub">Create new Item</h6>
             </div>
         </div>
         <div class="card">
@@ -24,27 +24,27 @@
                     <div class="row">
                         <div class="col-lg-4 col-sm-6 col-12">
                             <div class="form-group">
-                                <label>Item Name</label>
+                                <label data-i18n="form.item_name">Item Name</label>
                                 <input type="text" name="name" id="name" class="form-control" required>
                             </div>
                         </div>
                         <div class="col-lg-4 col-sm-6 col-12">
                             <div class="form-group">
-                                <label>Quantity</label>
+                                <label data-i18n="form.qty">Quantity</label>
                                 <input type="number" name="quantity" id="quantity" class="form-control" required>
                             </div>
                         </div>
                         <div class="col-lg-4 col-sm-6 col-12">
                             <div class="form-group">
-                                <label>Price</label>
+                                <label data-i18n="form.price">Price</label>
                                 <input type="number" name="price" id="price" step="0.01" class="form-control" required>
                             </div>
                         </div>
                         <div class="col-lg-4 col-sm-6 col-12">
                             <div class="form-group">
-                                <label>Supplier</label>
+                                <label data-i18n="form.supplier">Supplier</label>
                                 <select class="select form-control" name="supplier" id="supplier" required>
-                                    <option value="">Choose Supplier</option>
+                                    <option value="" data-i18n-value="form.choose_supplier">Choose Supplier</option>
                                     <% suppliers.forEach(supplier => { %>
                                         <option value="<%= supplier._id %>"><%= supplier.name %></option>
                                     <% }) %>
@@ -52,8 +52,8 @@
                             </div>
                         </div>
                         <div class="col-lg-12">
-                            <button type="submit" class="btn btn-submit me-2">Submit</button>
-                            <a href="productlist.html" class="btn btn-cancel">Cancel</a>
+                            <button type="submit" class="btn btn-submit me-2" data-i18n="form.submit">Submit</button>
+                            <a href="productlist.html" class="btn btn-cancel" data-i18n="form.cancel">Cancel</a>
                         </div>
                     </div>
                 </form>
@@ -63,8 +63,8 @@
         <!-- Supplier Form -->
         <div class="page-header mt-5">
             <div class="page-title">
-                <h4>Supplier Add</h4>
-                <h6>Add new Supplier</h6>
+                <h4 data-i18n="form.supplier_title">Supplier Add</h4>
+                <h6 data-i18n="form.supplier_sub">Add new Supplier</h6>
             </div>
         </div>
         <div class="card">
@@ -73,13 +73,13 @@
                     <div class="row">
                         <div class="col-lg-6 col-sm-12 col-12">
                             <div class="form-group">
-                                <label>Supplier Name</label>
+                                <label data-i18n="form.supplier_name">Supplier Name</label>
                                 <input type="text" name="name" id="supplierName" class="form-control" required>
                             </div>
                         </div>
                         <div class="col-lg-6 col-sm-12 col-12">
                             <div class="form-group">
-                                <label>Contact Info</label>
+                                <label data-i18n="form.contact_info">Contact Info</label>
                                 <input type="text" name="contactInfo" id="contactInfo" class="form-control" required>
                             </div>
                         </div>
@@ -122,9 +122,13 @@
             });
 
             if (response.ok) {
-            document.getElementById("add-item-form").reset();
-            document.getElementById("supplier").value = "";
-        }
+                Swal.fire('Success!', 'Inventory item added successfully.', 'success');
+                document.getElementById("add-item-form").reset();
+                document.getElementById("supplier").value = "";
+            } else {
+                const errData = await response.json();
+                Swal.fire('Error!', errData.message || 'Failed to add item.', 'error');
+            }
         } catch (err) {
             console.error("Request failed:", err);
             alert("Request failed: " + err.message);
@@ -153,16 +157,12 @@
             });
 
             if (response.ok) {
-                const savedSupplier = await response.json();
-                console.log("Supplier saved successfully:", savedSupplier);
-                alert("Supplier added successfully!");
-                // Clear form fields
+                Swal.fire('Success!', 'Supplier added successfully.', 'success');
                 document.getElementById("supplierName").value = "";
                 document.getElementById("contactInfo").value = "";
             } else {
                 const error = await response.json();
-                console.error("Error saving supplier:", error);
-                alert("Error: " + error.message);
+                Swal.fire('Error!', error.message || 'Failed to add supplier.', 'error');
             }
         } catch (err) {
             console.error("Request failed:", err);

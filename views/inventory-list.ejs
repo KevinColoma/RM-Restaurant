@@ -4,11 +4,11 @@
     <div class="content">
         <div class="page-header">
             <div class="page-title">
-                <h4>Inventory List</h4>
-                <h6>Manage your inventory</h6>
+                <h4 data-i18n="list.inventory_title">Inventory List</h4>
+                <h6 data-i18n="list.inventory_sub">Manage your inventory</h6>
             </div>
             <div class="page-btn">
-                <a href="/addinventory" class="btn btn-added">
+                <a href="/addinventory" class="btn btn-added" data-i18n="list.add_new_inventory">
                     <img src="assets/img/icons/plus.svg" alt="img" class="me-1">Add New Item
                 </a>
             </div>
@@ -33,17 +33,17 @@
                     <div class="wordset">
                         <ul>
                             <li>
-                                <a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf">
+                                <a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf" href="/export/inventory/pdf">
                                     <img src="assets/img/icons/pdf.svg" alt="img">
                                 </a>
                             </li>
                             <li>
-                                <a data-bs-toggle="tooltip" data-bs-placement="top" title="excel">
+                                <a data-bs-toggle="tooltip" data-bs-placement="top" title="csv" href="/export/inventory/csv">
                                     <img src="assets/img/icons/excel.svg" alt="img">
                                 </a>
                             </li>
                             <li>
-                                <a data-bs-toggle="tooltip" data-bs-placement="top" title="print">
+                                <a data-bs-toggle="tooltip" data-bs-placement="top" title="print" onclick="window.print()">
                                     <img src="assets/img/icons/printer.svg" alt="img">
                                 </a>
                             </li>
@@ -61,11 +61,11 @@
                                         <span class="checkmarks"></span>
                                     </label>
                                 </th>
-                                <th>Supplier Name</th>
-                                <th>Item Name</th>
-                                <th>Quantity</th>
-                                <th>Price</th>
-                                <th>Action</th>
+                                <th data-i18n="table.supplier">Supplier Name</th>
+                                <th data-i18n="table.name">Item Name</th>
+                                <th data-i18n="table.qty">Quantity</th>
+                                <th data-i18n="table.price">Price</th>
+                                <th data-i18n="table.action">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -87,10 +87,10 @@
                                         <!-- <a class="me-3" href="product-details.html">
                                             <img src="assets/img/icons/eye.svg" alt="img">
                                         </a> -->
-                                        <a class="me-3" href="editproduct.html">
+                                        <a class="me-3" href="/edit-inventory/<%= item._id %>">
                                             <img src="assets/img/icons/edit.svg" alt="img">
                                         </a>
-                                        <a  href="javascript:void(0);" onclick="confirmDeleteExpense('<%= item._id %>')">
+                                        <a  href="javascript:void(0);" onclick="confirmDeleteInventory('<%= item._id %>')">
                                             <img src="assets/img/icons/delete.svg" alt="img">
                                         </a>
                                     </td>
@@ -105,7 +105,7 @@
 </div>
 
 <script>
-    function confirmDeleteExpense(id) {
+    function confirmDeleteInventory(id) {
         Swal.fire({
             title: 'Are you sure?',
             text: "You won't be able to revert this!",

@@ -1,0 +1,83 @@
+<%- include('header') -%>
+
+<div class="page-wrapper">
+    <div class="content">
+        <div class="page-header">
+            <div class="page-title">
+                <h4 data-i18n="list.purchases_title">Purchase List</h4>
+                <h6 data-i18n="list.purchases_sub">View all purchases from suppliers</h6>
+            </div>
+            <div class="page-btn">
+                <a href="/add-purchase" class="btn btn-added me-2" data-i18n="list.add_purchase"><img src="assets/img/icons/plus.svg" alt="img" class="me-1">Add Purchase</a>
+                <a href="/export/purchases/pdf" class="btn btn-added me-2"><img src="assets/img/icons/pdf.svg" alt="img" class="me-1">PDF</a>
+                <a href="/export/purchases/csv" class="btn btn-added"><img src="assets/img/icons/excel.svg" alt="img" class="me-1">CSV</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table datanew">
+                        <thead>
+                            <tr>
+                                <th data-i18n="table.purchase_date">Purchase Date</th>
+                                <th data-i18n="table.supplier">Supplier</th>
+                                <th data-i18n="table.items">Items</th>
+                                <th data-i18n="table.total">Total Amount</th>
+                                <th data-i18n="table.notes">Notes</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% purchases.forEach(function(purchase){ %>
+                                <tr>
+                                    <td><%= new Date(purchase.purchaseDate).toLocaleDateString() %></td>
+                                    <td><%= purchase.supplier ? purchase.supplier.name : 'N/A' %></td>
+                                    <td><%= purchase.items.map(i => i.itemName + ' x' + i.quantity).join(', ') %></td>
+                                    <td><%= purchase.totalAmount.toFixed(2) %></td>
+                                    <td><%= purchase.notes || '' %></td>
+                                    <td>
+                                        <a href="javascript:void(0);" onclick="deletePurchase('<%= purchase._id %>')">
+                                            <img src="assets/img/icons/delete.svg" alt="img">
+                                        </a>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="assets/plugins/sweetalert/sweetalert2.all.min.js"></script>
+<script>
+    function deletePurchase(id) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This purchase record will be deleted.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/api/purchases/' + id, { method: 'DELETE' })
+                    .then(res => {
+                        if (res.ok) {
+                            Swal.fire('Deleted!', 'Purchase has been deleted.', 'success')
+                                .then(() => location.reload());
+                        } else {
+                            Swal.fire('Error!', 'Failed to delete purchase.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        Swal.fire('Error!', err.message, 'error');
+                    });
+            }
+        });
+    }
+</script>
+<%- include('footer') -%>

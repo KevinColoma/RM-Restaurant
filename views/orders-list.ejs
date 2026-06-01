@@ -1,0 +1,88 @@
+<%- include('header') -%>
+
+<div class="page-wrapper">
+<div class="content">
+<div class="page-header">
+<div class="page-title">
+<h4 data-i18n="list.orders_title">Orders List</h4>
+<h6 data-i18n="list.orders_sub">Manage your orders</h6>
+</div>
+<div class="page-btn">
+<a href="/export/orders/pdf" class="btn btn-added me-2"><img src="assets/img/icons/pdf.svg" alt="img" class="me-1">PDF</a>
+<a href="/export/orders/csv" class="btn btn-added"><img src="assets/img/icons/excel.svg" alt="img" class="me-1">CSV</a>
+</div>
+</div>
+
+<div class="card">
+<div class="card-body">
+<div class="table-responsive">
+<table class="table datanew">
+<thead>
+<tr>
+<th data-i18n="table.order_id">Order ID</th>
+<th data-i18n="table.items">Items</th>
+<th data-i18n="table.order_type">Order Type</th>
+<th data-i18n="table.total">Total Amount</th>
+<th data-i18n="table.tax">Tax</th>
+<th data-i18n="table.comment">Comment</th>
+<th data-i18n="table.date">Date</th>
+<th data-i18n="table.action">Action</th>
+</tr>
+</thead>
+<tbody>
+
+<% orders.forEach(order => { %>
+    <tr>
+        <td><%= order._id %></td>
+        <td><%= order.items.map(i => i.menuItem ? i.menuItem.item : 'Unknown').join(', ') %></td>
+        <td><%= order.orderType %></td>
+        <td><%= order.totalAmount.toFixed(2) %></td>
+        <td><%= order.taxAmount.toFixed(2) %></td>
+        <td><%= order.comment || '' %></td>
+        <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+        <td>
+            <a href="javascript:void(0);" onclick="cancelOrder('<%= order._id %>')" class="btn btn-sm btn-danger">Cancel</a>
+        </td>
+    </tr>
+<% }) %>
+
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+<script src="assets/plugins/sweetalert/sweetalert2.all.min.js"></script>
+<script>
+    function cancelOrder(id) {
+        Swal.fire({
+            title: 'Cancel Order?',
+            text: "This action cannot be undone!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, cancel it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/api/orders/' + id, { method: 'DELETE' })
+                    .then(res => {
+                        if (res.ok) {
+                            Swal.fire('Cancelled!', 'Order has been cancelled.', 'success')
+                                .then(() => location.reload());
+                        } else {
+                            Swal.fire('Error!', 'Failed to cancel order.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        Swal.fire('Error!', 'Request failed: ' + err.message, 'error');
+                    });
+            }
+        });
+    }
+</script>
+<%- include('footer') -%>

@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const { logAudit } = require('../utils/audit');
 require('dotenv').config();
 const jwtUtils = require('../jwt');
 
@@ -28,6 +29,8 @@ exports.SignUp = async function (req, res) {
         });
 
         const restaurant = await newRestaurant.save();
+
+        try { await logAudit({ restaurant: { restaurantId: null } }, 'signup', 'Restaurant', restaurant._id, 'User signed up: ' + email); } catch (e) {}
 
         // const payload = { subject: restaurant._id };
         // const token = jwt.sign(payload, SECRET_KEY);
@@ -67,6 +70,8 @@ exports.SignIn = async function (req, res) {
 
         const token = jwtUtils.generateToken({restaurantId: restaurant._id  });
         res.cookie('jwt', token, { httpOnly: true});
+
+        await logAudit({ restaurant: { restaurantId: restaurant._id } }, 'login', 'Restaurant', restaurant._id, 'User logged in: ' + email);
 
         return res.redirect('/index');
     } catch (err) {
@@ -111,7 +116,9 @@ exports.LogOut = async (req,res)=>{
     
         if (token) {
           res.clearCookie('jwt');
-    
+
+          await logAudit(req, 'logout', 'Restaurant', req.restaurant ? req.restaurant.restaurantId : null, 'User logged out');
+
         //   const user = await User.findOne({ tokens: token });
         //   if (user) {
         //     user.tokens = user.tokens.filter(t => t !== token);

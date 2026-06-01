@@ -1,14 +1,21 @@
 const Order = require('../models/order')
 const Menu = require('../models/menu')
+const Restaurant = require('../models/restaurant')
+const { logAudit } = require('../utils/audit');
 const ThermalPrinter = require('node-thermal-printer').printer;
 const PrinterTypes = require('node-thermal-printer').types;
 const InventoryItem = require('../models/InventoryItem');
+const Customer = require('../models/Customer');
 const mongoose = require('mongoose');
 
-async function printOrder(order, type) {
+async function printOrder(order, type, printerConnection) {
+  if (!printerConnection) {
+    console.log('No printer configured, skipping print');
+    return;
+  }
   let printer = new ThermalPrinter({
-    type: PrinterTypes.EPSON,  // 'EPSON' or 'STAR'
-    interface: 'printer connection string',
+    type: PrinterTypes.EPSON,
+    interface: printerConnection,
   });
 
   printer.alignCenter();
@@ -34,14 +41,15 @@ async function printOrder(order, type) {
   }
 }
 const PlaceOrder = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  
   try {
       const restaurantId = req.restaurant.restaurantId;
       const { items, orderType, comment } = req.body;
 
-      // Prepare order items with menu item details
+      const restaurant = await Restaurant.findById(restaurantId);
+      const taxRate = (restaurant && restaurant.taxRate) ? restaurant.taxRate / 100 : 0.1;
+      const currencySymbol = (restaurant && restaurant.currencySymbol) ? restaurant.currencySymbol : '$';
+      const printerConnection = (restaurant && restaurant.printerConnection) ? restaurant.printerConnection : '';
+
       const orderItems = await Promise.all(items.map(async item => {
           const menuItem = await Menu.findById(item.menuItem);
           return {
@@ -51,12 +59,10 @@ const PlaceOrder = async (req, res) => {
           };
       }));
 
-      // Calculate subtotal, tax, and total amount
       const subtotal = orderItems.reduce((sum, item) => sum + item.price, 0);
-      const tax = subtotal * 0.1; // Assuming a tax rate of 10%
+      const tax = subtotal * taxRate;
       const totalAmount = subtotal + tax;
 
-      // Create new order
       const newOrder = new Order({
           restaurantId,
           items: orderItems,
@@ -66,30 +72,31 @@ const PlaceOrder = async (req, res) => {
           comment
       });
 
-      await newOrder.save({ session });
+      await newOrder.save();
+      await logAudit(req, 'create', 'Order', newOrder._id, 'Order placed: ' + orderType + ' - $' + totalAmount.toFixed(2));
 
-      // Update inventory based on order items
-      // for (const item of orderItems) {
-      //     const inventoryItem = await InventoryItem.findOne({ menuItem: item.menuItem }).session(session);
-      //     if (inventoryItem) {
-      //         inventoryItem.quantity -= item.quantity;
-      //         await inventoryItem.save({ session });
-      //     } else {
-      //         throw new Error(`Inventory item for menu item ${item.menuItem} not found`);
-      //     }
-      // }
+      if (req.body.customerId) {
+          await Customer.findByIdAndUpdate(req.body.customerId, { $push: { orders: newOrder._id } });
+      }
 
-      // Print KOT and Bill
-      await printOrder(newOrder, 'KOT');
-      await printOrder(newOrder, 'bill');
+      for (const item of orderItems) {
+          const menuItem = await Menu.findById(item.menuItem);
+          if (menuItem) {
+              const inventoryItem = await InventoryItem.findOne({ name: menuItem.item, restaurantId });
+              if (inventoryItem) {
+                  inventoryItem.quantity -= item.quantity;
+                  await inventoryItem.save();
+              } else {
+                  console.warn(`Inventory item not found for menu item: ${menuItem.item}`);
+              }
+          }
+      }
 
-      await session.commitTransaction();
-      session.endSession();
+      await printOrder(newOrder, 'KOT', printerConnection);
+      await printOrder(newOrder, 'bill', printerConnection);
 
       res.status(201).send(newOrder);
   } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
       res.status(400).send(error.message);
   }
 };
@@ -97,4 +104,28 @@ const PlaceOrder = async (req, res) => {
 
 
 
-module.exports={ PlaceOrder}
+const GetOrders = async (req, res) => {
+    try {
+        const restaurantId = req.restaurant.restaurantId;
+        const orders = await Order.find({ restaurantId })
+            .populate('items.menuItem', 'item price')
+            .sort({ createdAt: -1 });
+        res.render('orders-list', { orders });
+    } catch (error) {
+        res.status(400).send(error.message);
+    }
+};
+
+exports.deleteOrder = async (req, res) => {
+  try {
+    const restaurantId = req.restaurant.restaurantId;
+    const order = await Order.findOneAndDelete({ _id: req.params.id, restaurantId });
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    await logAudit(req, 'cancel', 'Order', order._id, 'Order cancelled: ' + order._id);
+    res.json({ message: 'Order cancelled successfully' });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+module.exports={ PlaceOrder, GetOrders, deleteOrder: exports.deleteOrder }

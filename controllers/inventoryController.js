@@ -1,11 +1,13 @@
 const InventoryItem = require('../models/InventoryItem');
 const Supplier = require('../models/Supplier')
+const { logAudit } = require('../utils/audit');
 
 
 exports.addInventory = async (req,res)=>{
     try {
-        const suppliers = await Supplier.find(); // Fetch all suppliers
-        res.render('add-inventory', { suppliers }); // Pass suppliers to EJS template
+        const restaurantId = req.restaurant.restaurantId;
+        const suppliers = await Supplier.find({ restaurantId });
+        res.render('add-inventory', { suppliers });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -23,6 +25,7 @@ exports.addItem = async (req, res) => {
       });
       
       await newItem.save();
+      await logAudit(req, 'create', 'InventoryItem', newItem._id, 'Created inventory item: ' + req.body.name);
       res.status(201).json(newItem);
     } catch (error) {
       res.status(400).json({ message: error.message });
@@ -45,15 +48,31 @@ exports.addItem = async (req, res) => {
   };
   
 
+  exports.updateItem = async (req, res) => {
+    try {
+      const restaurantId = req.restaurant.restaurantId;
+      const { name, quantity, price, supplier } = req.body;
+      const item = await InventoryItem.findOneAndUpdate(
+        { _id: req.params.id, restaurantId },
+        { name, quantity, price, supplier },
+        { new: true, runValidators: true }
+      );
+      if (!item) return res.status(404).json({ error: 'Inventory item not found' });
+      await logAudit(req, 'update', 'InventoryItem', item._id, 'Updated inventory item: ' + item.name);
+      res.json(item);
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
+  };
+
   exports.deleteInventory = async (req, res) => {
     try {
-        await InventoryItem.findByIdAndDelete(req.params.id);
+        const restaurantId = req.restaurant.restaurantId;
+        const item = await InventoryItem.findOneAndDelete({ _id: req.params.id, restaurantId });
+        if (!item) return res.status(404).json({ error: 'Inventory item not found' });
+        await logAudit(req, 'delete', 'InventoryItem', item._id, 'Deleted inventory item: ' + item.name);
         res.send('Inventory deleted');
     } catch (err) {
         res.status(500).send('Server Error');
     }
 }
-
-  
-
-  

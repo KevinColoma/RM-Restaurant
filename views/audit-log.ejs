@@ -1,0 +1,62 @@
+<%- include('header') -%>
+
+<div class="page-wrapper">
+    <div class="content">
+        <div class="page-header">
+            <div class="page-title">
+                <h4>Audit Log</h4>
+                <h6>Complete activity history</h6>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table datatable">
+                        <thead>
+                            <tr>
+                                <th>Date / Time</th>
+                                <th>Action</th>
+                                <th>Module</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% logs.forEach(function(log){ %>
+                                <tr>
+                                    <td><%= new Date(log.createdAt).toLocaleString() %></td>
+                                    <td>
+                                        <% if (log.action === 'create') { %>
+                                            <span class="badge bg-success">Create</span>
+                                        <% } else if (log.action === 'update' || log.action === 'settings_update') { %>
+                                            <span class="badge bg-warning text-dark">Update</span>
+                                        <% } else if (log.action === 'delete') { %>
+                                            <span class="badge bg-danger">Delete</span>
+                                        <% } else if (log.action === 'cancel') { %>
+                                            <span class="badge bg-secondary">Cancel</span>
+                                        <% } else if (log.action === 'login') { %>
+                                            <span class="badge bg-info text-dark">Login</span>
+                                        <% } else if (log.action === 'logout') { %>
+                                            <span class="badge bg-dark">Logout</span>
+                                        <% } else if (log.action === 'password_change') { %>
+                                            <span class="badge bg-primary">Password</span>
+                                        <% } else { %>
+                                            <%= log.action %>
+                                        <% } %>
+                                    </td>
+                                    <td><%= log.collection %></td>
+                                    <td><%= log.details || '' %></td>
+                                </tr>
+                            <% }) %>
+                            <% if (logs.length === 0) { %>
+                                <tr><td colspan="4" class="text-center">No activity recorded yet.</td></tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('footer') -%>

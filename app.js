@@ -5,10 +5,18 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser'); 
 const connectDB = require('./db'); 
 const session = require('express-session');
+const multer = require('multer');
 const restaurantRoutes = require('./routes/restaurantRoutes')
 const port = process.env.PORT
 const app = express()
 connectDB();
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'public/uploads'),
+  filename: (req, file, cb) => cb(null, 'avatar-' + req.restaurant.restaurantId + path.extname(file.originalname))
+});
+const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 } });
+app.use((req, res, next) => { req.upload = upload; next(); });
 
 
 app.use(cookieParser());
@@ -24,7 +32,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 app.use(session({
-    secret: '123',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: { maxAge:  24 * 60 * 60 * 1000 }, 
@@ -43,5 +51,8 @@ app.use((req,res,next)=>{
 
 app.use(restaurantRoutes);
 
+app.use((req, res) => {
+  res.status(404).render('404');
+});
 
 app.listen(port, () => console.log(`RMS app listening on port ${port}!`)) 

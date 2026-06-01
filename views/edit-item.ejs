@@ -1,70 +1,60 @@
 <%- include('header') -%>
 
-<link rel="shortcut icon" type="image/x-icon" href="assets/img/favicon.png">
-
-<link rel="stylesheet" href="assets/css/bootstrap.min.css">
-<link rel="stylesheet" href="assets/css/animate.css">
-<link rel="stylesheet" href="assets/plugins/select2/css/select2.min.css">
-<link rel="stylesheet" href="assets/css/dataTables.bootstrap4.min.css">
-<link rel="stylesheet" href="assets/plugins/fontawesome/css/fontawesome.min.css">
-<link rel="stylesheet" href="assets/plugins/fontawesome/css/all.min.css">
-<link rel="stylesheet" href="assets/css/style.css">
-
 <div class="page-wrapper">
     <div class="content">
         <div class="page-header">
             <div class="page-title">
-                <h4 data-i18n="form.add_title">Item Add</h4>
-                <h6 data-i18n="form.add_sub">Create new Item</h6>
+                <h4>Edit Item</h4>
+                <h6>Update item details</h6>
             </div>
         </div>
         <div class="card">
             <div class="card-body">
-                <form id="add-item-form">
+                <form id="edit-item-form">
                     <div class="row">
                         <div class="col-lg-3 col-sm-6 col-12">
                             <div class="form-group">
-                                <label data-i18n="form.item_name">Item Name</label>
-                                <input type="text" name="item" id="item" required>
+                                <label>Item Name</label>
+                                <input type="text" name="item" id="item" value="<%= menu.item %>" required>
                             </div>
                         </div>
                         <div class="col-lg-3 col-sm-6 col-12">
                             <div class="form-group">
-                                <label data-i18n="dash.category">Category</label>
+                                <label>Category</label>
                                 <select class="select" name="category" id="category" required>
                                     <option value="">Choose Category</option>
-                                    <option value="Veg">Veg</option>
-                                    <option value="Non-Veg">Non-Veg</option>
+                                    <option value="Veg" <%= menu.category === 'Veg' ? 'selected' : '' %>>Veg</option>
+                                    <option value="Non-Veg" <%= menu.category === 'Non-Veg' ? 'selected' : '' %>>Non-Veg</option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-lg-3 col-sm-6 col-12">
                             <div class="form-group">
-                                <label data-i18n="dash.subcategory">Sub Category</label>
+                                <label>Sub Category</label>
                                 <select class="select" name="subCategory" id="subCategory" required>
                                     <option value="">Choose Sub Category</option>
-                                    <option value="Starter">Starter</option>
-                                    <option value="Main Course">Main Course</option>
-                                    <option value="Soup">Soup</option>
-                                    <option value="Beverage">Beverage</option>
-                                    <option value="Salad">Salad</option>
-                                    <option value="Dessert">Dessert</option>
-                                    <option value="Roti">Roti</option>
-                                    <option value="Rice">Rice</option>
-                                    <option value="Juice">Juice</option>
-                                    <option value="Side Dish">Side Dish</option>
+                                    <option value="Starter" <%= menu.subCategory === 'Starter' ? 'selected' : '' %>>Starter</option>
+                                    <option value="Main Course" <%= menu.subCategory === 'Main Course' ? 'selected' : '' %>>Main Course</option>
+                                    <option value="Soup" <%= menu.subCategory === 'Soup' ? 'selected' : '' %>>Soup</option>
+                                    <option value="Beverage" <%= menu.subCategory === 'Beverage' ? 'selected' : '' %>>Beverage</option>
+                                    <option value="Salad" <%= menu.subCategory === 'Salad' ? 'selected' : '' %>>Salad</option>
+                                    <option value="Dessert" <%= menu.subCategory === 'Dessert' ? 'selected' : '' %>>Dessert</option>
+                                    <option value="Roti" <%= menu.subCategory === 'Roti' ? 'selected' : '' %>>Roti</option>
+                                    <option value="Rice" <%= menu.subCategory === 'Rice' ? 'selected' : '' %>>Rice</option>
+                                    <option value="Juice" <%= menu.subCategory === 'Juice' ? 'selected' : '' %>>Juice</option>
+                                    <option value="Side Dish" <%= menu.subCategory === 'Side Dish' ? 'selected' : '' %>>Side Dish</option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-lg-3 col-sm-6 col-12">
                             <div class="form-group">
-                                <label data-i18n="form.price">Price</label>
-                                <input type="text" name="price" id="price" required>
+                                <label>Price</label>
+                                <input type="text" name="price" id="price" value="<%= menu.price %>" required>
                             </div>
                         </div>
                         <div class="col-lg-12">
-                            <button type="submit" class="btn btn-submit me-2" data-i18n="form.submit">Submit</button>
-                            <a href="productlist.html" class="btn btn-cancel" data-i18n="form.cancel">Cancel</a>
+                            <button type="submit" class="btn btn-submit me-2">Update</button>
+                            <a href="/getmenu" class="btn btn-cancel">Cancel</a>
                         </div>
                     </div>
                 </form>
@@ -74,9 +64,9 @@
 </div>
 
 <script>
-    document.getElementById("add-item-form").addEventListener("submit", async function(event) {
+    document.getElementById("edit-item-form").addEventListener("submit", async function(event) {
         event.preventDefault();
-        
+
         const item = document.getElementById("item").value;
         const category = document.getElementById("category").value;
         const subCategory = document.getElementById("subCategory").value;
@@ -90,8 +80,8 @@
         };
 
         try {
-            const response = await fetch("/api/addmenu", {
-                method: "POST",
+            const response = await fetch("/api/menu/<%= menu._id %>", {
+                method: "PUT",
                 headers: {
                     "Content-Type": "application/json"
                 },
@@ -99,13 +89,12 @@
             });
 
             if (response.ok) {
-                const savedItem = await response.json();
-                console.log("Item saved successfully:", savedItem);
-                alert("Item added successfully!");
-                // Optionally, redirect to another page or give user feedback
+                const updatedItem = await response.json();
+                console.log("Item updated successfully:", updatedItem);
+                window.location.href = "/getmenu";
             } else {
                 const error = await response.json();
-                console.error("Error saving item:", error);
+                console.error("Error updating item:", error);
                 alert("Error: " + error.message);
             }
         } catch (err) {

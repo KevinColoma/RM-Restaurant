@@ -36,6 +36,26 @@ const restaurantSchema = new mongoose.Schema({
     isadmin: {
         type: Boolean,
         default: false
+    },
+    taxRate: {
+        type: Number,
+        default: 10
+    },
+    currencySymbol: {
+        type: String,
+        default: '$'
+    },
+    printerConnection: {
+        type: String,
+        default: ''
+    },
+    theme: {
+        type: String,
+        default: 'light'
+    },
+    avatar: {
+        type: String,
+        default: ''
     }
 });
 

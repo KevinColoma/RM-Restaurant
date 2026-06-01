@@ -1,0 +1,118 @@
+<%- include('header') -%>
+<link rel="stylesheet" href="assets/plugins/select2/css/select2.min.css">
+
+<div class="page-wrapper">
+    <div class="content">
+        <div class="page-header">
+            <div class="page-title">
+                <h4 data-i18n="branch.add_title">Add Branch</h4>
+                <h6 data-i18n="branch.add_sub">Create new branch</h6>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <form id="add-branch-form">
+                    <div class="row">
+                        <div class="col-lg-3 col-sm-6 col-12">
+                            <div class="form-group">
+                                <label>Parent Restaurant</label>
+                                <input type="text" name="Parent_Rest" id="Parent_Rest" required>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6 col-12">
+                            <div class="form-group">
+                                <label data-i18n="form.branch_owner">Owner Name</label>
+                                <input type="text" name="ownerName" id="ownerName" required>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6 col-12">
+                            <div class="form-group">
+                                <label data-i18n="form.branch_name">Restaurant Name</label>
+                                <input type="text" name="restaurantName" id="restaurantName" required>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6 col-12">
+                            <div class="form-group">
+                                <label data-i18n="form.branch_city">City</label>
+                                <input type="text" name="city" id="city" required>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6 col-12">
+                            <div class="form-group">
+                                <label data-i18n="form.branch_address">Address</label>
+                                <input type="text" name="address" id="address" required>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6 col-12">
+                            <div class="form-group">
+                                <label data-i18n="form.branch_email">Email</label>
+                                <input type="email" name="email" id="email" required>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6 col-12">
+                            <div class="form-group">
+                                <label data-i18n="form.branch_mobile">Mobile</label>
+                                <input type="text" name="mobile" id="mobile" required>
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <button type="submit" class="btn btn-submit me-2" data-i18n="form.submit">Submit</button>
+                            <a href="/branches" class="btn btn-cancel" data-i18n="form.cancel">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById("add-branch-form").addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const Parent_Rest = document.getElementById("Parent_Rest").value;
+        const ownerName = document.getElementById("ownerName").value;
+        const restaurantName = document.getElementById("restaurantName").value;
+        const city = document.getElementById("city").value;
+        const address = document.getElementById("address").value;
+        const email = document.getElementById("email").value;
+        const mobile = document.getElementById("mobile").value;
+
+        const data = { Parent_Rest, ownerName, restaurantName, city, address, email, mobile };
+
+        try {
+            const response = await fetch("/api/branches", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                const saved = await response.json();
+                alert("Branch added successfully!");
+                window.location.href = "/branches";
+            } else {
+                const error = await response.json();
+                alert("Error: " + error.message);
+            }
+        } catch (err) {
+            alert("Request failed: " + err.message);
+        }
+    });
+</script>
+
+<script src="assets/js/jquery-3.6.0.min.js"></script>
+<script src="assets/js/feather.min.js"></script>
+<script src="assets/js/jquery.slimscroll.min.js"></script>
+<script src="assets/js/jquery.dataTables.min.js"></script>
+<script src="assets/js/dataTables.bootstrap4.min.js"></script>
+<script src="assets/js/bootstrap.bundle.min.js"></script>
+<script src="assets/plugins/select2/js/select2.min.js"></script>
+<script src="assets/plugins/sweetalert/sweetalert2.all.min.js"></script>
+<script src="assets/plugins/sweetalert/sweetalerts.min.js"></script>
+<script src="assets/js/script.js"></script>
+
+</body>
+</html>

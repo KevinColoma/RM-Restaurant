@@ -4,13 +4,8 @@
     <div class="content">
         <div class="page-header">
             <div class="page-title">
-                <h4 data-i18n="list.expense_title">Expense List</h4>
-                <h6 data-i18n="list.expense_sub">Manage your expenses</h6>
-            </div>
-            <div class="page-btn">
-                <a href="/addexpense" class="btn btn-added" data-i18n="list.add_new_expense">
-                    <img src="assets/img/icons/plus.svg" alt="img" class="me-1">Add New Expense
-                </a>
+                <h4 data-i18n="list.customers_title">Customers List</h4>
+                <h6 data-i18n="list.customers_sub">Manage your customers</h6>
             </div>
         </div>
 
@@ -33,12 +28,12 @@
                     <div class="wordset">
                         <ul>
                             <li>
-                                <a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf" href="/export/expenses/pdf">
+                                <a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf" href="/export/customers/pdf">
                                     <img src="assets/img/icons/pdf.svg" alt="img">
                                 </a>
                             </li>
                             <li>
-                                <a data-bs-toggle="tooltip" data-bs-placement="top" title="csv" href="/export/expenses/csv">
+                                <a data-bs-toggle="tooltip" data-bs-placement="top" title="csv" href="/export/customers/csv">
                                     <img src="assets/img/icons/excel.svg" alt="img">
                                 </a>
                             </li>
@@ -61,37 +56,33 @@
                                         <span class="checkmarks"></span>
                                     </label>
                                 </th>
-                                <th data-i18n="table.category">Expense Type</th>
-                                <th data-i18n="table.date">Expense Date</th>
-                                <th data-i18n="table.total">Amount</th>
-                                <th data-i18n="table.supplier">Vendor</th>
-                                <th data-i18n="table.comment">Description</th>
+                                <th data-i18n="table.name">Name</th>
+                                <th data-i18n="table.phone">Phone</th>
+                                <th data-i18n="table.address">Address</th>
+                                <th data-i18n="table.created_date">Created Date</th>
                                 <th data-i18n="table.action">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <% expenses.forEach(expense => { %>
-                                <tr>
+                            <% customers.forEach(customer => { %>
+                                <tr data-customer-id="<%= customer._id %>">
                                     <td>
                                         <label class="checkboxs">
                                             <input type="checkbox">
                                             <span class="checkmarks"></span>
                                         </label>
                                     </td>
-                                    <td><%= expense.expenseType %></td>
-                                    <td><%= expense.expenseDate.toDateString() %></td>
-                                    <td><%= expense.amount.toFixed(2) %></td>
-                                    <td><%= expense.vendor %></td>
-                                    <td><%= expense.description %></td>
-                                    
+                                    <td class="cust-name"><%= customer.name %></td>
+                                    <td class="cust-phone"><%= customer.phone %></td>
+                                    <td class="cust-address"><%= customer.address %></td>
+                                    <td><%= customer.createdAt.toDateString() %></td>
                                     <td>
-                                        <a class="me-3" href="/edit-expense/<%= expense._id %>">
+                                        <a class="me-3" href="javascript:void(0);" onclick="editCustomer('<%= customer._id %>')">
                                             <img src="assets/img/icons/edit.svg" alt="img">
                                         </a>
-                                        <a  href="javascript:void(0);" onclick="confirmDeleteExpense('<%= expense._id %>')">
+                                        <a href="javascript:void(0);" onclick="confirmDeleteCustomer('<%= customer._id %>')">
                                             <img src="assets/img/icons/delete.svg" alt="img">
                                         </a>
-                                        
                                     </td>
                                 </tr>
                             <% }) %>
@@ -102,9 +93,6 @@
         </div>
     </div>
 </div>
-<!-- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script> -->
-
-
 
 <script src="assets/js/jquery-3.6.0.min.js"></script>
 <script src="assets/js/feather.min.js"></script>
@@ -118,7 +106,38 @@
 <script src="assets/js/script.js"></script>
 
 <script>
-    function confirmDeleteExpense(id) {
+    function editCustomer(id) {
+        const row = document.querySelector(`[data-customer-id="${id}"]`);
+        const name = row ? row.querySelector('.cust-name').textContent : '';
+        const phone = row ? row.querySelector('.cust-phone').textContent : '';
+        const address = row ? row.querySelector('.cust-address').textContent : '';
+        Swal.fire({
+            title: 'Edit Customer',
+            html: `
+                <input id="swal-name" class="swal2-input" value="${name}" placeholder="Name">
+                <input id="swal-phone" class="swal2-input" value="${phone}" placeholder="Phone">
+                <input id="swal-address" class="swal2-input" value="${address}" placeholder="Address">
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Update',
+            preConfirm: () => {
+                return fetch('/customers/' + id, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: document.getElementById('swal-name').value,
+                        phone: document.getElementById('swal-phone').value,
+                        address: document.getElementById('swal-address').value
+                    })
+                }).then(res => {
+                    if (res.ok) { Swal.fire('Updated!', '', 'success').then(() => location.reload()); }
+                    else { Swal.fire('Error!', 'Failed to update.', 'error'); }
+                });
+            }
+        });
+    }
+
+    function confirmDeleteCustomer(id) {
         Swal.fire({
             title: 'Are you sure?',
             text: "You won't be able to revert this!",
@@ -129,30 +148,22 @@
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                $.ajax({
-                    url: '/deleteexpense/' + id,
-                    type: 'DELETE',
-                    success: function(result) {
-                        Swal.fire(
-                            'Deleted!',
-                            'Your expense has been deleted.',
-                            'success'
-                        ).then(() => {
-                            window.location.reload();
-                        });
-                    },
-                    error: function(err) {
-                        Swal.fire(
-                            'Error!',
-                            'There was an error deleting the expense.',
-                            'error'
-                        );
-                    }
-                });
+                fetch('/customers/' + id, { method: 'DELETE' })
+                    .then(response => {
+                        if (response.ok) {
+                            Swal.fire('Deleted!', 'Customer has been deleted.', 'success')
+                                .then(() => location.reload());
+                        } else {
+                            Swal.fire('Error!', 'Failed to delete customer.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        Swal.fire('Error!', 'Request failed: ' + err.message, 'error');
+                    });
             }
         });
     }
-    </script>
-    
+</script>
+
 </body>
 </html>

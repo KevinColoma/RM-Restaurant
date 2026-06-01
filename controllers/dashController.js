@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Order = require('../models/order');
 const Expense = require('../models/Expense');
 const Menu = require('../models/menu');
+const Purchase = require('../models/Purchase');
 
 exports.Dashboard = async (req, res) => {
     try {
@@ -13,9 +14,9 @@ exports.Dashboard = async (req, res) => {
         const endOfDay = new Date();
         endOfDay.setHours(23, 59, 59, 999);
 
-        const totalPurchases = await Expense.countDocuments({
+        const totalPurchases = await Purchase.countDocuments({
             restaurantId: new mongoose.Types.ObjectId(restaurantId),
-            createdAt: { $gte: startOfDay, $lte: endOfDay }
+            purchaseDate: { $gte: startOfDay, $lte: endOfDay }
         });
 
         const totalOrders = await Order.countDocuments({
