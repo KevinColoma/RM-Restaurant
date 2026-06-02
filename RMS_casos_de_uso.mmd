@@ -1,0 +1,92 @@
+---
+title: RMS - Diagrama de Casos de Uso
+---
+usecaseDiagram
+    Actor "Dueño/Admin" as Admin
+    Actor "Cajero" as Cajero
+    Actor "Cliente" as Cliente
+    Actor "Proveedor" as Proveedor
+
+    rectangle POS {
+        usecase "Tomar Orden" as UC1
+        usecase "Procesar Pago" as UC2
+        usecase "Seleccionar Método" as UC3
+        usecase "Agregar Cliente" as UC4
+    }
+
+    rectangle Inventario {
+        usecase "Ver Stock" as UC5
+        usecase "Agregar Item" as UC6
+        usecase "Editar Item" as UC7
+        usecase "Ajustar Cantidad" as UC8
+    }
+
+    rectangle Compras {
+        usecase "Registrar Compra" as UC9
+        usecase "Ver Historial" as UC10
+    }
+
+    rectangle Menú {
+        usecase "Agregar Plato" as UC11
+        usecase "Editar Plato" as UC12
+        usecase "Cambiar Disponibilidad" as UC13
+    }
+
+    rectangle Clientes {
+        usecase "Registrar Cliente" as UC14
+        usecase "Ver Clientes" as UC15
+        usecase "Ver Historial Órdenes" as UC16
+    }
+
+    rectangle Gastos {
+        usecase "Registrar Gasto" as UC17
+        usecase "Ver Reportes" as UC18
+    }
+
+    rectangle Sistema {
+        usecase "Iniciar Sesión" as UC19
+        usecase "Cerrar Sesión" as UC20
+        usecase "Ver Dashboard" as UC21
+        usecase "Gestionar Perfil" as UC22
+        usecase "Cambiar Idioma" as UC23
+        usecase "Ver Auditoría" as UC24
+    }
+
+    Admin --> UC1
+    Admin --> UC2
+    Admin --> UC3
+    Admin --> UC4
+    Admin --> UC5
+    Admin --> UC6
+    Admin --> UC7
+    Admin --> UC8
+    Admin --> UC9
+    Admin --> UC10
+    Admin --> UC11
+    Admin --> UC12
+    Admin --> UC13
+    Admin --> UC14
+    Admin --> UC15
+    Admin --> UC16
+    Admin --> UC17
+    Admin --> UC18
+    Admin --> UC19
+    Admin --> UC20
+    Admin --> UC21
+    Admin --> UC22
+    Admin --> UC23
+    Admin --> UC24
+
+    Cajero --> UC1
+    Cajero --> UC2
+    Cajero --> UC3
+    Cajero --> UC4
+    Cajero --> UC5
+    Cajero --> UC19
+    Cajero --> UC20
+    Cajero --> UC21
+
+    Cliente --> UC1
+    Cliente --> UC16
+
+    Proveedor --> UC9

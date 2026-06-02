@@ -1,0 +1,169 @@
+erDiagram
+    personas ||--o{ usuarios : "persona_id"
+    roles ||--o{ usuarios : "rol_id"
+
+    personas ||--o{ customers : "persona_id"
+    personas ||--o{ menus : "persona_id"
+    personas ||--o{ orders : "persona_id"
+    personas ||--o{ expenses : "persona_id"
+    personas ||--o{ inventoryitems : "persona_id"
+    personas ||--o{ suppliers : "persona_id"
+    personas ||--o{ purchases : "persona_id"
+    personas ||--o{ auditlogs : "persona_id"
+    personas ||--o{ restbranchschemas : "persona_id"
+
+    customers ||--o{ orders : "customer_id"
+    customers }o--o{ orders : "customer_orders"
+
+    orders ||--o{ order_items : "order_id"
+    menus ||--o{ order_items : "menu_item_id"
+
+    suppliers ||--o{ inventoryitems : "supplier_id"
+    suppliers ||--o{ purchases : "supplier_id"
+
+    purchases ||--o{ purchase_items : "purchase_id"
+
+    personas {
+        varchar id PK
+        varchar ownerName
+        varchar restaurantName
+        varchar city
+        text address
+        varchar mobile
+        varchar currencySymbol
+        varchar printerConnection
+        decimal taxRate
+        varchar theme
+        timestamp created_at
+    }
+
+    roles {
+        varchar id PK
+        varchar nombre "UK"
+        text descripcion
+    }
+
+    usuarios {
+        varchar id PK
+        varchar username "UK"
+        varchar password
+        varchar persona_id FK
+        varchar rol_id FK
+        boolean isadmin
+        timestamp created_at
+    }
+
+    customers {
+        varchar id PK
+        varchar name
+        varchar phone
+        text address
+        varchar persona_id FK
+        timestamp created_at
+    }
+
+    menus {
+        varchar id PK
+        varchar persona_id FK
+        varchar item
+        varchar category
+        varchar sub_category
+        decimal price
+        boolean availability
+    }
+
+    orders {
+        varchar id PK
+        varchar persona_id FK
+        varchar customer_id FK
+        decimal tax_amount
+        decimal total_amount
+        varchar order_type
+        text comment
+        timestamp created_at
+    }
+
+    order_items {
+        int id PK
+        varchar order_id FK
+        varchar menu_item_id FK
+        int quantity
+        decimal price
+    }
+
+    suppliers {
+        varchar id PK
+        varchar persona_id FK
+        varchar name
+        text contact_info
+    }
+
+    inventoryitems {
+        varchar id PK
+        varchar persona_id FK
+        varchar name
+        decimal quantity
+        decimal price
+        varchar supplier_id FK
+    }
+
+    expenses {
+        varchar id PK
+        varchar persona_id FK
+        varchar expense_type
+        date expense_date
+        decimal amount
+        text description
+        varchar payment_method
+        varchar invoice_number
+        varchar vendor
+        varchar category
+        text receipt_url
+        timestamp created_at
+    }
+
+    purchases {
+        varchar id PK
+        varchar persona_id FK
+        varchar supplier_id FK
+        decimal total_amount
+        date purchase_date
+        text notes
+        timestamp created_at
+    }
+
+    purchase_items {
+        int id PK
+        varchar purchase_id FK
+        varchar item_name
+        decimal quantity
+        decimal unit_price
+        decimal total_price
+    }
+
+    auditlogs {
+        varchar id PK
+        varchar persona_id FK
+        varchar action
+        varchar collection_name
+        varchar document_id
+        text details
+        timestamp created_at
+    }
+
+    customer_orders {
+        varchar customer_id PK, FK
+        varchar order_id PK, FK
+    }
+
+    restbranchschemas {
+        varchar id PK
+        varchar persona_id FK
+        varchar parent_rest
+        varchar owner_name
+        varchar branch_name
+        varchar city
+        text address
+        varchar email
+        varchar mobile
+    }

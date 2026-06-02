@@ -1,0 +1,171 @@
+Project "RMS Restaurant Management" {
+  database_type: "PostgreSQL"
+  Note: "Esquema normalizado: Persona / Rol / Usuario"
+}
+
+Table personas {
+  id VARCHAR(24) [pk]
+  ownerName VARCHAR(100)
+  restaurantName VARCHAR(100)
+  city VARCHAR(100)
+  address TEXT
+  mobile VARCHAR(20)
+  currencySymbol VARCHAR(10)
+  printerConnection VARCHAR(255)
+  taxRate DECIMAL(5,2)
+  theme VARCHAR(50)
+  created_at TIMESTAMP
+}
+
+Table roles {
+  id VARCHAR(24) [pk]
+  nombre VARCHAR(50) [not null]
+  descripcion TEXT
+}
+
+Table usuarios {
+  id VARCHAR(24) [pk]
+  username VARCHAR(100) [unique, not null]
+  password VARCHAR(255) [not null]
+  persona_id VARCHAR(24) [not null]
+  rol_id VARCHAR(24) [not null]
+  isadmin BOOLEAN
+  created_at TIMESTAMP
+}
+
+Table customers {
+  id VARCHAR(24) [pk]
+  name VARCHAR(100)
+  phone VARCHAR(50)
+  address TEXT
+  persona_id VARCHAR(24) [not null]
+  created_at TIMESTAMP
+}
+
+Table menus {
+  id VARCHAR(24) [pk]
+  persona_id VARCHAR(24) [not null]
+  item VARCHAR(100)
+  category VARCHAR(100)
+  sub_category VARCHAR(100)
+  price DECIMAL(10,2)
+  availability BOOLEAN
+}
+
+Table orders {
+  id VARCHAR(24) [pk]
+  persona_id VARCHAR(24) [not null]
+  customer_id VARCHAR(24)
+  tax_amount DECIMAL(10,2)
+  total_amount DECIMAL(10,2)
+  order_type VARCHAR(20)
+  comment TEXT
+  created_at TIMESTAMP
+}
+
+Table order_items {
+  id INT [pk, increment]
+  order_id VARCHAR(24) [not null]
+  menu_item_id VARCHAR(24) [not null]
+  quantity INT
+  price DECIMAL(10,2)
+}
+
+Table suppliers {
+  id VARCHAR(24) [pk]
+  persona_id VARCHAR(24) [not null]
+  name VARCHAR(100)
+  contact_info TEXT
+}
+
+Table inventoryitems {
+  id VARCHAR(24) [pk]
+  persona_id VARCHAR(24) [not null]
+  name VARCHAR(100)
+  quantity DECIMAL(10,2)
+  price DECIMAL(10,2)
+  supplier_id VARCHAR(24)
+}
+
+Table expenses {
+  id VARCHAR(24) [pk]
+  persona_id VARCHAR(24) [not null]
+  expense_type VARCHAR(100)
+  expense_date DATE
+  amount DECIMAL(10,2)
+  description TEXT
+  payment_method VARCHAR(50)
+  invoice_number VARCHAR(100)
+  vendor VARCHAR(100)
+  category VARCHAR(100)
+  receipt_url TEXT
+  created_at TIMESTAMP
+  updated_at TIMESTAMP
+}
+
+Table purchases {
+  id VARCHAR(24) [pk]
+  persona_id VARCHAR(24) [not null]
+  supplier_id VARCHAR(24)
+  total_amount DECIMAL(10,2)
+  purchase_date DATE
+  notes TEXT
+  created_at TIMESTAMP
+  updated_at TIMESTAMP
+}
+
+Table purchase_items {
+  id INT [pk, increment]
+  purchase_id VARCHAR(24) [not null]
+  item_name VARCHAR(100)
+  quantity DECIMAL(10,2)
+  unit_price DECIMAL(10,2)
+  total_price DECIMAL(10,2)
+}
+
+Table auditlogs {
+  id VARCHAR(24) [pk]
+  persona_id VARCHAR(24) [not null]
+  action VARCHAR(20)
+  collection_name VARCHAR(50)
+  document_id VARCHAR(24)
+  details TEXT
+  created_at TIMESTAMP
+}
+
+Table customer_orders {
+  customer_id VARCHAR(24) [not null]
+  order_id VARCHAR(24) [not null]
+}
+
+Table restbranchschemas {
+  id VARCHAR(24) [pk]
+  persona_id VARCHAR(24) [not null]
+  parent_rest VARCHAR(100)
+  owner_name VARCHAR(100)
+  branch_name VARCHAR(100)
+  city VARCHAR(100)
+  address TEXT
+  email VARCHAR(100)
+  mobile VARCHAR(20)
+}
+
+Ref: usuarios.persona_id > personas.id
+Ref: usuarios.rol_id > roles.id
+Ref: customers.persona_id > personas.id
+Ref: customer_orders.customer_id > customers.id
+Ref: customer_orders.order_id > orders.id
+Ref: menus.persona_id > personas.id
+Ref: orders.persona_id > personas.id
+Ref: orders.customer_id > customers.id
+Ref: order_items.order_id > orders.id
+Ref: order_items.menu_item_id > menus.id
+Ref: suppliers.persona_id > personas.id
+Ref: inventoryitems.persona_id > personas.id
+Ref: inventoryitems.supplier_id > suppliers.id
+Ref: expenses.persona_id > personas.id
+Ref: purchases.persona_id > personas.id
+Ref: purchases.supplier_id > suppliers.id
+Ref: purchase_items.purchase_id > purchases.id
+Ref: auditlogs.persona_id > personas.id
+Ref: restbranchschemas.persona_id > personas.id

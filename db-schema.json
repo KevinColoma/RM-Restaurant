@@ -1,0 +1,180 @@
+{
+  "collections": [
+    {
+      "name": "restaurants",
+      "fields": {
+        "_id": "ObjectId",
+        "ownerName": "String",
+        "restaurantName": "String",
+        "city": "String",
+        "address": "String",
+        "username": "String",
+        "mobile": "Number",
+        "password": "String (hashed)",
+        "isadmin": "Boolean",
+        "currencySymbol": "String",
+        "printerConnection": "String",
+        "taxRate": "Number",
+        "theme": "String",
+        "__v": "Number"
+      },
+      "relations": []
+    },
+    {
+      "name": "customers",
+      "fields": {
+        "_id": "ObjectId",
+        "name": "String",
+        "phone": "String",
+        "address": "String",
+        "restaurantId": "ObjectId → restaurants",
+        "orders": "Array[ObjectId → orders]",
+        "createdAt": "Date",
+        "__v": "Number"
+      },
+      "relations": ["restaurantId → restaurants._id", "orders[] → orders._id"]
+    },
+    {
+      "name": "menus",
+      "fields": {
+        "_id": "ObjectId",
+        "restaurantId": "ObjectId → restaurants",
+        "item": "String",
+        "category": "String",
+        "subCategory": "String",
+        "price": "Number",
+        "availability": "Boolean",
+        "__v": "Number"
+      },
+      "relations": ["restaurantId → restaurants._id"]
+    },
+    {
+      "name": "orders",
+      "fields": {
+        "_id": "ObjectId",
+        "restaurantId": "ObjectId → restaurants",
+        "items": "Array[Object]",
+        "items[].menuItem": "ObjectId → menus._id",
+        "items[].quantity": "Number",
+        "items[].price": "Number",
+        "taxAmount": "Number",
+        "totalAmount": "Number",
+        "orderType": "String (Dine In / Take Away / Online)",
+        "comment": "String",
+        "createdAt": "Date",
+        "__v": "Number"
+      },
+      "relations": ["restaurantId → restaurants._id", "items[].menuItem → menus._id"]
+    },
+    {
+      "name": "expenses",
+      "fields": {
+        "_id": "ObjectId",
+        "restaurantId": "ObjectId → restaurants",
+        "expenseType": "String",
+        "expenseDate": "Date",
+        "amount": "Number",
+        "description": "String",
+        "paymentMethod": "String",
+        "invoiceNumber": "String",
+        "vendor": "String",
+        "category": "String",
+        "receiptURL": "String",
+        "createdAt": "Date",
+        "updatedAt": "Date",
+        "__v": "Number"
+      },
+      "relations": ["restaurantId → restaurants._id"]
+    },
+    {
+      "name": "inventoryitems",
+      "fields": {
+        "_id": "ObjectId",
+        "restaurantId": "ObjectId → restaurants",
+        "name": "String",
+        "quantity": "Number",
+        "price": "Number",
+        "supplier": "ObjectId → suppliers._id",
+        "__v": "Number"
+      },
+      "relations": ["restaurantId → restaurants._id", "supplier → suppliers._id"]
+    },
+    {
+      "name": "suppliers",
+      "fields": {
+        "_id": "ObjectId",
+        "restaurantId": "ObjectId → restaurants",
+        "name": "String",
+        "contactInfo": "String",
+        "__v": "Number"
+      },
+      "relations": ["restaurantId → restaurants._id"]
+    },
+    {
+      "name": "purchases",
+      "fields": {
+        "_id": "ObjectId",
+        "restaurantId": "ObjectId → restaurants",
+        "supplier": "ObjectId → suppliers._id",
+        "items": "Array[Object]",
+        "items[].itemName": "String",
+        "items[].quantity": "Number",
+        "items[].unitPrice": "Number",
+        "items[].totalPrice": "Number",
+        "totalAmount": "Number",
+        "purchaseDate": "Date",
+        "notes": "String",
+        "createdAt": "Date",
+        "updatedAt": "Date",
+        "__v": "Number"
+      },
+      "relations": ["restaurantId → restaurants._id", "supplier → suppliers._id"]
+    },
+    {
+      "name": "auditlogs",
+      "fields": {
+        "_id": "ObjectId",
+        "restaurantId": "ObjectId → restaurants",
+        "action": "String (CREATE|UPDATE|DELETE|SIGNIN|SIGNOUT)",
+        "collection": "String",
+        "documentId": "ObjectId",
+        "details": "String",
+        "createdAt": "Date",
+        "updatedAt": "Date",
+        "__v": "Number"
+      },
+      "relations": ["restaurantId → restaurants._id"]
+    },
+    {
+      "name": "restbranchschemas",
+      "fields": {
+        "_id": "ObjectId",
+        "restaurantID": "ObjectId → restaurants",
+        "Parent_Rest": "String",
+        "ownerName": "String",
+        "restaurantName": "String",
+        "city": "String",
+        "address": "String",
+        "email": "String",
+        "mobile": "Number",
+        "__v": "Number"
+      },
+      "relations": ["restaurantID → restaurants._id"]
+    }
+  ],
+  "relationships": [
+    { "from": "restaurants", "to": "customers", "via": "customers.restaurantId" },
+    { "from": "restaurants", "to": "menus", "via": "menus.restaurantId" },
+    { "from": "restaurants", "to": "orders", "via": "orders.restaurantId" },
+    { "from": "restaurants", "to": "expenses", "via": "expenses.restaurantId" },
+    { "from": "restaurants", "to": "inventoryitems", "via": "inventoryitems.restaurantId" },
+    { "from": "restaurants", "to": "suppliers", "via": "suppliers.restaurantId" },
+    { "from": "restaurants", "to": "purchases", "via": "purchases.restaurantId" },
+    { "from": "restaurants", "to": "auditlogs", "via": "auditlogs.restaurantId" },
+    { "from": "restaurants", "to": "restbranchschemas", "via": "restbranchschemas.restaurantID" },
+    { "from": "customers", "to": "orders", "via": "customers.orders[]" },
+    { "from": "orders", "to": "menus", "via": "orders.items[].menuItem" },
+    { "from": "inventoryitems", "to": "suppliers", "via": "inventoryitems.supplier" },
+    { "from": "purchases", "to": "suppliers", "via": "purchases.supplier" }
+  ]
+}
