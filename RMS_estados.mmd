@@ -2,40 +2,53 @@
 title: Diagrama de Estados - RMS
 ---
 stateDiagram-v2
+    direction LR
+
     [*] --> InicioSesion
 
     state InicioSesion {
+        direction LR
         [*] --> Formulario
-        Formulario --> Dashboard : credenciales válidas
         Formulario --> Formulario : error
+        Formulario --> Dashboard : credenciales válidas
     }
 
-    state Orden {
-        [*] --> Creada
-        Creada --> EnProceso : cajero confirma
-        EnProceso --> Completada : cocina termina
-        EnProceso --> Cancelada : admin cancela
-        Completada --> Pagada : cobro
-        Cancelada --> [*]
-        Pagada --> [*]
+    Dashboard --> Módulos : Seleccionar Módulo
+    Dashboard --> CerrandoSesion : Cerrar Sesión
+
+    state Módulos {
+        direction TB
+
+        state Orden {
+            direction LR
+            [*] --> Creada
+            Creada --> EnProceso : cajero confirma
+            EnProceso --> Completada : cocina termina
+            EnProceso --> Cancelada : admin cancela
+            Completada --> Pagada : cobro
+            Cancelada --> FinalOrden
+            Pagada --> FinalOrden
+            state FinalOrden ##  [*]
+        }
+
+        state Inventario {
+            direction LR
+            [*] --> ConStock
+            ConStock --> BajoStock : ventas > umbral
+            BajoStock --> SinStock : se agota
+            BajoStock --> ConStock : compra repone
+            SinStock --> ConStock : compra repone
+            SinStock --> FinalInventario : descontinuado
+            state FinalInventario ##  [*]
+        }
+
+        state Compra {
+            direction LR
+            [*] --> Registrada
+            Registrada --> Recibida : mercancía llega
+            Recibida --> FinalCompra
+            state FinalCompra ##  [*]
+        }
     }
 
-    state Inventario {
-        [*] --> ConStock
-        ConStock --> BajoStock : ventas > umbral
-        BajoStock --> SinStock : se agota
-        BajoStock --> ConStock : compra repone
-        SinStock --> ConStock : compra repone
-        SinStock --> [*] : descontinuado
-    }
-
-    state Compra {
-        [*] --> Registrada
-        Registrada --> Recibida : mercancía llega
-        Recibida --> [*]
-    }
-
-    Dashboard --> Orden : POS
-    Dashboard --> Inventario : módulo
-    Dashboard --> Compra : módulo
-    Dashboard --> [*] : cerrar sesión
+    CerrandoSesion --> [*]

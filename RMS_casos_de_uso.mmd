@@ -1,92 +1,85 @@
----
-title: RMS - Diagrama de Casos de Uso
----
-usecaseDiagram
-    Actor "Dueño/Admin" as Admin
-    Actor "Cajero" as Cajero
-    Actor "Cliente" as Cliente
-    Actor "Proveedor" as Proveedor
+graph TB
+    %% --- ESTILOS DE ACTORES (Simulación UML) ---
+    classDef actor fill:#eceff1,stroke:#37474f,stroke-width:2px,font-weight:bold;
 
-    rectangle POS {
-        usecase "Tomar Orden" as UC1
-        usecase "Procesar Pago" as UC2
-        usecase "Seleccionar Método" as UC3
-        usecase "Agregar Cliente" as UC4
-    }
+    %% --- BLOQUE GENERAL Y ACCESO ---
+    subgraph SistemaGeneral["⚙️ Módulo: Acceso y Sistema"]
+        AdminGen["👤 Admin"]:::actor
+        CajeroGen["👤 Cajero"]:::actor
+        
+        UC19(["Iniciar Sesión"])
+        UC20(["Cerrar Sesión"])
+        UC21(["Ver Dashboard"])
+        UC22(["Gestionar Perfil"])
+        UC23(["Cambiar Idioma"])
+        UC24(["Ver Auditoría"])
 
-    rectangle Inventario {
-        usecase "Ver Stock" as UC5
-        usecase "Agregar Item" as UC6
-        usecase "Editar Item" as UC7
-        usecase "Ajustar Cantidad" as UC8
-    }
+        AdminGen --- UC19 & UC20 & UC21 & UC22 & UC23 & UC24
+        CajeroGen --- UC19 & UC20 & UC21
+    end
 
-    rectangle Compras {
-        usecase "Registrar Compra" as UC9
-        usecase "Ver Historial" as UC10
-    }
+    %% --- BLOQUE OPERACIONES VENTA ---
+    subgraph ModuloPOS["🛒 Módulo: Punto de Venta (POS)"]
+        AdminPOS["👤 Admin"]:::actor
+        CajeroPOS["👤 Cajero"]:::actor
+        ClientePOS["👤 Cliente"]:::actor
 
-    rectangle Menú {
-        usecase "Agregar Plato" as UC11
-        usecase "Editar Plato" as UC12
-        usecase "Cambiar Disponibilidad" as UC13
-    }
+        UC1(["Tomar Orden"])
+        UC2(["Procesar Pago"])
+        UC3(["Seleccionar Método"])
+        UC4(["Agregar Cliente"])
 
-    rectangle Clientes {
-        usecase "Registrar Cliente" as UC14
-        usecase "Ver Clientes" as UC15
-        usecase "Ver Historial Órdenes" as UC16
-    }
+        AdminPOS & CajeroPOS & ClientePOS --- UC1
+        AdminPOS & CajeroPOS --- UC2 & UC3 & UC4
+    end
 
-    rectangle Gastos {
-        usecase "Registrar Gasto" as UC17
-        usecase "Ver Reportes" as UC18
-    }
+    %% --- BLOQUE LOGÍSTICA ---
+    subgraph ModuloInventario["📦 Módulo: Inventario y Compras"]
+        AdminInv["👤 Admin"]:::actor
+        CajeroInv["👤 Cajero"]:::actor
+        ProveedorInv["👤 Proveedor"]:::actor
 
-    rectangle Sistema {
-        usecase "Iniciar Sesión" as UC19
-        usecase "Cerrar Sesión" as UC20
-        usecase "Ver Dashboard" as UC21
-        usecase "Gestionar Perfil" as UC22
-        usecase "Cambiar Idioma" as UC23
-        usecase "Ver Auditoría" as UC24
-    }
+        UC5(["Ver Stock"])
+        UC6(["Agregar Item"])
+        UC7(["Editar Item"])
+        UC8(["Ajustar Cantidad"])
+        UC9(["Registrar Compra"])
+        UC10(["Ver Historial"])
 
-    Admin --> UC1
-    Admin --> UC2
-    Admin --> UC3
-    Admin --> UC4
-    Admin --> UC5
-    Admin --> UC6
-    Admin --> UC7
-    Admin --> UC8
-    Admin --> UC9
-    Admin --> UC10
-    Admin --> UC11
-    Admin --> UC12
-    Admin --> UC13
-    Admin --> UC14
-    Admin --> UC15
-    Admin --> UC16
-    Admin --> UC17
-    Admin --> UC18
-    Admin --> UC19
-    Admin --> UC20
-    Admin --> UC21
-    Admin --> UC22
-    Admin --> UC23
-    Admin --> UC24
+        AdminInv --- UC5 & UC6 & UC7 & UC8 & UC9 & UC10
+        CajeroInv --- UC5
+        ProveedorInv --- UC9
+    end
 
-    Cajero --> UC1
-    Cajero --> UC2
-    Cajero --> UC3
-    Cajero --> UC4
-    Cajero --> UC5
-    Cajero --> UC19
-    Cajero --> UC20
-    Cajero --> UC21
+    %% --- BLOQUE ADMINISTRACIÓN DE CONTENIDO ---
+    subgraph ModuloMenu["🍳 Módulo: Gestión del Menú"]
+        AdminMenu["👤 Admin"]:::actor
 
-    Cliente --> UC1
-    Cliente --> UC16
+        UC11(["Agregar Plato"])
+        UC12(["Editar Plato"])
+        UC13(["Cambiar Disponibilidad"])
 
-    Proveedor --> UC9
+        AdminMenu --- UC11 & UC12 & UC13
+    end
+
+    %% --- BLOQUE CLIENTES Y FINANZAS ---
+    subgraph ModuloClientesGastos["👥 Módulo: Clientes e Indicadores"]
+        AdminCli["👤 Admin"]:::actor
+        ClienteCli["👤 Cliente"]:::actor
+
+        UC14(["Registrar Cliente"])
+        UC15(["Ver Clientes"])
+        UC16(["Ver Historial Órdenes"])
+        UC17(["Registrar Gasto"])
+        UC18(["Ver Reportes"])
+
+        AdminCli --- UC14 & UC15 & UC16 & UC17 & UC18
+        ClienteCli --- UC16
+    end
+
+    %% --- AJUSTES COSMÉTICOS ---
+    style SistemaGeneral fill:#fafafa,stroke:#ccc,stroke-width:1px
+    style ModuloPOS fill:#fafafa,stroke:#ccc,stroke-width:1px
+    style ModuloInventario fill:#fafafa,stroke:#ccc,stroke-width:1px
+    style ModuloMenu fill:#fafafa,stroke:#ccc,stroke-width:1px
+    style ModuloClientesGastos fill:#fafafa,stroke:#ccc,stroke-width:1px

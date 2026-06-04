@@ -1,0 +1,102 @@
+@startuml
+title Diagrama Objeto-Estado - RMS
+
+object "orden_001 : Orden" as orden {
+    id = "66a1c99..."
+    cliente = "María García"
+    mesa = "5"
+    items = "3 platos"
+    subtotal = "$38.00"
+    tax = "$4.56"
+    descuento = "$2.06"
+    total = "$45.50"
+    tipo = "Dine In"
+    método_pago = "Efectivo"
+    creado = "2024-01-15 13:30"
+    cerrado = "2024-01-15 14:15"
+    estado actual = "Pagada"
+}
+
+object "orden_002 : Orden" as orden2 {
+    id = "66a1c99..."
+    cliente = "Carlos López"
+    items = "1 plato"
+    total = "$12.00"
+    tipo = "Take Away"
+    creado = "2024-01-15 14:00"
+    estado actual = "EnProceso"
+}
+
+object "pollo_045 : Inventario" as inv {
+    id = "66a1c8f..."
+    nombre = "Pollo"
+    categoria = "Proteína"
+    unidad = "kg"
+    stock_minimo = "5.0"
+    stock = "2.5"
+    precio_compra = "$5.50/kg"
+    ultima_compra = "2024-01-10"
+    estado actual = "BajoStock"
+}
+
+object "harina_102 : Inventario" as inv2 {
+    id = "66a1c8f..."
+    nombre = "Harina"
+    categoria = "Secos"
+    unidad = "kg"
+    stock_minimo = "10.0"
+    stock = "25.0"
+    precio_compra = "$1.20/kg"
+    estado actual = "ConStock"
+}
+
+object "compra_012 : Compra" as compra {
+    id = "66a1cf3..."
+    proveedor = "Distribuidora XYZ"
+    items = "5 productos"
+    pollo = "10 kg x $5.50 = $55.00"
+    harina = "20 kg x $1.20 = $24.00"
+    arroz = "15 kg x $1.80 = $27.00"
+    aceite = "10 L x $3.00 = $30.00"
+    sal = "5 kg x $0.80 = $4.00"
+    total = "$320.00"
+    fecha = "2024-01-14"
+    notas = "Entrega completa"
+    estado actual = "Recibida"
+}
+
+object "cliente_007 : Cliente" as cli {
+    id = "66a1c98..."
+    nombre = "María García"
+    telefono = "555-0123"
+    visitas = "15"
+    gasto_total = "$580.00"
+    ultima_visita = "2024-01-15"
+    estado actual = "Cliente Frecuente"
+}
+
+object "usuario_001 : Usuario" as user {
+    id = "66a1c8e..."
+    username = "admin"
+    nombre = "Juan Pérez"
+    restaurante = "Mi Restaurante"
+    rol = "Admin"
+    ultimo_acceso = "2024-01-15 13:00"
+    tema = "Light"
+    estado actual = "Conectado"
+}
+
+orden --> orden2 : misma sesión
+orden --> inv : consume pollo (0.5 kg)
+orden2 --> inv : no consume (Take Away)
+compra --> inv : repone +10 kg
+compra --> inv2 : repone +20 kg
+orden --> cli : pertenece a
+user --> orden : registró
+user --> compra : autorizó
+user --> cli : gestiona
+
+note right of inv #FFAAAA : ALERTA: Stock por debajo del mínimo
+note right of orden #AAFFAA : Transacción completada
+note right of compra #AAFFAA : Mercancía recibida
+@enduml

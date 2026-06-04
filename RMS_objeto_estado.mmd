@@ -2,50 +2,78 @@
 title: Diagrama Objeto-Estado - RMS
 ---
 classDiagram
-    class Orden_001 {
-        +id: "66a1c99..."
+    class `orden_001 : Orden` {
         +cliente: "María García"
-        +items: "3 platos"
+        +mesa: 5
+        +items: 3 platos
+        +subtotal: "$38.00"
+        +tax: "$4.56"
         +total: "$45.50"
         +tipo: "Dine In"
-        +estado: "Pagada"
+        +pago: "Efectivo"
         +creado: "2024-01-15 13:30"
+        +estado actual: Pagada
     }
 
-    class Inventario_045 {
-        +id: "66a1c8f..."
+    class `orden_002 : Orden` {
+        +cliente: "Carlos López"
+        +items: 1 plato
+        +total: "$12.00"
+        +tipo: "Take Away"
+        +creado: "2024-01-15 14:00"
+        +estado actual: EnProceso
+    }
+
+    class `pollo_045 : Inventario` {
         +nombre: "Pollo"
         +categoria: "Proteína"
-        +unidad: "kg"
-        +stock: "2.5"
-        +precio: "$8.00"
-        +estado: "BajoStock"
+        +stock_min: 5.0 kg
+        +stock: 2.5 kg
+        +precio_compra: "$5.50/kg"
+        +estado actual: BajoStock
     }
 
-    class Compra_012 {
-        +id: "66a1cf3..."
+    class `harina_102 : Inventario` {
+        +nombre: "Harina"
+        +categoria: "Secos"
+        +stock_min: 10.0 kg
+        +stock: 25.0 kg
+        +precio_compra: "$1.20/kg"
+        +estado actual: ConStock
+    }
+
+    class `compra_012 : Compra` {
         +proveedor: "Distribuidora XYZ"
-        +items: "5 productos"
+        +items: 5 productos
+        +pollo: "10 kg x $5.50"
+        +harina: "20 kg x $1.20"
         +total: "$320.00"
         +fecha: "2024-01-14"
-        +estado: "Registrada"
+        +estado actual: Recibida
     }
 
-    class Menu_008 {
-        +id: "66a1c8f..."
-        +nombre: "Hamburguesa Clásica"
-        +categoria: "Comida Rápida"
-        +precio: "$12.00"
-        +disponible: true
-        +estado: "Activo"
+    class `cliente_007 : Cliente` {
+        +nombre: "María García"
+        +telefono: "555-0123"
+        +visitas: 15
+        +gasto_total: "$580.00"
+        +ultima_visita: "2024-01-15"
+        +estado actual: Cliente Frecuente
     }
 
-    class Usuario_Admin {
-        +id: "66a1c8e..."
+    class `usuario_001 : Usuario` {
         +username: "admin"
-        +persona: "Juan Pérez"
+        +nombre: "Juan Pérez"
         +restaurante: "Mi Restaurante"
-        +rol: "Admin"
-        +tema: "light"
-        +estado: "Conectado"
+        +rol: Admin
+        +ultimo_acceso: "2024-01-15 13:00"
+        +estado actual: Conectado
     }
+
+    `orden_001 : Orden` --> `orden_002 : Orden` : misma sesion
+    `orden_001 : Orden` --> `pollo_045 : Inventario` : consume 0.5 kg
+    `compra_012 : Compra` --> `pollo_045 : Inventario` : repone +10 kg
+    `compra_012 : Compra` --> `harina_102 : Inventario` : repone +20 kg
+    `orden_001 : Orden` --> `cliente_007 : Cliente` : pertenece
+    `usuario_001 : Usuario` --> `orden_001 : Orden` : registro
+    `usuario_001 : Usuario` --> `compra_012 : Compra` : autorizo
