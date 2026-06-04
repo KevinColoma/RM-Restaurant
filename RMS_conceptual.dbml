@@ -1,0 +1,82 @@
+Project "RMS - Conceptual" {
+  database_type: "PostgreSQL"
+  Note: "Modelo Conceptual - Solo entidades y relaciones"
+}
+
+Table Persona {
+  id VARCHAR(24) [pk]
+}
+
+Table Rol {
+  id VARCHAR(24) [pk]
+}
+
+Table Usuario {
+  id VARCHAR(24) [pk]
+}
+
+Table Cliente {
+  id VARCHAR(24) [pk]
+}
+
+Table Menu {
+  id VARCHAR(24) [pk]
+}
+
+Table Orden {
+  id VARCHAR(24) [pk]
+}
+
+Table DetalleOrden {
+  id INT [pk]
+}
+
+Table Proveedor {
+  id VARCHAR(24) [pk]
+}
+
+Table Inventario {
+  id VARCHAR(24) [pk]
+}
+
+Table Gasto {
+  id VARCHAR(24) [pk]
+}
+
+Table Compra {
+  id VARCHAR(24) [pk]
+}
+
+Table DetalleCompra {
+  id INT [pk]
+}
+
+Table Auditoria {
+  id VARCHAR(24) [pk]
+}
+
+Table Sucursal {
+  id VARCHAR(24) [pk]
+}
+
+Ref: Usuario.persona_id > Persona.id
+Ref: Usuario.rol_id > Rol.id
+
+Ref: Cliente.persona_id > Persona.id
+Ref: Menu.persona_id > Persona.id
+Ref: Orden.persona_id > Persona.id
+Ref: Orden.cliente_id > Cliente.id
+Ref: DetalleOrden.orden_id > Orden.id
+Ref: DetalleOrden.menu_id > Menu.id
+
+Ref: Proveedor.persona_id > Persona.id
+Ref: Inventario.persona_id > Persona.id
+Ref: Inventario.proveedor_id > Proveedor.id
+Ref: Gasto.persona_id > Persona.id
+
+Ref: Compra.persona_id > Persona.id
+Ref: Compra.proveedor_id > Proveedor.id
+Ref: DetalleCompra.compra_id > Compra.id
+
+Ref: Auditoria.persona_id > Persona.id
+Ref: Sucursal.persona_id > Persona.id

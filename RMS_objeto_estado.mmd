@@ -1,0 +1,51 @@
+---
+title: Diagrama Objeto-Estado - RMS
+---
+classDiagram
+    class Orden_001 {
+        +id: "66a1c99..."
+        +cliente: "María García"
+        +items: "3 platos"
+        +total: "$45.50"
+        +tipo: "Dine In"
+        +estado: "Pagada"
+        +creado: "2024-01-15 13:30"
+    }
+
+    class Inventario_045 {
+        +id: "66a1c8f..."
+        +nombre: "Pollo"
+        +categoria: "Proteína"
+        +unidad: "kg"
+        +stock: "2.5"
+        +precio: "$8.00"
+        +estado: "BajoStock"
+    }
+
+    class Compra_012 {
+        +id: "66a1cf3..."
+        +proveedor: "Distribuidora XYZ"
+        +items: "5 productos"
+        +total: "$320.00"
+        +fecha: "2024-01-14"
+        +estado: "Registrada"
+    }
+
+    class Menu_008 {
+        +id: "66a1c8f..."
+        +nombre: "Hamburguesa Clásica"
+        +categoria: "Comida Rápida"
+        +precio: "$12.00"
+        +disponible: true
+        +estado: "Activo"
+    }
+
+    class Usuario_Admin {
+        +id: "66a1c8e..."
+        +username: "admin"
+        +persona: "Juan Pérez"
+        +restaurante: "Mi Restaurante"
+        +rol: "Admin"
+        +tema: "light"
+        +estado: "Conectado"
+    }

@@ -1,0 +1,41 @@
+---
+title: Diagrama de Estados - RMS
+---
+stateDiagram-v2
+    [*] --> InicioSesion
+
+    state InicioSesion {
+        [*] --> Formulario
+        Formulario --> Dashboard : credenciales válidas
+        Formulario --> Formulario : error
+    }
+
+    state Orden {
+        [*] --> Creada
+        Creada --> EnProceso : cajero confirma
+        EnProceso --> Completada : cocina termina
+        EnProceso --> Cancelada : admin cancela
+        Completada --> Pagada : cobro
+        Cancelada --> [*]
+        Pagada --> [*]
+    }
+
+    state Inventario {
+        [*] --> ConStock
+        ConStock --> BajoStock : ventas > umbral
+        BajoStock --> SinStock : se agota
+        BajoStock --> ConStock : compra repone
+        SinStock --> ConStock : compra repone
+        SinStock --> [*] : descontinuado
+    }
+
+    state Compra {
+        [*] --> Registrada
+        Registrada --> Recibida : mercancía llega
+        Recibida --> [*]
+    }
+
+    Dashboard --> Orden : POS
+    Dashboard --> Inventario : módulo
+    Dashboard --> Compra : módulo
+    Dashboard --> [*] : cerrar sesión

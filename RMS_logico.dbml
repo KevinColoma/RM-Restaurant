@@ -1,0 +1,151 @@
+Project "RMS - Lógico" {
+  database_type: "PostgreSQL"
+  Note: "Modelo Lógico - Entidades con atributos y tipos"
+}
+
+Table Persona {
+  id VARCHAR(24) [pk]
+  ownerName VARCHAR(100)
+  restaurantName VARCHAR(100)
+  city VARCHAR(100)
+  address TEXT
+  mobile VARCHAR(20)
+  currencySymbol VARCHAR(10)
+  printerConnection VARCHAR(255)
+  taxRate DECIMAL
+  theme VARCHAR(50)
+  created_at TIMESTAMP
+}
+
+Table Rol {
+  id VARCHAR(24) [pk]
+  nombre VARCHAR(50) [not null, unique]
+  descripcion TEXT
+}
+
+Table Usuario {
+  id VARCHAR(24) [pk]
+  username VARCHAR(100) [unique, not null]
+  password VARCHAR(255) [not null]
+  isadmin BOOLEAN
+  created_at TIMESTAMP
+  persona_id VARCHAR(24) [not null, ref: > Persona.id]
+  rol_id VARCHAR(24) [not null, ref: > Rol.id]
+}
+
+Table Cliente {
+  id VARCHAR(24) [pk]
+  name VARCHAR(100)
+  phone VARCHAR(50)
+  address TEXT
+  created_at TIMESTAMP
+  persona_id VARCHAR(24) [not null, ref: > Persona.id]
+}
+
+Table Menu {
+  id VARCHAR(24) [pk]
+  item VARCHAR(100)
+  category VARCHAR(100)
+  sub_category VARCHAR(100)
+  price DECIMAL
+  availability BOOLEAN
+  persona_id VARCHAR(24) [not null, ref: > Persona.id]
+}
+
+Table Orden {
+  id VARCHAR(24) [pk]
+  order_type VARCHAR(20)
+  tax_amount DECIMAL
+  total_amount DECIMAL
+  comment TEXT
+  created_at TIMESTAMP
+  persona_id VARCHAR(24) [not null, ref: > Persona.id]
+  customer_id VARCHAR(24) [ref: > Cliente.id]
+}
+
+Table DetalleOrden {
+  id INT [pk, increment]
+  quantity INT
+  price DECIMAL
+  order_id VARCHAR(24) [not null, ref: > Orden.id]
+  menu_id VARCHAR(24) [not null, ref: > Menu.id]
+}
+
+Table Proveedor {
+  id VARCHAR(24) [pk]
+  name VARCHAR(100)
+  contact_info TEXT
+  persona_id VARCHAR(24) [not null, ref: > Persona.id]
+}
+
+Table Inventario {
+  id VARCHAR(24) [pk]
+  name VARCHAR(100)
+  quantity DECIMAL
+  price DECIMAL
+  persona_id VARCHAR(24) [not null, ref: > Persona.id]
+  supplier_id VARCHAR(24) [ref: > Proveedor.id]
+}
+
+Table Gasto {
+  id VARCHAR(24) [pk]
+  expense_type VARCHAR(100)
+  expense_date DATE
+  amount DECIMAL
+  description TEXT
+  payment_method VARCHAR(50)
+  invoice_number VARCHAR(100)
+  vendor VARCHAR(100)
+  category VARCHAR(100)
+  receipt_url TEXT
+  created_at TIMESTAMP
+  updated_at TIMESTAMP
+  persona_id VARCHAR(24) [not null, ref: > Persona.id]
+}
+
+Table Compra {
+  id VARCHAR(24) [pk]
+  total_amount DECIMAL
+  purchase_date DATE
+  notes TEXT
+  created_at TIMESTAMP
+  updated_at TIMESTAMP
+  persona_id VARCHAR(24) [not null, ref: > Persona.id]
+  supplier_id VARCHAR(24) [ref: > Proveedor.id]
+}
+
+Table DetalleCompra {
+  id INT [pk, increment]
+  item_name VARCHAR(100)
+  quantity DECIMAL
+  unit_price DECIMAL
+  total_price DECIMAL
+  purchase_id VARCHAR(24) [not null, ref: > Compra.id]
+}
+
+Table Auditoria {
+  id VARCHAR(24) [pk]
+  action VARCHAR(20)
+  collection_name VARCHAR(50)
+  document_id VARCHAR(24)
+  details TEXT
+  created_at TIMESTAMP
+  persona_id VARCHAR(24) [not null, ref: > Persona.id]
+}
+
+Table Sucursal {
+  id VARCHAR(24) [pk]
+  parent_rest VARCHAR(100)
+  owner_name VARCHAR(100)
+  branch_name VARCHAR(100)
+  city VARCHAR(100)
+  address TEXT
+  email VARCHAR(100)
+  mobile VARCHAR(20)
+  persona_id VARCHAR(24) [not null, ref: > Persona.id]
+}
+
+Table ClienteOrden {
+  customer_id VARCHAR(24) [ref: > Cliente.id]
+  order_id VARCHAR(24) [ref: > Orden.id]
+}

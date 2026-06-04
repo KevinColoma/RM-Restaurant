@@ -1,0 +1,138 @@
+---
+title: Diagrama de Clases - RMS
+---
+classDiagram
+    class Persona {
+        +String id
+        +String ownerName
+        +String restaurantName
+        +String city
+        +String address
+        +String mobile
+        +String currencySymbol
+        +String printerConnection
+        +Float taxRate
+        +String theme
+        +Date created_at
+        +getNombreCompleto()
+    }
+
+    class Rol {
+        +String id
+        +String nombre
+        +String descripcion
+    }
+
+    class Usuario {
+        +String id
+        +String username
+        +String password
+        +Boolean isadmin
+        +Date created_at
+        +login(username, password) bool
+        +cambiarPassword(nueva)
+    }
+
+    class Cliente {
+        +String id
+        +String name
+        +String phone
+        +String address
+        +Date created_at
+        +getHistorialOrdenes()
+    }
+
+    class Menu {
+        +String id
+        +String item
+        +String category
+        +String subCategory
+        +Float price
+        +Boolean availability
+        +cambiarDisponibilidad()
+    }
+
+    class Orden {
+        +String id
+        +String orderType
+        +Float taxAmount
+        +Float totalAmount
+        +String comment
+        +Date created_at
+        +calcularTotal()
+        +cancelar()
+    }
+
+    class DetalleOrden {
+        +int id
+        +int quantity
+        +Float price
+        +calcularSubtotal() float
+    }
+
+    class Proveedor {
+        +String id
+        +String name
+        +String contactInfo
+    }
+
+    class Inventario {
+        +String id
+        +String name
+        +Float quantity
+        +Float price
+        +ajustarStock(cantidad)
+        +estaBajoStock() bool
+    }
+
+    class Gasto {
+        +String id
+        +String expenseType
+        +Date expenseDate
+        +Float amount
+        +String description
+        +String paymentMethod
+        +String category
+    }
+
+    class Compra {
+        +String id
+        +Float totalAmount
+        +Date purchaseDate
+        +String notes
+        +Date created_at
+    }
+
+    class DetalleCompra {
+        +int id
+        +String itemName
+        +Float quantity
+        +Float unitPrice
+        +Float totalPrice
+    }
+
+    class Auditoria {
+        +String id
+        +String action
+        +String collectionName
+        +String documentId
+        +String details
+        +Date created_at
+    }
+
+    Persona "1" --> "*" Usuario : tiene
+    Rol "1" --> "*" Usuario : asigna
+    Persona "1" --> "*" Cliente : registra
+    Persona "1" --> "*" Menu : crea
+    Persona "1" --> "*" Orden : procesa
+    Persona "1" --> "*" Proveedor : gestiona
+    Persona "1" --> "*" Inventario : controla
+    Persona "1" --> "*" Gasto : registra
+    Persona "1" --> "*" Compra : realiza
+    Persona "1" --> "*" Auditoria : genera
+    Cliente "1" --> "*" Orden : realiza
+    Orden "1" --> "*" DetalleOrden : contiene
+    Menu "1" --> "*" DetalleOrden : incluye
+    Proveedor "1" --> "*" Inventario : suministra
+    Proveedor "1" --> "*" Compra : abastece
+    Compra "1" --> "*" DetalleCompra : compone

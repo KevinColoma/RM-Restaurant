@@ -1,0 +1,53 @@
+@startuml
+skinparam componentStyle rectangle
+title RMS - Diagrama de Componentes
+
+package "Frontend (EJS / jQuery)" as Front {
+  [Vistas EJS] as Views
+  [assets/js] as JS
+  [assets/css] as CSS
+}
+
+package "Backend (Node.js / Express)" as Back {
+  [app.js] as App
+  [routes/] as Routes
+  [middleware/] as Middleware
+  [controllers/] as Controllers
+  [models/] as Models
+  [utils/] as Utils
+}
+
+package "Persistencia" as DB {
+  database "MongoDB 7" as Mongo
+}
+
+package "Servicios Externos" as Ext {
+  [PDFKit] as PDF
+  [json2csv] as CSV
+  [multer] as Upload
+  [jsonwebtoken] as JWT
+}
+
+package "Librerías" as Lib {
+  [express] as Express
+  [mongoose] as Mongoose
+  [bcryptjs] as Bcrypt
+  [ejs] as Ejs
+  [sweetalert2] as Swal
+  [datatables] as DT
+}
+
+Views --> JS : data-i18n, fetch()
+Views --> App : HTTP GET/POST
+App --> Routes : enrutamiento
+Routes --> Middleware : auth, locals
+Routes --> Controllers : lógica
+Controllers --> Models : Mongoose CRUD
+Controllers --> Utils : audit, pdf, csv
+Models --> Mongo : ODM
+Utils --> PDF : generar PDF
+Utils --> CSV : generar CSV
+Controllers --> Upload : avatar
+MiddleWare --> JWT : verificar token
+
+@enduml
