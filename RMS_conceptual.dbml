@@ -13,50 +13,67 @@ Table Rol {
 
 Table Usuario {
   id VARCHAR(24) [pk]
+  persona_id VARCHAR(24)
+  rol_id VARCHAR(24)
 }
 
 Table Cliente {
   id VARCHAR(24) [pk]
+  persona_id VARCHAR(24)
 }
 
 Table Menu {
   id VARCHAR(24) [pk]
+  persona_id VARCHAR(24)
 }
 
 Table Orden {
   id VARCHAR(24) [pk]
+  persona_id VARCHAR(24)
+  cliente_id VARCHAR(24)
 }
 
 Table DetalleOrden {
   id INT [pk]
+  orden_id VARCHAR(24)
+  menu_id VARCHAR(24)
 }
 
 Table Proveedor {
   id VARCHAR(24) [pk]
+  persona_id VARCHAR(24)
 }
 
 Table Inventario {
   id VARCHAR(24) [pk]
+  persona_id VARCHAR(24)
+  proveedor_id VARCHAR(24)
 }
 
 Table Gasto {
   id VARCHAR(24) [pk]
+  persona_id VARCHAR(24)
 }
 
 Table Compra {
   id VARCHAR(24) [pk]
+  persona_id VARCHAR(24)
+  proveedor_id VARCHAR(24)
 }
 
 Table DetalleCompra {
   id INT [pk]
+  compra_id VARCHAR(24)
 }
 
 Table Auditoria {
   id VARCHAR(24) [pk]
+  persona_id VARCHAR(24)
 }
 
 Table Sucursal {
   id VARCHAR(24) [pk]
+  persona_id VARCHAR(24)
 }
 
 Ref: Usuario.persona_id > Persona.id
