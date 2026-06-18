@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [test]
+    branches: [dev, test]
   pull_request:
     branches: [dev, test]
   workflow_dispatch:
@@ -80,6 +80,28 @@ jobs:
       - uses: github/codeql-action/autobuild@v3
       - uses: github/codeql-action/analyze@v3
 
+  sync-to-test:
+    if: success() && github.ref_name == 'dev'
+    needs: [lint, test-backend, test-frontend, sonarcloud, codeql]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Push to test
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git push origin HEAD:test
+      - name: Trigger CI on test
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run ci-pr.yml --ref test
+
   auto-merge:
     if: success() && github.ref_name == 'test'
     needs: [lint, test-backend, test-frontend, sonarcloud, codeql]
@@ -111,7 +133,7 @@ jobs:
 
   notify-success:
     if: success()
-    needs: [lint, test-backend, test-frontend, sonarcloud, codeql, auto-merge]
+    needs: [lint, test-backend, test-frontend, sonarcloud, codeql, sync-to-test, auto-merge]
     runs-on: ubuntu-latest
     steps:
       - uses: appleboy/telegram-action@v1.0.1
@@ -129,7 +151,7 @@ jobs:
 
   notify-failure:
     if: failure()
-    needs: [lint, test-backend, test-frontend, sonarcloud, codeql, auto-merge]
+    needs: [lint, test-backend, test-frontend, sonarcloud, codeql, sync-to-test, auto-merge]
     runs-on: ubuntu-latest
     steps:
       - uses: appleboy/telegram-action@v1.0.1
