@@ -37,7 +37,7 @@ exports.SignUp = async function (req, res) {
 
         try {
             await logAudit({ personaId: persona._id }, 'signup', 'Persona', persona._id, 'User signed up: ' + email);
-        } catch (e) {}
+        } catch (e) { /* ignore */ }
 
         res.status(201).json({ success: true, message: 'Sign up successful!' });
     } catch (error) {
