@@ -1,0 +1,186 @@
+<%- include('header') -%>
+
+<div class="page-wrapper">
+    <div class="content">
+        <div class="page-header">
+            <div class="page-title">
+                <h4 data-i18n="nav.add_purchase">Add Purchase</h4>
+                <h6 data-i18n="list.purchases_sub">Record a new purchase from supplier</h6>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form id="add-purchase-form">
+                    <div class="row">
+                        <div class="col-lg-6 col-sm-12 col-12">
+                            <div class="form-group">
+                                <label data-i18n="form.supplier">Supplier</label>
+                                <select class="select form-control" id="supplier" required>
+                                    <option value="" data-i18n-value="form.choose_supplier">Choose Supplier</option>
+                                    <% suppliers.forEach(function(supplier){ %>
+                                        <option value="<%= supplier._id %>"><%= supplier.name %></option>
+                                    <% }) %>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-sm-12 col-12">
+                            <div class="form-group">
+                                <label data-i18n="form.purchase_date">Purchase Date</label>
+                                <input type="date" id="purchaseDate" class="form-control" value="<%= new Date().toISOString().split('T')[0] %>">
+                            </div>
+                        </div>
+                        <div class="col-lg-12 col-sm-12 col-12">
+                            <div class="form-group">
+                                <label data-i18n="form.notes">Notes</label>
+                                <textarea id="notes" class="form-control" rows="2" placeholder="Optional notes"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-lg-12">
+                            <h5 data-i18n="form.purchase_items">Purchase Items</h5>
+                            <hr>
+                            <div id="items-container">
+                                <div class="row mb-2 item-row">
+                                    <div class="col-lg-4">
+                                        <select class="form-control item-select" required>
+                                            <option value="" data-i18n-value="form.select_item">Select item</option>
+                                            <% inventoryItems.forEach(function(item){ %>
+                                                <option value="<%= item.name %>"><%= item.name %></option>
+                                            <% }) %>
+                                        </select>
+                                    </div>
+                                    <div class="col-lg-2">
+                                        <input type="number" class="form-control item-qty" placeholder="Qty" min="1" required data-i18n-placeholder="form.qty">
+                                    </div>
+                                    <div class="col-lg-2">
+                                        <input type="number" step="0.01" class="form-control item-price" placeholder="Unit Price" min="0" required data-i18n-placeholder="form.unit_price">
+                                    </div>
+                                    <div class="col-lg-2">
+                                        <input type="text" class="form-control item-total" placeholder="Total" readonly>
+                                    </div>
+                                    <div class="col-lg-2">
+                                        <button type="button" class="btn btn-danger remove-item" data-i18n="form.remove">Remove</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-success mt-2" id="add-item-btn" data-i18n="form.add_item_btn">+ Add Item</button>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-lg-4 offset-lg-8">
+                            <div class="form-group">
+                                <label data-i18n="form.total_amount">Total Amount</label>
+                                <input type="text" id="totalAmount" class="form-control" readonly value="0.00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-12 mt-3">
+                        <button type="submit" class="btn btn-submit me-2" data-i18n="form.submit_purchase">Submit Purchase</button>
+                        <a href="/purchase-list" class="btn btn-cancel" data-i18n="form.cancel">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="assets/plugins/sweetalert/sweetalert2.all.min.js"></script>
+<script src="assets/plugins/select2/js/select2.min.js"></script>
+<script>
+    function recalcTotal() {
+        let total = 0;
+        document.querySelectorAll('.item-row').forEach(function(row) {
+            const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+            const price = parseFloat(row.querySelector('.item-price').value) || 0;
+            const itemTotal = qty * price;
+            row.querySelector('.item-total').value = itemTotal.toFixed(2);
+            total += itemTotal;
+        });
+        document.getElementById('totalAmount').value = total.toFixed(2);
+    }
+
+    function addItemRow() {
+        const container = document.getElementById('items-container');
+        const firstRow = container.querySelector('.item-row');
+        const newRow = firstRow.cloneNode(true);
+        newRow.querySelector('.item-select').value = '';
+        newRow.querySelector('.item-qty').value = '';
+        newRow.querySelector('.item-price').value = '';
+        newRow.querySelector('.item-total').value = '';
+        container.appendChild(newRow);
+        attachEvents(newRow);
+    }
+
+    function attachEvents(row) {
+        row.querySelector('.item-qty').addEventListener('input', recalcTotal);
+        row.querySelector('.item-price').addEventListener('input', recalcTotal);
+        row.querySelector('.remove-item').addEventListener('click', function() {
+            if (document.querySelectorAll('.item-row').length > 1) {
+                row.remove();
+                recalcTotal();
+            } else {
+                Swal.fire('Info', 'At least one item is required.', 'info');
+            }
+        });
+    }
+
+    document.querySelectorAll('.item-row').forEach(attachEvents);
+    document.getElementById('add-item-btn').addEventListener('click', addItemRow);
+
+    document.getElementById('add-purchase-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const supplier = document.getElementById('supplier').value;
+        if (!supplier) {
+            Swal.fire('Error!', 'Please select a supplier.', 'error');
+            return;
+        }
+
+        const items = [];
+        let valid = true;
+        document.querySelectorAll('.item-row').forEach(function(row) {
+            const itemName = row.querySelector('.item-select').value;
+            const qty = parseInt(row.querySelector('.item-qty').value);
+            const price = parseFloat(row.querySelector('.item-price').value);
+            if (!itemName || !qty || !price) {
+                valid = false;
+                return;
+            }
+            items.push({ itemName, quantity: qty, unitPrice: price });
+        });
+
+        if (!valid || items.length === 0) {
+            Swal.fire('Error!', 'Please fill all item fields correctly.', 'error');
+            return;
+        }
+
+        const payload = {
+            supplier,
+            items,
+            purchaseDate: document.getElementById('purchaseDate').value,
+            notes: document.getElementById('notes').value
+        };
+
+        try {
+            const res = await fetch('/api/purchases', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                Swal.fire('Success!', 'Purchase recorded successfully.', 'success')
+                    .then(() => window.location.href = '/purchase-list');
+            } else {
+                const err = await res.json();
+                Swal.fire('Error!', err.error || 'Failed to record purchase.', 'error');
+            }
+        } catch (err) {
+            Swal.fire('Error!', err.message, 'error');
+        }
+    });
+</script>
+<%- include('footer') -%>
