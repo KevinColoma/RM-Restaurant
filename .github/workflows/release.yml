@@ -1,9 +1,18 @@
+# =============================================================================
+# Release Pipeline (GitHub Release)
+# =============================================================================
+# Este pipeline se ejecuta al publicar un Release en GitHub.
+# Flujo: Build (tests) → SonarCloud → Deploy a Render
+# =============================================================================
+
 name: Release
 
+# ── Disparadores ──────────────────────────────────────────────────────────────
 on:
   release:
-    types: [published]
+    types: [published]           # Cuando se publica un release
 
+# ── Variables de entorno globales ────────────────────────────────────────────
 env:
   TELEGRAM_PREFIX: |
     🏷 *${{ github.repository }}*
@@ -13,6 +22,7 @@ env:
     🔗 [Ver release](${{ github.event.release.html_url }})
 
 jobs:
+  # ── Job 1: Build + Tests ─────────────────────────────────────────────────
   build:
     runs-on: ubuntu-latest
     steps:
@@ -21,6 +31,7 @@ jobs:
         with:
           node-version: 20
       - run: cd backend && npm ci
+      # Ejecuta tests backend con cobertura para validar la release
       - run: cd backend && npm test -- --coverage 2>&1 | tee test-release.log
       - name: Notify build result
         uses: appleboy/telegram-action@v1.0.1
@@ -35,11 +46,13 @@ jobs:
             📦 Tests backend: OK
             📌 Siguiente: Análisis SonarCloud + Deploy
 
+  # ── Job 2: SonarCloud (Quality Gate) ─────────────────────────────────────
   sonarcloud:
     needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Análisis de calidad con SonarCloud
       - uses: sonarsource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -57,11 +70,13 @@ jobs:
             🔍 Quality Gate verificado
             📌 Siguiente: Deploy a Render
 
+  # ── Job 3: Deploy a Render ───────────────────────────────────────────────
   deploy:
     needs: [build, sonarcloud]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Despliega en Render vía API REST
       - name: Deploy to Render
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
@@ -83,6 +98,7 @@ jobs:
             🌐 Aplicación actualizada en producción.
             📌 [Deploy en Render](https://dashboard.render.com/web/${{ secrets.RENDER_SERVICE_ID }})
 
+  # ── Job 4: Notificación de éxito ─────────────────────────────────────────
   notify-success:
     if: success()
     needs: [build, sonarcloud, deploy]
@@ -100,6 +116,7 @@ jobs:
             ✅ Build · ✅ SonarCloud · ✅ Deploy
             La nueva versión \`${{ github.event.release.tag_name }}\` ya está en producción.
 
+  # ── Job 5: Notificación de fallo ─────────────────────────────────────────
   notify-failure:
     if: failure()
     needs: [build, sonarcloud, deploy]

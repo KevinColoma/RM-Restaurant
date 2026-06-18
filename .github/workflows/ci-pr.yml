@@ -1,14 +1,23 @@
+# =============================================================================
+# CI - Pipeline de Integración Continua (ramas dev y test)
+# =============================================================================
+# Este pipeline se ejecuta al hacer push o PR a dev/test.
+# Flujo: lint → tests → CodeQL → sync a test / auto-merge a main + deploy Render
+# =============================================================================
+
 name: CI
 
+# ── Disparadores ──────────────────────────────────────────────────────────────
 on:
   push:
     branches: [dev, test]
   pull_request:
     branches: [dev, test]
-  workflow_dispatch:
+  workflow_dispatch:          # Permite ejecución manual desde GitHub
 
+# ── Variables de entorno globales ────────────────────────────────────────────
 env:
-  TELEGRAM_PREFIX: |
+  TELEGRAM_PREFIX: |          # Prefijo reutilizado en todas las notificaciones
     🏷 *${{ github.repository }}*
     🌿 Rama: \`${{ github.ref_name }}\`
     📝 \`${{ github.event.head_commit.message || 'N/A' }}\`
@@ -16,6 +25,7 @@ env:
     🔗 [Ver commit](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
 
 jobs:
+  # ── Job 1: Lint (ESLint backend + frontend) ──────────────────────────────
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -29,6 +39,7 @@ jobs:
       - run: cd backend && npx eslint . 2>&1 | tee lint-backend.log
       - run: cd frontend && npm ci
       - run: cd frontend && npx eslint src/ 2>&1 | tee lint-frontend.log
+      # Notifica por Telegram que el lint pasó
       - name: Notify lint result
         uses: appleboy/telegram-action@v1.0.1
         with:
@@ -44,6 +55,7 @@ jobs:
             Sin errores de lint.
             📌 Siguiente: Tests backend + frontend + CodeQL
 
+  # ── Job 2: Tests Backend (Jest + Supertest + mongodb-memory-server) ──────
   test-backend:
     runs-on: ubuntu-latest
     steps:
@@ -53,6 +65,7 @@ jobs:
           node-version: 20
       - run: cd backend && npm ci
       - run: cd backend && npm test -- --coverage 2>&1 | tee test-backend.log
+      # Guarda reporte de cobertura como artefacto para SonarCloud
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-backend
@@ -71,6 +84,7 @@ jobs:
             📊 Cobertura global
             📌 Siguiente: Frontend tests + CodeQL
 
+  # ── Job 3: Tests Frontend (Vitest + jsdom) ───────────────────────────────
   test-frontend:
     runs-on: ubuntu-latest
     steps:
@@ -80,6 +94,7 @@ jobs:
           node-version: 20
       - run: cd frontend && npm ci
       - run: cd frontend && npm test 2>&1 | tee test-frontend.log
+      # Guarda reporte de cobertura como artefacto para SonarCloud
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-frontend
@@ -97,12 +112,14 @@ jobs:
             📦 Tests: todos pasaron
             📌 Siguiente: CodeQL y SonarCloud (solo en test)
 
+  # ── Job 4: SonarCloud (solo en rama test) ────────────────────────────────
   sonarcloud:
-    if: github.ref_name == 'test'
+    if: github.ref_name == 'test'       # Solo se ejecuta en test
     needs: [test-backend, test-frontend]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Descarga los artefactos de cobertura generados en jobs anteriores
       - uses: actions/download-artifact@v4
         with:
           name: coverage-backend
@@ -111,13 +128,14 @@ jobs:
         with:
           name: coverage-frontend
           path: frontend/coverage/
+      # Corrige rutas en lcov.info para que SonarCloud las interprete correctamente
       - name: Fix lcov paths for SonarCloud
         run: |
           sed -i 's|^SF:|SF:backend/|' backend/coverage/lcov.info
           sed -i 's|^SF:|SF:frontend/|' frontend/coverage/lcov.info
       - uses: sonarsource/sonarcloud-github-action@master
         with:
-          qualityGateWait: true
+          qualityGateWait: true          # Espera a que el Quality Gate pase
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -134,6 +152,7 @@ jobs:
             🔍 Análisis completo en SonarCloud
             📌 Siguiente: Auto-merge a main + Deploy
 
+  # ── Job 5: CodeQL (GitHub Security Analysis) ─────────────────────────────
   codeql:
     runs-on: ubuntu-latest
     permissions:
@@ -158,8 +177,9 @@ jobs:
             🔒 Análisis de seguridad: sin vulnerabilidades críticas
             📌 Siguiente: ${{ github.ref_name == 'dev' && 'Sync a test' || 'Auto-merge a main + Deploy' }}
 
+  # ── Job 6: Sync dev → test ───────────────────────────────────────────────
   sync-to-test:
-    if: success() && github.ref_name == 'dev'
+    if: success() && github.ref_name == 'dev'   # Solo en dev y si todo OK
     needs: [lint, test-backend, test-frontend, codeql]
     runs-on: ubuntu-latest
     permissions:
@@ -169,11 +189,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # Promueve el código de dev a test
       - name: Push to test
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git push origin HEAD:test
+      # Dispara el pipeline en test para validación final con SonarCloud
       - name: Trigger CI on test
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -193,8 +215,9 @@ jobs:
             Se disparó CI en \`test\` para validación final.
             📌 Pendiente: SonarCloud + Auto-merge a main
 
+  # ── Job 7: Auto-merge test → main + Deploy a Render ────────────────────
   auto-merge:
-    if: success() && github.ref_name == 'test'
+    if: success() && github.ref_name == 'test'   # Solo en test y si todo OK
     needs: [lint, test-backend, test-frontend, sonarcloud, codeql]
     runs-on: ubuntu-latest
     permissions:
@@ -203,11 +226,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # Promueve el código de test a main (producción)
       - name: Push test → main
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git push origin HEAD:main
+      # Despliega en Render vía API
       - name: Deploy to Render
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
@@ -230,6 +255,7 @@ jobs:
             🌐 Desplegando en Render...
             📌 Siguiente: Notificación de deploy
 
+  # ── Job 8: Notificación de éxito ─────────────────────────────────────────
   notify-success:
     if: success()
     needs: [lint, test-backend, test-frontend, codeql]
@@ -251,6 +277,7 @@ jobs:
             ✅ Lint · ✅ Tests Backend · ✅ Tests Frontend · ✅ SonarCloud · ✅ CodeQL
             🚀 Mergeando a \`main\` + Desplegando en Render...' }}
 
+  # ── Job 9: Notificación de fallo ─────────────────────────────────────────
   notify-failure:
     if: failure()
     needs: [lint, test-backend, test-frontend, codeql]
@@ -277,6 +304,7 @@ jobs:
             👨‍💻 Revisa los logs y corrige antes de reintentar.
             🔗 [Ver workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
+  # ── Job 10: Notificación de cancelación ──────────────────────────────────
   notify-blocked:
     if: cancelled()
     runs-on: ubuntu-latest

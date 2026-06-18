@@ -1,13 +1,22 @@
+# =============================================================================
+# Deploy a Producción (rama main)
+# =============================================================================
+# Este pipeline se ejecuta al hacer push o merge a main.
+# Flujo: CodeQL → Deploy a Render
+# =============================================================================
+
 name: Deploy to Production
 
+# ── Disparadores ──────────────────────────────────────────────────────────────
 on:
   push:
-    branches: [main]
+    branches: [main]             # Push directo a main
   pull_request:
-    types: [closed]
+    types: [closed]              # PR mergeado a main
     branches: [main]
-  workflow_dispatch:
+  workflow_dispatch:             # Ejecución manual
 
+# ── Variables de entorno globales ────────────────────────────────────────────
 env:
   TELEGRAM_PREFIX: |
     🏷 *${{ github.repository }}*
@@ -17,6 +26,7 @@ env:
     🔗 [Ver commit](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
 
 jobs:
+  # ── Job 1: CodeQL (Análisis de seguridad en main) ─────────────────────────
   codeql:
     runs-on: ubuntu-latest
     permissions:
@@ -41,11 +51,13 @@ jobs:
             🔒 Sin vulnerabilidades críticas
             📌 Siguiente: Deploy a Render
 
+  # ── Job 2: Deploy a Render ───────────────────────────────────────────────
   deploy:
     needs: codeql
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Dispara el deploy en Render vía API REST
       - name: Deploy to Render
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
@@ -55,6 +67,7 @@ jobs:
             -H "Content-Type: application/json"
       - name: Wait for deploy
         run: sleep 5
+      # Consulta el estado del deploy para mostrarlo en la notificación
       - name: Check deploy status
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
@@ -80,6 +93,7 @@ jobs:
             📌 [Dashboard Render](https://dashboard.render.com/web/${{ secrets.RENDER_SERVICE_ID }})
             📌 [Ver workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
+  # ── Job 3: Notificación de fallo ─────────────────────────────────────────
   notify-failure:
     if: failure()
     needs: [codeql, deploy]
