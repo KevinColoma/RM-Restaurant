@@ -74,4 +74,32 @@ describe('Customer CRUD', () => {
 
     expect(res.status).toBe(200);
   });
+
+  it('should return 500 when creating with missing required fields', async () => {
+    const res = await request(app)
+      .post('/api/customers')
+      .set('Cookie', [`jwt=${token}`])
+      .send({ name: '' });
+
+    expect(res.status).toBe(500);
+  });
+
+  it('should return 404 when deleting non-existent customer', async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .delete(`/api/customers/${fakeId}`)
+      .set('Cookie', [`jwt=${token}`]);
+
+    expect(res.status).toBe(404);
+  });
+
+  it('should return 404 when updating non-existent customer', async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .put(`/api/customers/${fakeId}`)
+      .set('Cookie', [`jwt=${token}`])
+      .send({ name: 'Nobody' });
+
+    expect(res.status).toBe(404);
+  });
 });

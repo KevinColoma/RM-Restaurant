@@ -6,7 +6,7 @@ registerRoute('/menu-edit/', async (app) => {
   app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
 
   const hash = window.location.hash;
-  const id = hash.replace('#/menu-edit/', '') || hash.replace('#/menu-edit/', '');
+  const id = hash.replace('#/menu-edit/', '');
   if (!id) {
     app.innerHTML = '<div class="page-wrapper"><div class="content"><p class="text-danger">Invalid menu item ID.</p></div></div>';
     return;

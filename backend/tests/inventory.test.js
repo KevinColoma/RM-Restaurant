@@ -1,4 +1,5 @@
 const request = require('supertest');
+const mongoose = require('mongoose');
 const { setupDB, teardownDB } = require('./helpers/db');
 const Rol = require('../models/Rol');
 const Persona = require('../models/Persona');
@@ -78,5 +79,33 @@ describe('Inventory CRUD', () => {
       .set('Cookie', [`jwt=${token}`]);
 
     expect(res.status).toBe(200);
+  });
+
+  it('should return 400 when creating with invalid data', async () => {
+    const res = await request(app)
+      .post('/api/addinventory')
+      .set('Cookie', [`jwt=${token}`])
+      .send({ name: '' });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('should return 404 when updating non-existent item', async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .put(`/api/inventory/${fakeId}`)
+      .set('Cookie', [`jwt=${token}`])
+      .send({ name: 'Ghost' });
+
+    expect(res.status).toBe(404);
+  });
+
+  it('should return 404 when deleting non-existent item', async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .delete(`/api/inventory/${fakeId}`)
+      .set('Cookie', [`jwt=${token}`]);
+
+    expect(res.status).toBe(404);
   });
 });

@@ -13,6 +13,7 @@ module.exports = {
     'models/**/*.js',
     'routes/**/*.js',
     'utils/audit.js',
+    'utils/reportUtils.js',
     '!**/node_modules/**'
   ],
   coverageReporters: ['lcov', 'text', 'clover'],
