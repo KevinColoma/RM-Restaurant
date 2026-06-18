@@ -32,8 +32,10 @@ if (process.env.NODE_ENV !== 'test') {
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-
 app.use(express.static(path.join(__dirname, 'public')));
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '..', 'frontend', 'dist')));
+}
 
 app.set('view engine', 'ejs');
 
@@ -53,14 +55,9 @@ app.use((req,res,next)=>{
     next();
 })
 
-
-
-
-
 app.use(webRoutes);
 
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '..', 'frontend', 'dist')));
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'frontend', 'dist', 'index.html'));
   });

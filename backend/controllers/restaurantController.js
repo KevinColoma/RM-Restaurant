@@ -11,7 +11,7 @@ exports.SignUp = async function (req, res) {
     const { email, ownerName, restaurantName, city, address, mobile, password } = req.body;
 
     try {
-        const existingUser = await Usuario.findOne({ username: email });
+        const existingUser = await Usuario.findOne({ username: String(email) });
         if (existingUser) {
             return res.status(400).json({ success: false, message: 'Email is already in use.' });
         }
@@ -50,7 +50,7 @@ exports.SignIn = async function (req, res) {
     const { email, password } = req.body;
 
     try {
-        const usuario = await Usuario.findOne({ username: email });
+        const usuario = await Usuario.findOne({ username: String(email) });
 
         if (!usuario) {
             return res.json({

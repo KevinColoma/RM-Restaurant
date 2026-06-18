@@ -18,11 +18,8 @@ exports.addItem = async (req, res) => {
     try {
       const personaId = req.personaId;
       
-      // Create a new item with the personaId included in the body
-      const newItem = new InventoryItem({
-        ...req.body,
-        personaId
-      });
+      const { name, quantity, price, supplier } = req.body;
+      const newItem = new InventoryItem({ name, quantity, price, supplier, personaId });
       
       await newItem.save();
       await logAudit(req, 'create', 'InventoryItem', newItem._id, 'Created inventory item: ' + req.body.name);
