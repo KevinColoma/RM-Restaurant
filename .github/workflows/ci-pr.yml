@@ -80,7 +80,25 @@ jobs:
       - uses: github/codeql-action/autobuild@v3
       - uses: github/codeql-action/analyze@v3
 
-  notify:
+  notify-success:
+    if: success()
+    needs: [lint, test-backend, test-frontend, sonarcloud, codeql]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/telegram-action@v1.0.1
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            ✅ *CI Exitoso — ${{ github.repository }}*
+            Rama: `${{ github.ref_name }}`
+            Commit: `${{ github.sha }}`
+            Autor: ${{ github.actor }}
+            Workflow: ${{ github.workflow }}
+            [Ver detalles](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+  notify-failure:
     if: failure()
     needs: [lint, test-backend, test-frontend, sonarcloud, codeql]
     runs-on: ubuntu-latest

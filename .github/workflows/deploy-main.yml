@@ -91,10 +91,11 @@ jobs:
             Commit: `${{ github.sha }}`
             Autor: ${{ github.actor }}
             [Ver en Render](https://dashboard.render.com/web/${{ secrets.RENDER_SERVICE_ID }})
+            [Workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
   notify-failure:
     if: failure()
-    needs: deploy
+    needs: [lint, test, sonarcloud, codeql, deploy]
     runs-on: ubuntu-latest
     steps:
       - uses: appleboy/telegram-action@v1.0.1
@@ -106,4 +107,6 @@ jobs:
             ❌ *Deploy Falló — ${{ github.repository }}*
             Rama: `main`
             Commit: `${{ github.sha }}`
+            Autor: ${{ github.actor }}
+            Workflow: ${{ github.workflow }}
             [Ver detalles](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})

@@ -38,7 +38,8 @@ jobs:
             -H "Authorization: Bearer $RENDER_API_KEY" \
             -H "Content-Type: application/json"
 
-  notify:
+  notify-success:
+    if: success()
     needs: [build, sonarcloud, deploy]
     runs-on: ubuntu-latest
     steps:
@@ -54,3 +55,21 @@ jobs:
             Autor: ${{ github.actor }}
             [Ver release](${{ github.event.release.html_url }})
             [Workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+  notify-failure:
+    if: failure()
+    needs: [build, sonarcloud, deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/telegram-action@v1.0.1
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            ❌ *Release Falló — ${{ github.repository }}*
+            Tag: `${{ github.event.release.tag_name }}`
+            Nombre: ${{ github.event.release.name }}
+            Autor: ${{ github.actor }}
+            Workflow: ${{ github.workflow }}
+            [Ver detalles](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
