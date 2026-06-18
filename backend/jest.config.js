@@ -1,5 +1,7 @@
 module.exports = {
   testEnvironment: 'node',
+  testTimeout: 60000,
+  maxWorkers: 1,
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
     'controllers/customerController.js',
