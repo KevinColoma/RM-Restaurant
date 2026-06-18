@@ -32,6 +32,7 @@ export default [
         moment: 'readonly',
         bootstrap: 'readonly',
         FileUploadWithPreview: 'readonly',
+        global: 'readonly',
       },
     },
   },

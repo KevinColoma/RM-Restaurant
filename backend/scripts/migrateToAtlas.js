@@ -1,7 +1,8 @@
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const mongoose = require('mongoose');
 
-const LOCAL_URI = 'mongodb://localhost:27017/rms';
-const ATLAS_URI = 'mongodb://kevin:kevin321@ac-9qn6otc-shard-00-00.mgh7dy5.mongodb.net:27017,ac-9qn6otc-shard-00-01.mgh7dy5.mongodb.net:27017,ac-9qn6otc-shard-00-02.mgh7dy5.mongodb.net:27017/rms?tls=true&authSource=admin&retryWrites=true&w=majority&serverSelectionTimeoutMS=15000';
+const LOCAL_URI = process.env.LOCAL_URI || 'mongodb://localhost:27017/rms';
+const ATLAS_URI = process.env.MONGODB_URI;
 
 async function migrate() {
   console.log('Conectando a MongoDB local...');

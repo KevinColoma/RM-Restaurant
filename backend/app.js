@@ -9,7 +9,6 @@ const multer = require('multer');
 const webRoutes = require('./routes/restaurantRoutes')
 const port = process.env.PORT
 const app = express()
-connectDB();
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'public/uploads'),
@@ -20,6 +19,10 @@ app.use((req, res, next) => { req.upload = upload; next(); });
 
 
 app.use(cookieParser());
+
+if (process.env.NODE_ENV !== 'test') {
+  connectDB();
+}
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -62,4 +65,8 @@ app.use((req, res) => {
   res.status(404).render('404');
 });
 
-app.listen(port, () => console.log(`RMS app listening on port ${port}!`)) 
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(port, () => console.log(`RMS app listening on port ${port}!`));
+}
+
+module.exports = app; 

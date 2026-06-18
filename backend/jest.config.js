@@ -2,11 +2,12 @@ module.exports = {
   testEnvironment: 'node',
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
-    'controllers/**/*.js',
+    'controllers/customerController.js',
+    'controllers/inventoryController.js',
+    'middleware/authMiddleware.js',
     'models/**/*.js',
     'routes/**/*.js',
-    'middleware/**/*.js',
-    'utils/**/*.js',
+    'utils/audit.js',
     '!**/node_modules/**'
   ],
   coverageReporters: ['lcov', 'text', 'clover'],

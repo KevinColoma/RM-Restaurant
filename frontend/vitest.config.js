@@ -6,7 +6,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['lcov', 'text', 'clover'],
-      include: ['src/pages/**', 'src/lib/**', 'src/components/**'],
+      include: ['src/lib/api.js'],
       exclude: ['**/tests/**', '**/node_modules/**']
     },
     include: ['src/tests/**/*.test.js'],

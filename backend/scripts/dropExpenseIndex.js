@@ -1,5 +1,6 @@
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/rms').then(async () => {
+mongoose.connect(process.env.LOCAL_URI || 'mongodb://localhost:27017/rms').then(async () => {
   const db = mongoose.connection.db;
   try {
     await db.collection('expenses').dropIndex('invoiceNumber_1');
