@@ -321,7 +321,7 @@ const translations = {
     'form.address': 'Dirección',
     'form.email': 'Correo Electrónico',
     'form.mobile': 'Teléfono',
-    'form.password': 'Contraseña',
+    'form.password': 'Contraseña', // NOSONAR - translation label, not a real credential
     'form.customer_name': 'Nombre del Cliente',
     'form.phone': 'Teléfono',
     'form.branch_name': 'Nombre del Restaurante',

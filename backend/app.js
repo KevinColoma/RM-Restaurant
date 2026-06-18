@@ -14,6 +14,7 @@ const multer = require('multer');
 const webRoutes = require('./routes/restaurantRoutes')
 const port = process.env.PORT
 const app = express()
+app.disable('x-powered-by');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'public/uploads'),
