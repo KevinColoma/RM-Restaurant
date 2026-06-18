@@ -4,6 +4,9 @@ module.exports = {
   maxWorkers: 1,
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
+    'app.js',
+    'db.js',
+    'jwt.js',
     'controllers/customerController.js',
     'controllers/inventoryController.js',
     'middleware/authMiddleware.js',
