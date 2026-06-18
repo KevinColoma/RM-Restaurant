@@ -41,8 +41,7 @@ describe('authMiddleware', () => {
 
   it('should redirect to signin when user is not found', async () => {
     jwtUtils.verifyToken.mockResolvedValue({ usuarioId: 'nonexistent' });
-    const mockQuery = { populate: jest.fn().mockReturnThis(), then: jest.fn(resolve => resolve(null)) };
-    Usuario.findById.mockReturnValue(mockQuery);
+    Usuario.findById.mockReturnValue({ populate: jest.fn().mockResolvedValue(null) });
     const { requireAuth } = require('../middleware/authMiddleware');
     const { req, res } = mockReqRes();
     req.cookies.jwt = 'valid-token';
@@ -72,8 +71,9 @@ describe('authMiddleware', () => {
     const personaId = { _id: '507f1f77bcf86cd799439012', ownerName: 'Test', restaurantName: 'Test Rest', avatar: 'pic.jpg' };
 
     jwtUtils.verifyToken.mockResolvedValue({ usuarioId: userId });
-    const mockQuery = { populate: jest.fn().mockReturnThis(), then: jest.fn(resolve => resolve({ _id: userId, personaId })) };
-    Usuario.findById.mockReturnValue(mockQuery);
+    Usuario.findById.mockReturnValue({
+      populate: jest.fn().mockResolvedValue({ _id: userId, personaId })
+    });
 
     const { requireAuth } = require('../middleware/authMiddleware');
     const { req, res } = mockReqRes();

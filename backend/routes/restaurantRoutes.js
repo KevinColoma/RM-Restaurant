@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const restaurantController = require('../controllers/restaurantController')
 const {requireAuth} = require('../middleware/authMiddleware')
-const { requireRole } = require('../middleware/roleMiddleware')
 const menuController = require('../controllers/menuController')
 const orderController = require('../controllers/orderController')
 const reportController = require('../controllers/reportController')
@@ -43,11 +42,11 @@ router.post('/api/log-out',restaurantController.LogOut)
 router.get('/api/personas', requireAuth, restaurantController.getPersonas)
 
 // All menu relate routes are here
-router.get('/addmenupage',requireAuth,requireRole('admin'),(req,res)=>{
+router.get('/addmenupage',requireAuth,(req,res)=>{
     res.render('add-item')
 })
 
-router.get('/edit-item/:id', requireAuth, requireRole('admin'), async (req, res) => {
+router.get('/edit-item/:id', requireAuth, async (req, res) => {
     try {
         const Menu = require('../models/menu');
         const menu = await Menu.findOne({ _id: req.params.id, personaId: req.personaId });
@@ -60,41 +59,41 @@ router.get('/edit-item/:id', requireAuth, requireRole('admin'), async (req, res)
 
 router.get('/pos',requireAuth,menuController.GetPos)
 router.get('/getmenu',requireAuth,menuController.GetMenu)
-router.post('/api/addmenu',requireAuth,requireRole('admin'),menuController.AddMenu)
-router.put('/api/menu/:id',requireAuth,requireRole('admin'),menuController.UpdateMenu)
-router.delete('/api/menu/:id',requireAuth,requireRole('admin'),menuController.DeleteMenu)
+router.post('/api/addmenu',requireAuth,menuController.AddMenu)
+router.put('/api/menu/:id',requireAuth,menuController.UpdateMenu)
+router.delete('/api/menu/:id',requireAuth,menuController.DeleteMenu)
 router.post ('/api/placeorder',requireAuth,orderController.PlaceOrder)
 router.get('/orders-list', requireAuth, orderController.GetOrders)
 
 // All report releted  routes 
 
-router.get('/chart-js',requireAuth,requireRole('admin'),(req,res)=>{
+router.get('/chart-js',requireAuth,(req,res)=>{
 
     res.render('chart-js')
 
 })
 
-router.get('/api/reports/sales',requireRole('admin'),reportController.sales)
-router.get('/api/reports/orders',requireRole('admin'),reportController.orders)
+router.get('/api/reports/sales',reportController.sales)
+router.get('/api/reports/orders',reportController.orders)
 
 // All report releted  routes 
 
-router.get('/datechart',requireAuth,requireRole('admin'),(req,res)=>{
+router.get('/datechart',requireAuth,(req,res)=>{
 
     res.render('datechart')
 
 })
 
-router.get('/api/reports/sales-by-date',requireRole('admin'),datereportController.salesByDate)
-router.get('/api/reports/orders-by-date',requireRole('admin'),datereportController.ordersByDate)
+router.get('/api/reports/sales-by-date',datereportController.salesByDate)
+router.get('/api/reports/orders-by-date',datereportController.ordersByDate)
 
 
 //inventroy coontroller routes 
-router.get('/addinventory',requireAuth,requireRole('admin'),inventoryController.addInventory)
+router.get('/addinventory',requireAuth,inventoryController.addInventory)
 
-router.post('/api/addinventory',requireAuth,requireRole('admin'), inventoryController.addItem);
-router.get('/get-expense-list',requireAuth,requireRole('admin'),inventoryController.getItem)
-router.get('/edit-inventory/:id', requireAuth, requireRole('admin'), async (req, res) => {
+router.post('/api/addinventory',requireAuth, inventoryController.addItem);
+router.get('/get-expense-list',requireAuth,inventoryController.getItem)
+router.get('/edit-inventory/:id', requireAuth, async (req, res) => {
     try {
         const InventoryItem = require('../models/InventoryItem');
         const Supplier = require('../models/Supplier');
@@ -106,30 +105,30 @@ router.get('/edit-inventory/:id', requireAuth, requireRole('admin'), async (req,
         res.status(500).send(err.message);
     }
 })
-router.put('/api/inventory/:id',requireAuth,requireRole('admin'),inventoryController.updateItem)
-router.delete('/api/inventory/:id',requireAuth,requireRole('admin'),inventoryController.deleteInventory );
+router.put('/api/inventory/:id',requireAuth,inventoryController.updateItem)
+router.delete('/api/inventory/:id',requireAuth,inventoryController.deleteInventory );
 
 
 
 // suppliers related routes 
 
 
-router.post('/api/suppliers',requireAuth,requireRole('admin'), supplierController.createSupplier);
-router.get('/api/suppliers',requireAuth,requireRole('admin'), supplierController.getSuppliers);
-router.get('/suppliers-list', requireAuth, requireRole('admin'), supplierController.getSuppliersPage);
-router.get('/api/suppliers/:id' ,requireAuth,requireRole('admin'), supplierController.getSupplierById);
-router.put('/api/suppliers/:id' ,requireAuth,requireRole('admin'), supplierController.updateSupplier);
-router.delete('/api/suppliers/:id' ,requireAuth,requireRole('admin'), supplierController.deleteSupplier);
+router.post('/api/suppliers',requireAuth, supplierController.createSupplier);
+router.get('/api/suppliers',requireAuth, supplierController.getSuppliers);
+router.get('/suppliers-list', requireAuth, supplierController.getSuppliersPage);
+router.get('/api/suppliers/:id' ,requireAuth, supplierController.getSupplierById);
+router.put('/api/suppliers/:id' ,requireAuth, supplierController.updateSupplier);
+router.delete('/api/suppliers/:id' ,requireAuth, supplierController.deleteSupplier);
 
 
 //all expense related rouets are here 
 
-router.get('/addexpense',requireAuth,requireRole('admin'),expenseController.addExpensePage)
+router.get('/addexpense',requireAuth,expenseController.addExpensePage)
 
 
-router.post('/api/addexpense',requireAuth,requireRole('admin'),expenseController.addExpense)
-router.get('/getexpense',requireAuth,requireRole('admin'), expenseController.getExpense);
-router.delete('/api/expense/:id', requireAuth, requireRole('admin'), expenseController.deleteExpense);
+router.post('/api/addexpense',requireAuth,expenseController.addExpense)
+router.get('/getexpense',requireAuth, expenseController.getExpense);
+router.delete('/api/expense/:id', requireAuth, expenseController.deleteExpense);
 
 
 
@@ -142,24 +141,24 @@ router.delete('/api/customers/:id', requireAuth, customerController.deleteCustom
 
 // branch related routes
 
-router.get('/branches', requireAuth, requireRole('admin'), branchController.getBranches)
-router.get('/add-branch', requireAuth, requireRole('admin'), branchController.addBranchPage)
-router.post('/api/branches', requireAuth, requireRole('admin'), branchController.createBranch)
-router.get('/api/branches/:id', requireAuth, requireRole('admin'), branchController.getBranchById)
-router.put('/api/branches/:id', requireAuth, requireRole('admin'), branchController.updateBranch)
-router.delete('/api/branches/:id', requireAuth, requireRole('admin'), branchController.deleteBranch)
+router.get('/branches', requireAuth, branchController.getBranches)
+router.get('/add-branch', requireAuth, branchController.addBranchPage)
+router.post('/api/branches', requireAuth, branchController.createBranch)
+router.get('/api/branches/:id', requireAuth, branchController.getBranchById)
+router.put('/api/branches/:id', requireAuth, branchController.updateBranch)
+router.delete('/api/branches/:id', requireAuth, branchController.deleteBranch)
 
 // purchase related routes
 
-router.get('/purchase-list', requireAuth, requireRole('admin'), purchaseController.listPurchases)
-router.get('/add-purchase', requireAuth, requireRole('admin'), purchaseController.addPurchasePage)
-router.post('/api/purchases', requireAuth, requireRole('admin'), purchaseController.createPurchase)
-router.get('/api/purchases/:id', requireAuth, requireRole('admin'), purchaseController.getPurchaseById)
-router.delete('/api/purchases/:id', requireAuth, requireRole('admin'), purchaseController.deletePurchase)
+router.get('/purchase-list', requireAuth, purchaseController.listPurchases)
+router.get('/add-purchase', requireAuth, purchaseController.addPurchasePage)
+router.post('/api/purchases', requireAuth, purchaseController.createPurchase)
+router.get('/api/purchases/:id', requireAuth, purchaseController.getPurchaseById)
+router.delete('/api/purchases/:id', requireAuth, purchaseController.deletePurchase)
 
 // expense edit routes
 
-router.get('/edit-expense/:id', requireAuth, requireRole('admin'), async (req, res) => {
+router.get('/edit-expense/:id', requireAuth, async (req, res) => {
     try {
         const expense = await Expense.findOne({ _id: req.params.id, personaId: req.personaId });
         if (!expense) return res.status(404).send('Expense not found');
@@ -168,7 +167,7 @@ router.get('/edit-expense/:id', requireAuth, requireRole('admin'), async (req, r
         res.status(500).send('Server Error');
     }
 })
-router.put('/api/expense/:id', requireAuth, requireRole('admin'), expenseController.updateExpense)
+router.put('/api/expense/:id', requireAuth, expenseController.updateExpense)
 
 // Profile routes
 router.get('/profile', requireAuth, profileController.getProfile)
@@ -177,33 +176,33 @@ router.post('/api/profile/avatar', requireAuth, (req, res, next) => { req.upload
 router.put('/api/profile/password', requireAuth, profileController.changePassword)
 
 // Settings routes
-router.get('/settings', requireAuth, requireRole('admin'), settingsController.getSettings)
-router.put('/api/settings', requireAuth, requireRole('admin'), settingsController.updateSettings)
+router.get('/settings', requireAuth, settingsController.getSettings)
+router.put('/api/settings', requireAuth, settingsController.updateSettings)
 
 // Export routes
-router.get('/export/menu/csv', requireAuth, requireRole('admin'), exportController.exportMenuCsv)
-router.get('/export/menu/pdf', requireAuth, requireRole('admin'), exportController.exportMenuPdf)
-router.get('/export/orders/csv', requireAuth, requireRole('admin'), exportController.exportOrdersCsv)
-router.get('/export/orders/pdf', requireAuth, requireRole('admin'), exportController.exportOrdersPdf)
-router.get('/export/customers/csv', requireAuth, requireRole('admin'), exportController.exportCustomersCsv)
-router.get('/export/customers/pdf', requireAuth, requireRole('admin'), exportController.exportCustomersPdf)
-router.get('/export/expenses/csv', requireAuth, requireRole('admin'), exportController.exportExpensesCsv)
-router.get('/export/expenses/pdf', requireAuth, requireRole('admin'), exportController.exportExpensesPdf)
-router.get('/export/inventory/csv', requireAuth, requireRole('admin'), exportController.exportInventoryCsv)
-router.get('/export/inventory/pdf', requireAuth, requireRole('admin'), exportController.exportInventoryPdf)
-router.get('/export/branches/csv', requireAuth, requireRole('admin'), exportController.exportBranchesCsv)
-router.get('/export/branches/pdf', requireAuth, requireRole('admin'), exportController.exportBranchesPdf)
-router.get('/export/suppliers/csv', requireAuth, requireRole('admin'), exportController.exportSuppliersCsv)
-router.get('/export/suppliers/pdf', requireAuth, requireRole('admin'), exportController.exportSuppliersPdf)
-router.get('/export/sales/csv', requireAuth, requireRole('admin'), exportController.exportSalesCsv)
-router.get('/export/sales/pdf', requireAuth, requireRole('admin'), exportController.exportSalesPdf)
-router.get('/export/purchases/csv', requireAuth, requireRole('admin'), exportController.exportPurchasesCsv)
-router.get('/export/purchases/pdf', requireAuth, requireRole('admin'), exportController.exportPurchasesPdf)
+router.get('/export/menu/csv', requireAuth, exportController.exportMenuCsv)
+router.get('/export/menu/pdf', requireAuth, exportController.exportMenuPdf)
+router.get('/export/orders/csv', requireAuth, exportController.exportOrdersCsv)
+router.get('/export/orders/pdf', requireAuth, exportController.exportOrdersPdf)
+router.get('/export/customers/csv', requireAuth, exportController.exportCustomersCsv)
+router.get('/export/customers/pdf', requireAuth, exportController.exportCustomersPdf)
+router.get('/export/expenses/csv', requireAuth, exportController.exportExpensesCsv)
+router.get('/export/expenses/pdf', requireAuth, exportController.exportExpensesPdf)
+router.get('/export/inventory/csv', requireAuth, exportController.exportInventoryCsv)
+router.get('/export/inventory/pdf', requireAuth, exportController.exportInventoryPdf)
+router.get('/export/branches/csv', requireAuth, exportController.exportBranchesCsv)
+router.get('/export/branches/pdf', requireAuth, exportController.exportBranchesPdf)
+router.get('/export/suppliers/csv', requireAuth, exportController.exportSuppliersCsv)
+router.get('/export/suppliers/pdf', requireAuth, exportController.exportSuppliersPdf)
+router.get('/export/sales/csv', requireAuth, exportController.exportSalesCsv)
+router.get('/export/sales/pdf', requireAuth, exportController.exportSalesPdf)
+router.get('/export/purchases/csv', requireAuth, exportController.exportPurchasesCsv)
+router.get('/export/purchases/pdf', requireAuth, exportController.exportPurchasesPdf)
 
 // Order cancel route
-router.delete('/api/orders/:id', requireAuth, requireRole('admin'), orderController.deleteOrder)
+router.delete('/api/orders/:id', requireAuth, orderController.deleteOrder)
 
 // Audit log route
-router.get('/audit-log', requireAuth, requireRole('admin'), auditController.getAuditLog)
+router.get('/audit-log', requireAuth, auditController.getAuditLog)
 
 module.exports = router;
