@@ -7,8 +7,7 @@
     "start": "node app.js",
     "dev": "nodemon app.js",
     "test": "jest --forceExit --detectOpenHandles",
-    "lint": "eslint .",
-    "seed": "node scripts/seed.js"
+    "lint": "eslint ."
   },
   "author": "",
   "license": "ISC",
