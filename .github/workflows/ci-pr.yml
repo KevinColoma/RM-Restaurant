@@ -51,6 +51,7 @@ jobs:
           path: frontend/coverage/
 
   sonarcloud:
+    if: github.ref_name == 'test'
     needs: [test-backend, test-frontend]
     runs-on: ubuntu-latest
     steps:
@@ -82,7 +83,7 @@ jobs:
 
   sync-to-test:
     if: success() && github.ref_name == 'dev'
-    needs: [lint, test-backend, test-frontend, sonarcloud, codeql]
+    needs: [lint, test-backend, test-frontend, codeql]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -142,12 +143,14 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           format: markdown
           message: |
-            ✅ *CI Exitoso — ${{ github.repository }}*
+            ${{ github.ref_name == 'dev' && '🟢' || '🟢' }} *CI ${{ github.ref_name == 'dev' && 'Dev' || 'Test' }} Exitoso — ${{ github.repository }}*
             Rama: `${{ github.ref_name }}`
-            Commit: `${{ github.sha }}`
+            Commit: [`${{ github.sha }}`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
             Autor: ${{ github.actor }}
-            Workflow: ${{ github.workflow }}
-            [Ver detalles](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            Jobs: ✅ lint · ✅ test-backend · ✅ test-frontend ${{ github.ref_name == 'test' && '· ✅ sonarcloud' || '' }} · ✅ codeql
+            ${{ github.ref_name == 'dev' && '🔄 Sincronizando a test...' || '' }}
+            ${{ github.ref_name == 'test' && '🔀 Mergeando a main...' || '' }}
+            [Ver workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
   notify-failure:
     if: failure()
@@ -160,9 +163,9 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           format: markdown
           message: |
-            ❌ *CI Falló — ${{ github.repository }}*
+            ❌ *CI ${{ github.ref_name == 'dev' && 'Dev' || 'Test' }} Falló — ${{ github.repository }}*
             Rama: `${{ github.ref_name }}`
-            Commit: `${{ github.sha }}`
+            Commit: [`${{ github.sha }}`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
             Autor: ${{ github.actor }}
-            Workflow: ${{ github.workflow }}
-            [Ver detalles](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            🔴 Se detuvo el pipeline. No pasa a la siguiente fase.
+            [Ver workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})

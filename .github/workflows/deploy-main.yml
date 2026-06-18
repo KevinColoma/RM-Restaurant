@@ -9,46 +9,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
-      - run: cd backend && npm ci
-      - run: cd backend && npx eslint .
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: cd backend && npm ci
-      - run: cd backend && npm test -- --coverage
-      - uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: backend/coverage/
-
-  sonarcloud:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: coverage
-          path: backend/coverage/
-      - uses: sonarsource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
   codeql:
     runs-on: ubuntu-latest
     permissions:
@@ -62,12 +22,10 @@ jobs:
       - uses: github/codeql-action/analyze@v3
 
   deploy:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
-    needs: [lint, test, sonarcloud, codeql]
+    needs: codeql
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Deploy to Render
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
@@ -87,16 +45,17 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           format: markdown
           message: |
-            ✅ *Deploy exitoso — ${{ github.repository }}*
+            🚀 *Deploy exitoso — ${{ github.repository }}*
             Rama: `main`
-            Commit: `${{ github.sha }}`
+            Commit: [`${{ github.sha }}`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
             Autor: ${{ github.actor }}
+            🌐 Aplicación desplegada en Render
             [Ver en Render](https://dashboard.render.com/web/${{ secrets.RENDER_SERVICE_ID }})
             [Workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
   notify-failure:
     if: failure()
-    needs: [lint, test, sonarcloud, codeql, deploy]
+    needs: [codeql, deploy]
     runs-on: ubuntu-latest
     steps:
       - uses: appleboy/telegram-action@v1.0.1
@@ -107,7 +66,7 @@ jobs:
           message: |
             ❌ *Deploy Falló — ${{ github.repository }}*
             Rama: `main`
-            Commit: `${{ github.sha }}`
+            Commit: [`${{ github.sha }}`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
             Autor: ${{ github.actor }}
-            Workflow: ${{ github.workflow }}
-            [Ver detalles](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            🔴 No se pudo desplegar en Render
+            [Ver workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
