@@ -57,6 +57,26 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # Consulta métricas de SonarCloud vía API para incluirlas en la notificación
+      - name: Fetch SonarCloud metrics
+        id: sonar-metrics
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          curl -s -u "$SONAR_TOKEN:" \
+            "https://sonarcloud.io/api/measures/component?component=KevinColoma_RM-Restaurant&metricKeys=alert_status,coverage,bugs,code_smells,vulnerabilities,security_hotspots" \
+            | python3 -c "
+          import sys, json
+          d = json.load(sys.stdin)
+          measures = {m['metric']: m['value'] for m in d.get('component',{}).get('measures',[])}
+          qg = '✅ Passed' if measures.get('alert_status') == 'OK' else '❌ Failed'
+          print(f'SONAR_QG={qg}')
+          print(f'SONAR_COV={measures.get(\"coverage\",\"N/A\")}%')
+          print(f'SONAR_BUGS={measures.get(\"bugs\",\"?\")}')
+          print(f'SONAR_SMELLS={measures.get(\"code_smells\",\"?\")}')
+          print(f'SONAR_VULNS={measures.get(\"vulnerabilities\",\"?\")}')
+          print(f'SONAR_HOTSPOTS={measures.get(\"security_hotspots\",\"?\")}')
+          " >> $GITHUB_ENV
       - name: Notify SonarCloud result
         uses: appleboy/telegram-action@v1.0.1
         with:
@@ -66,8 +86,14 @@ jobs:
           message: |
             ${{ env.TELEGRAM_PREFIX }}
             ─────────────────────
-            ✅ *SonarCloud completado*
-            🔍 Quality Gate verificado
+            ${{ env.SONAR_QG }}
+            📈 Coverage: ${{ env.SONAR_COV }}
+            🐛 Bugs: ${{ env.SONAR_BUGS }}
+            💨 Code Smells: ${{ env.SONAR_SMELLS }}
+            🔒 Vulnerabilities: ${{ env.SONAR_VULNS }}
+            ⚡ Hotspots: ${{ env.SONAR_HOTSPOTS }}
+            ─────────────────────
+            🔗 [Ver reporte en SonarCloud](https://sonarcloud.io/project/overview?id=KevinColoma_RM-Restaurant)
             📌 Siguiente: Deploy a Render
 
   # ── Job 3: Deploy a Render ───────────────────────────────────────────────
