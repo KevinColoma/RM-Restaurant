@@ -10,7 +10,7 @@ const requireAuth = async (req, res, next) => {
             return res.redirect('/signin');
         }
 
-        const usuario = await Usuario.findById(decoded.usuarioId).populate('personaId');
+        const usuario = await Usuario.findById(decoded.usuarioId).populate('personaId').populate('rolId');
         if (!usuario) {
             return res.redirect('/signin');
         }
