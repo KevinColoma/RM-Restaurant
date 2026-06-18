@@ -1,5 +1,10 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
+if (process.env.NODE_ENV === 'test') {
+  process.env.SESSION_SECRET = process.env.SESSION_SECRET || 'test-session-secret';
+  process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret';
+  process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/test';
+}
 const express = require('express')
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser'); 
