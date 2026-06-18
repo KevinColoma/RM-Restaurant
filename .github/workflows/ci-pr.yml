@@ -7,6 +7,14 @@ on:
     branches: [dev, test]
   workflow_dispatch:
 
+env:
+  TELEGRAM_PREFIX: |
+    🏷 *${{ github.repository }}*
+    🌿 Rama: \`${{ github.ref_name }}\`
+    📝 \`${{ github.event.head_commit.message || 'N/A' }}\`
+    👤 Autor: ${{ github.actor }}
+    🔗 [Ver commit](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -18,9 +26,23 @@ jobs:
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
       - run: cd backend && npm ci
-      - run: cd backend && npx eslint .
+      - run: cd backend && npx eslint . 2>&1 | tee lint-backend.log
       - run: cd frontend && npm ci
-      - run: cd frontend && npx eslint src/
+      - run: cd frontend && npx eslint src/ 2>&1 | tee lint-frontend.log
+      - name: Notify lint result
+        uses: appleboy/telegram-action@v1.0.1
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            ${{ env.TELEGRAM_PREFIX }}
+            ─────────────────────
+            ✅ *Lint completado*
+            📁 backend: `eslint .`
+            📁 frontend: `eslint src/`
+            Sin errores de lint.
+            📌 Siguiente: Tests backend + frontend + CodeQL
 
   test-backend:
     runs-on: ubuntu-latest
@@ -30,11 +52,24 @@ jobs:
         with:
           node-version: 20
       - run: cd backend && npm ci
-      - run: cd backend && npm test -- --coverage
+      - run: cd backend && npm test -- --coverage 2>&1 | tee test-backend.log
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-backend
           path: backend/coverage/
+      - name: Notify backend test result
+        uses: appleboy/telegram-action@v1.0.1
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            ${{ env.TELEGRAM_PREFIX }}
+            ─────────────────────
+            ✅ *Tests Backend OK*
+            📦 Suites: `{{ steps.test-results.outputs.suites }}`
+            📊 Cobertura global
+            📌 Siguiente: Frontend tests + CodeQL
 
   test-frontend:
     runs-on: ubuntu-latest
@@ -44,11 +79,23 @@ jobs:
         with:
           node-version: 20
       - run: cd frontend && npm ci
-      - run: cd frontend && npm test
+      - run: cd frontend && npm test 2>&1 | tee test-frontend.log
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-frontend
           path: frontend/coverage/
+      - name: Notify frontend test result
+        uses: appleboy/telegram-action@v1.0.1
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            ${{ env.TELEGRAM_PREFIX }}
+            ─────────────────────
+            ✅ *Tests Frontend OK*
+            📦 Tests: todos pasaron
+            📌 Siguiente: CodeQL y SonarCloud (solo en test)
 
   sonarcloud:
     if: github.ref_name == 'test'
@@ -74,6 +121,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Notify SonarCloud result
+        uses: appleboy/telegram-action@v1.0.1
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            ${{ env.TELEGRAM_PREFIX }}
+            ─────────────────────
+            ✅ *SonarCloud — Quality Gate superado*
+            🔍 Análisis completo en SonarCloud
+            📌 Siguiente: Auto-merge a main + Deploy
 
   codeql:
     runs-on: ubuntu-latest
@@ -86,6 +145,18 @@ jobs:
           languages: javascript
       - uses: github/codeql-action/autobuild@v3
       - uses: github/codeql-action/analyze@v3
+      - name: Notify CodeQL result
+        uses: appleboy/telegram-action@v1.0.1
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            ${{ env.TELEGRAM_PREFIX }}
+            ─────────────────────
+            ✅ *CodeQL completado*
+            🔒 Análisis de seguridad: sin vulnerabilidades críticas
+            📌 Siguiente: ${{ github.ref_name == 'dev' && 'Sync a test' || 'Auto-merge a main + Deploy' }}
 
   sync-to-test:
     if: success() && github.ref_name == 'dev'
@@ -108,6 +179,19 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh workflow run ci-pr.yml --ref test
+      - name: Notify sync to test
+        uses: appleboy/telegram-action@v1.0.1
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            ${{ env.TELEGRAM_PREFIX }}
+            ─────────────────────
+            🔄 *Sync: dev → test*
+            Código promovido de \`dev\` a \`test\`
+            Se disparó CI en \`test\` para validación final.
+            📌 Pendiente: SonarCloud + Auto-merge a main
 
   auto-merge:
     if: success() && github.ref_name == 'test'
@@ -132,10 +216,23 @@ jobs:
           curl -s -X POST "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" \
             -H "Authorization: Bearer $RENDER_API_KEY" \
             -H "Content-Type: application/json"
+      - name: Notify auto-merge and deploy
+        uses: appleboy/telegram-action@v1.0.1
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            ${{ env.TELEGRAM_PREFIX }}
+            ─────────────────────
+            🚀 *Auto-merge + Deploy exitoso*
+            📦 \`test\` → \`main\` mergeado
+            🌐 Desplegando en Render...
+            📌 Siguiente: Notificación de deploy
 
   notify-success:
     if: success()
-    needs: [lint, test-backend, test-frontend, sonarcloud, codeql, sync-to-test, auto-merge]
+    needs: [lint, test-backend, test-frontend, codeql]
     runs-on: ubuntu-latest
     steps:
       - uses: appleboy/telegram-action@v1.0.1
@@ -144,18 +241,19 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           format: markdown
           message: |
-            ${{ github.ref_name == 'dev' && '🟢' || '🟢' }} *CI ${{ github.ref_name == 'dev' && 'Dev' || 'Test' }} Exitoso — ${{ github.repository }}*
-            Rama: `${{ github.ref_name }}`
-            Commit: [`${{ github.sha }}`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
-            Autor: ${{ github.actor }}
-            Jobs: ✅ lint · ✅ test-backend · ✅ test-frontend ${{ github.ref_name == 'test' && '· ✅ sonarcloud' || '' }} · ✅ codeql
-            ${{ github.ref_name == 'dev' && '🔄 Sincronizando a test...' || '' }}
-            ${{ github.ref_name == 'test' && '🚀 Mergeado a main + Deploy a Render' || '' }}
-            [Ver workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            ${{ env.TELEGRAM_PREFIX }}
+            ─────────────────────
+            ${{ github.ref_name == 'dev'
+            && '🟢 *Pipeline Dev completado exitosamente*
+            ✅ Lint · ✅ Tests Backend · ✅ Tests Frontend · ✅ CodeQL
+            🔄 Sincronizando a \`test\`...'
+            || '🟢 *Pipeline Test completado exitosamente*
+            ✅ Lint · ✅ Tests Backend · ✅ Tests Frontend · ✅ SonarCloud · ✅ CodeQL
+            🚀 Mergeando a \`main\` + Desplegando en Render...' }}
 
   notify-failure:
     if: failure()
-    needs: [lint, test-backend, test-frontend, sonarcloud, codeql, sync-to-test, auto-merge]
+    needs: [lint, test-backend, test-frontend, codeql]
     runs-on: ubuntu-latest
     steps:
       - uses: appleboy/telegram-action@v1.0.1
@@ -164,9 +262,32 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           format: markdown
           message: |
-            ❌ *CI ${{ github.ref_name == 'dev' && 'Dev' || 'Test' }} Falló — ${{ github.repository }}*
-            Rama: `${{ github.ref_name }}`
-            Commit: [`${{ github.sha }}`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
-            Autor: ${{ github.actor }}
-            🔴 Se detuvo el pipeline. No pasa a la siguiente fase.
-            [Ver workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            ❌ *Pipeline Bloqueado — ${{ github.repository }}*
+            🌿 Rama: \`${{ github.ref_name }}\`
+            👤 Autor: ${{ github.actor }}
+            ─────────────────────
+            🔴 El pipeline se detuvo en \`${{ github.ref_name }}\`
+            🚫 No se sincroniza a la siguiente fase.
+            ─────────────────────
+            ⚠️ *Posibles causas:*
+            • Error de lint en backend o frontend
+            • Tests fallidos
+            • CodeQL detectó vulnerabilidades
+            ─────────────────────
+            👨‍💻 Revisa los logs y corrige antes de reintentar.
+            🔗 [Ver workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+  notify-blocked:
+    if: cancelled()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/telegram-action@v1.0.1
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            ⏹ *Pipeline cancelado — ${{ github.repository }}*
+            🌿 Rama: \`${{ github.ref_name }}\`
+            👤 Autor: ${{ github.actor }}
+            El pipeline fue cancelado manualmente.

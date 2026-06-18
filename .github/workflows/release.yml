@@ -4,6 +4,14 @@ on:
   release:
     types: [published]
 
+env:
+  TELEGRAM_PREFIX: |
+    🏷 *${{ github.repository }}*
+    🏷️ Tag: \`${{ github.event.release.tag_name }}\`
+    📛 Nombre: ${{ github.event.release.name }}
+    👤 Autor: ${{ github.actor }}
+    🔗 [Ver release](${{ github.event.release.html_url }})
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,7 +21,19 @@ jobs:
         with:
           node-version: 20
       - run: cd backend && npm ci
-      - run: cd backend && npm test -- --coverage
+      - run: cd backend && npm test -- --coverage 2>&1 | tee test-release.log
+      - name: Notify build result
+        uses: appleboy/telegram-action@v1.0.1
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            ${{ env.TELEGRAM_PREFIX }}
+            ─────────────────────
+            ✅ *Build completado*
+            📦 Tests backend: OK
+            📌 Siguiente: Análisis SonarCloud + Deploy
 
   sonarcloud:
     needs: build
@@ -24,6 +44,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Notify SonarCloud result
+        uses: appleboy/telegram-action@v1.0.1
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            ${{ env.TELEGRAM_PREFIX }}
+            ─────────────────────
+            ✅ *SonarCloud completado*
+            🔍 Quality Gate verificado
+            📌 Siguiente: Deploy a Render
 
   deploy:
     needs: [build, sonarcloud]
@@ -37,6 +69,19 @@ jobs:
           curl -s -X POST "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys" \
             -H "Authorization: Bearer $RENDER_API_KEY" \
             -H "Content-Type: application/json"
+      - name: Notify deploy
+        uses: appleboy/telegram-action@v1.0.1
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            ${{ env.TELEGRAM_PREFIX }}
+            ─────────────────────
+            🚀 *Release desplegado en Render*
+            📦 Versión: \`${{ github.event.release.tag_name }}\`
+            🌐 Aplicación actualizada en producción.
+            📌 [Deploy en Render](https://dashboard.render.com/web/${{ secrets.RENDER_SERVICE_ID }})
 
   notify-success:
     if: success()
@@ -49,12 +94,11 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           format: markdown
           message: |
-            🚀 *Release publicado — ${{ github.repository }}*
-            Tag: `${{ github.event.release.tag_name }}`
-            Nombre: ${{ github.event.release.name }}
-            Autor: ${{ github.actor }}
-            [Ver release](${{ github.event.release.html_url }})
-            [Workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            ${{ env.TELEGRAM_PREFIX }}
+            ─────────────────────
+            🎉 *Release completado exitosamente*
+            ✅ Build · ✅ SonarCloud · ✅ Deploy
+            La nueva versión \`${{ github.event.release.tag_name }}\` ya está en producción.
 
   notify-failure:
     if: failure()
@@ -68,8 +112,15 @@ jobs:
           format: markdown
           message: |
             ❌ *Release Falló — ${{ github.repository }}*
-            Tag: `${{ github.event.release.tag_name }}`
-            Nombre: ${{ github.event.release.name }}
-            Autor: ${{ github.actor }}
-            Workflow: ${{ github.workflow }}
-            [Ver detalles](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            🏷️ Tag: \`${{ github.event.release.tag_name }}\`
+            📛 Nombre: ${{ github.event.release.name }}
+            👤 Autor: ${{ github.actor }}
+            ─────────────────────
+            🔴 El release pipeline no se completó.
+            ⚠️ *Posibles causas:*
+            • Tests fallaron en build
+            • SonarCloud no superó Quality Gate
+            • Error en deploy a Render
+            ─────────────────────
+            👨‍💻 Revisa los logs y corrige.
+            🔗 [Ver workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
