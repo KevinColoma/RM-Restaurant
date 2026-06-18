@@ -9,6 +9,10 @@ export default defineConfig({
       include: ['src/pages/**', 'src/lib/**', 'src/components/**'],
       exclude: ['**/tests/**', '**/node_modules/**']
     },
-    include: ['src/tests/**/*.test.js']
+    include: ['src/tests/**/*.test.js'],
+    reporters: [
+      'default',
+      ['vitest-sonar-reporter', { outputFile: 'coverage/test-report.xml' }]
+    ]
   }
 });

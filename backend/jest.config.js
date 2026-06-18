@@ -10,5 +10,6 @@ module.exports = {
     '!**/node_modules/**'
   ],
   coverageReporters: ['lcov', 'text', 'clover'],
-  testMatch: ['**/tests/**/*.test.js']
+  testMatch: ['**/tests/**/*.test.js'],
+  testResultsProcessor: 'jest-sonar-reporter'
 };
