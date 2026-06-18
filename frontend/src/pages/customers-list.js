@@ -1,12 +1,12 @@
 import { registerRoute } from '../router.js';
-import { renderLayout } from '../components/Header.js';
+import { showLoading, showError, renderPage, bindDelete, extractList } from '../lib/listPage.js';
 import { get, put, del } from '../lib/api.js';
 
 registerRoute('/customers-list', async (app) => {
-  app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
+  showLoading(app);
   try {
     const res = await get('/customers');
-    const customers = res?.success ? (res.customers || res.data || []) : [];
+    const customers = extractList(res, 'customers');
     const rows = customers.length ? customers.map(c => {
       const date = c.createdAt ? new Date(c.createdAt).toDateString() : '-';
       return `<tr data-customer-id="${c._id}">
@@ -72,16 +72,9 @@ registerRoute('/customers-list', async (app) => {
 </div>
 </div>`;
 
-    renderLayout(app, 'customers-list', html);
+    renderPage(app, 'customers-list', html);
 
     setTimeout(() => {
-      if (typeof $ !== 'undefined' && $.fn.DataTable) {
-        const $dt = $(app.querySelector('.datanew'));
-        if ($dt.length && !$.fn.DataTable.isDataTable($dt[0])) {
-          $dt.DataTable({ pageLength: 10, bFilter: false });
-        }
-      }
-
       app.querySelectorAll('.edit-customer').forEach(btn => {
         btn.addEventListener('click', function(e) {
           e.preventDefault();
@@ -110,40 +103,12 @@ registerRoute('/customers-list', async (app) => {
                 } else {
                   Swal.fire('Error!', 'Failed to update.', 'error');
                 }
-              }).catch(() => {
-                Swal.fire('Error!', 'Failed to update.', 'error');
-              });
+              }).catch(() => Swal.fire('Error!', 'Failed to update.', 'error'));
             }
           });
         });
       });
-
-      app.querySelectorAll('.delete-customer').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-          e.preventDefault();
-          const id = this.getAttribute('data-id');
-          Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
-          }).then(result => {
-            if (result.isConfirmed) {
-              del('/customers/' + id).then(() => {
-                Swal.fire('Deleted!', 'Customer has been deleted.', 'success')
-                  .then(() => window.location.hash = '#/customers-list');
-              }).catch(err => {
-                Swal.fire('Error!', 'Failed to delete: ' + err.message, 'error');
-              });
-            }
-          });
-        });
-      });
+      bindDelete(app, '.delete-customer', { del, endpoint: '/customers/', successMsg: 'Customer has been deleted.', listRoute: '#/customers-list' });
     }, 100);
-  } catch (err) {
-    app.innerHTML = `<div class="page-wrapper"><div class="content"><p class="text-danger">Failed to load: ${err.message}</p></div></div>`;
-  }
+  } catch (err) { showError(app, err); }
 });

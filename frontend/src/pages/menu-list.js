@@ -1,12 +1,12 @@
 import { registerRoute } from '../router.js';
-import { renderLayout } from '../components/Header.js';
+import { showLoading, showError, renderPage, bindDelete, extractList } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
 
 registerRoute('/menu-list', async (app) => {
-  app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
+  showLoading(app);
   try {
     const res = await get('/menu');
-    const menus = res?.success ? (res.menus || res.data || []) : [];
+    const menus = extractList(res, 'menus');
     const rows = menus.length ? menus.map(m => {
       const price = typeof m.price === 'number' ? m.price.toFixed(2) : (m.price || '0.00');
       const available = m.available !== undefined ? m.available : (m.status !== 'inactive');
@@ -77,40 +77,7 @@ registerRoute('/menu-list', async (app) => {
 </div>
 </div>`;
 
-    renderLayout(app, 'menu-list', html);
-
-    setTimeout(() => {
-      if (typeof $ !== 'undefined' && $.fn.DataTable) {
-        const $dt = $(app.querySelector('.datanew'));
-        if ($dt.length && !$.fn.DataTable.isDataTable($dt[0])) {
-          $dt.DataTable({ pageLength: 10, bFilter: false });
-        }
-      }
-      app.querySelectorAll('.delete-item').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const id = this.getAttribute('data-id');
-          Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
-          }).then(result => {
-            if (result.isConfirmed) {
-              del('/menu/' + id).then(() => {
-                Swal.fire('Deleted!', 'Menu item has been deleted.', 'success')
-                  .then(() => window.location.hash = '#/menu-list');
-              }).catch(err => {
-                Swal.fire('Error!', 'Failed to delete: ' + err.message, 'error');
-              });
-            }
-          });
-        });
-      });
-    }, 100);
-  } catch (err) {
-    app.innerHTML = `<div class="page-wrapper"><div class="content"><p class="text-danger">Failed to load: ${err.message}</p></div></div>`;
-  }
+    renderPage(app, 'menu-list', html);
+    bindDelete(app, '.delete-item', { del, endpoint: '/menu/', successMsg: 'Menu item has been deleted.', listRoute: '#/menu-list' });
+  } catch (err) { showError(app, err); }
 });

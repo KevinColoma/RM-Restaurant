@@ -1,12 +1,12 @@
 import { registerRoute } from '../router.js';
-import { renderLayout } from '../components/Header.js';
+import { showLoading, showError, renderPage, bindDelete, extractList } from '../lib/listPage.js';
 import { get, del, post } from '../lib/api.js';
 
 registerRoute('/suppliers-list', async (app) => {
-  app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
+  showLoading(app);
   try {
     const suppliers = await get('/suppliers');
-    const list = Array.isArray(suppliers) ? suppliers : (suppliers?.suppliers || suppliers?.data || []);
+    const list = Array.isArray(suppliers) ? suppliers : extractList(suppliers, 'suppliers');
     const rows = list.length ? list.map(s => {
       const contact = [s.email, s.phone, s.address].filter(Boolean).join(', ') || '-';
       return `<tr>
@@ -54,16 +54,9 @@ registerRoute('/suppliers-list', async (app) => {
 </div>
 </div>`;
 
-    renderLayout(app, 'suppliers-list', html);
+    renderPage(app, 'suppliers-list', html);
 
     setTimeout(() => {
-      if (typeof $ !== 'undefined' && $.fn.DataTable) {
-        const $dt = $(app.querySelector('.datanew'));
-        if ($dt.length && !$.fn.DataTable.isDataTable($dt[0])) {
-          $dt.DataTable({ pageLength: 10, bFilter: false });
-        }
-      }
-
       app.querySelector('#addSupplierBtn').addEventListener('click', function() {
         Swal.fire({
           title: 'Add New Supplier',
@@ -88,38 +81,11 @@ registerRoute('/suppliers-list', async (app) => {
               } else {
                 Swal.fire('Error!', res?.message || 'Failed to add supplier.', 'error');
               }
-            }).catch(() => {
-              Swal.fire('Error!', 'Failed to add supplier.', 'error');
-            });
+            }).catch(() => Swal.fire('Error!', 'Failed to add supplier.', 'error'));
           }
         });
       });
-
-      app.querySelectorAll('.delete-supplier').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const id = this.getAttribute('data-id');
-          Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
-          }).then(result => {
-            if (result.isConfirmed) {
-              del('/suppliers/' + id).then(() => {
-                Swal.fire('Deleted!', 'Supplier has been deleted.', 'success')
-                  .then(() => window.location.hash = '#/suppliers-list');
-              }).catch(err => {
-                Swal.fire('Error!', 'Failed to delete: ' + err.message, 'error');
-              });
-            }
-          });
-        });
-      });
+      bindDelete(app, '.delete-supplier', { del, endpoint: '/suppliers/', successMsg: 'Supplier has been deleted.', listRoute: '#/suppliers-list' });
     }, 100);
-  } catch (err) {
-    app.innerHTML = `<div class="page-wrapper"><div class="content"><p class="text-danger">Failed to load: ${err.message}</p></div></div>`;
-  }
+  } catch (err) { showError(app, err); }
 });

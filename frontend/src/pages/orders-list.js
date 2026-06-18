@@ -1,12 +1,12 @@
 import { registerRoute } from '../router.js';
-import { renderLayout } from '../components/Header.js';
+import { showLoading, showError, renderPage, bindDelete, extractList } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
 
 registerRoute('/orders-list', async (app) => {
-  app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
+  showLoading(app);
   try {
     const res = await get('/orders');
-    const orders = res?.success ? (res.orders || res.data || []) : [];
+    const orders = extractList(res, 'orders');
     const rows = orders.length ? orders.map(o => {
       const items = o.items ? o.items.map(i => i.menuItem ? i.menuItem.item : 'Unknown').join(', ') : '-';
       const date = o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '-';
@@ -57,40 +57,10 @@ registerRoute('/orders-list', async (app) => {
 </div>
 </div>`;
 
-    renderLayout(app, 'orders-list', html);
-
-    setTimeout(() => {
-      if (typeof $ !== 'undefined' && $.fn.DataTable) {
-        const $dt = $(app.querySelector('.datanew'));
-        if ($dt.length && !$.fn.DataTable.isDataTable($dt[0])) {
-          $dt.DataTable({ pageLength: 10, bFilter: false });
-        }
-      }
-      app.querySelectorAll('.cancel-order').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const id = this.getAttribute('data-id');
-          Swal.fire({
-            title: 'Cancel Order?',
-            text: "This action cannot be undone!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, cancel it!'
-          }).then(result => {
-            if (result.isConfirmed) {
-              del('/orders/' + id).then(() => {
-                Swal.fire('Cancelled!', 'Order has been cancelled.', 'success')
-                  .then(() => window.location.hash = '#/orders-list');
-              }).catch(err => {
-                Swal.fire('Error!', 'Failed to cancel order: ' + err.message, 'error');
-              });
-            }
-          });
-        });
-      });
-    }, 100);
-  } catch (err) {
-    app.innerHTML = `<div class="page-wrapper"><div class="content"><p class="text-danger">Failed to load: ${err.message}</p></div></div>`;
-  }
+    renderPage(app, 'orders-list', html);
+    bindDelete(app, '.cancel-order', {
+      del, endpoint: '/orders/', successMsg: 'Order has been cancelled.', listRoute: '#/orders-list',
+      confirmTitle: 'Cancel Order?', confirmText: 'This action cannot be undone!', confirmBtn: 'Yes, cancel it!'
+    });
+  } catch (err) { showError(app, err); }
 });

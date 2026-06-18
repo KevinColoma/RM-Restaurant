@@ -19,260 +19,203 @@ function setPdfHeaders(res, filename) {
   res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
 }
 
-// Menu exports
-exports.exportMenuCsv = async (req, res) => {
-  try {
-    const items = await Menu.find({ personaId: req.personaId });
-    const columns = [
-      { label: 'Item Name', getValue: r => r.item },
-      { label: 'Category', getValue: r => r.category },
-      { label: 'Sub Category', getValue: r => r.subCategory },
-      { label: 'Price', getValue: r => r.price.toFixed(2) },
-      { label: 'Available', getValue: r => r.availability ? 'Yes' : 'No' },
-    ];
-    const csv = generateCsv(items, columns);
-    setCsvHeaders(res, 'menu-items.csv');
-    res.send(csv);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
+function csvExport(model, opts) {
+  return async (req, res) => {
+    try {
+      const query = model.find({ personaId: req.personaId });
+      if (opts.sort) query.sort(opts.sort);
+      if (opts.populate) query.populate(opts.populate);
+      const items = await query;
+      const csv = generateCsv(items, opts.columns);
+      setCsvHeaders(res, opts.filename);
+      res.send(csv);
+    } catch (err) { res.status(500).send(err.message); }
+  };
+}
 
-exports.exportMenuPdf = async (req, res) => {
-  try {
-    const items = await Menu.find({ personaId: req.personaId });
-    const columns = [
-      { label: 'Item', getValue: r => r.item },
-      { label: 'Category', getValue: r => r.category },
-      { label: 'Sub Category', getValue: r => r.subCategory },
-      { label: 'Price', getValue: r => r.price.toFixed(2) },
-    ];
-    const doc = generatePdf('Menu Items', items, columns);
-    setPdfHeaders(res, 'menu-items.pdf');
-    doc.pipe(res);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
+function pdfExport(model, opts) {
+  return async (req, res) => {
+    try {
+      const query = model.find({ personaId: req.personaId });
+      if (opts.sort) query.sort(opts.sort);
+      if (opts.populate) query.populate(opts.populate);
+      const items = await query;
+      const doc = generatePdf(opts.title, items, opts.columns);
+      setPdfHeaders(res, opts.filename);
+      doc.pipe(res);
+    } catch (err) { res.status(500).send(err.message); }
+  };
+}
+
+// Menu exports
+exports.exportMenuCsv = csvExport(Menu, {
+  columns: [
+    { label: 'Item Name', getValue: r => r.item },
+    { label: 'Category', getValue: r => r.category },
+    { label: 'Sub Category', getValue: r => r.subCategory },
+    { label: 'Price', getValue: r => r.price.toFixed(2) },
+    { label: 'Available', getValue: r => r.availability ? 'Yes' : 'No' },
+  ],
+  filename: 'menu-items.csv'
+});
+
+exports.exportMenuPdf = pdfExport(Menu, {
+  columns: [
+    { label: 'Item', getValue: r => r.item },
+    { label: 'Category', getValue: r => r.category },
+    { label: 'Sub Category', getValue: r => r.subCategory },
+    { label: 'Price', getValue: r => r.price.toFixed(2) },
+  ],
+  title: 'Menu Items',
+  filename: 'menu-items.pdf'
+});
 
 // Orders exports
-exports.exportOrdersCsv = async (req, res) => {
-  try {
-    const orders = await Order.find({ personaId: req.personaId })
-      .populate('items.menuItem', 'item')
-      .sort({ createdAt: -1 });
-    const columns = [
-      { label: 'Order ID', getValue: r => r._id },
-      { label: 'Items', getValue: r => r.items.map(i => i.menuItem ? i.menuItem.item : 'N/A').join('; ') },
-      { label: 'Order Type', getValue: r => r.orderType },
-      { label: 'Total', getValue: r => r.totalAmount.toFixed(2) },
-      { label: 'Tax', getValue: r => r.taxAmount.toFixed(2) },
-      { label: 'Date', getValue: r => new Date(r.createdAt).toLocaleDateString() },
-    ];
-    const csv = generateCsv(orders, columns);
-    setCsvHeaders(res, 'orders.csv');
-    res.send(csv);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
+exports.exportOrdersCsv = csvExport(Order, {
+  populate: { path: 'items.menuItem', select: 'item' },
+  sort: { createdAt: -1 },
+  columns: [
+    { label: 'Order ID', getValue: r => r._id },
+    { label: 'Items', getValue: r => r.items.map(i => i.menuItem ? i.menuItem.item : 'N/A').join('; ') },
+    { label: 'Order Type', getValue: r => r.orderType },
+    { label: 'Total', getValue: r => r.totalAmount.toFixed(2) },
+    { label: 'Tax', getValue: r => r.taxAmount.toFixed(2) },
+    { label: 'Date', getValue: r => new Date(r.createdAt).toLocaleDateString() },
+  ],
+  filename: 'orders.csv'
+});
 
-exports.exportOrdersPdf = async (req, res) => {
-  try {
-    const orders = await Order.find({ personaId: req.personaId })
-      .populate('items.menuItem', 'item')
-      .sort({ createdAt: -1 });
-    const columns = [
-      { label: 'Order ID', getValue: r => String(r._id).slice(-8) },
-      { label: 'Items', getValue: r => r.items.map(i => i.menuItem ? i.menuItem.item : 'N/A').join(', ') },
-      { label: 'Type', getValue: r => r.orderType },
-      { label: 'Total', getValue: r => r.totalAmount.toFixed(2) },
-      { label: 'Date', getValue: r => new Date(r.createdAt).toLocaleDateString() },
-    ];
-    const doc = generatePdf('Orders Report', orders, columns);
-    setPdfHeaders(res, 'orders.pdf');
-    doc.pipe(res);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
+exports.exportOrdersPdf = pdfExport(Order, {
+  populate: { path: 'items.menuItem', select: 'item' },
+  sort: { createdAt: -1 },
+  columns: [
+    { label: 'Order ID', getValue: r => String(r._id).slice(-8) },
+    { label: 'Items', getValue: r => r.items.map(i => i.menuItem ? i.menuItem.item : 'N/A').join(', ') },
+    { label: 'Type', getValue: r => r.orderType },
+    { label: 'Total', getValue: r => r.totalAmount.toFixed(2) },
+    { label: 'Date', getValue: r => new Date(r.createdAt).toLocaleDateString() },
+  ],
+  title: 'Orders Report',
+  filename: 'orders.pdf'
+});
 
 // Customer exports
-exports.exportCustomersCsv = async (req, res) => {
-  try {
-    const customers = await Customer.find({ personaId: req.personaId }).sort({ createdAt: -1 });
-    const columns = [
-      { label: 'Name', getValue: r => r.name },
-      { label: 'Phone', getValue: r => r.phone },
-      { label: 'Address', getValue: r => r.address },
-      { label: 'Created', getValue: r => new Date(r.createdAt).toLocaleDateString() },
-    ];
-    const csv = generateCsv(customers, columns);
-    setCsvHeaders(res, 'customers.csv');
-    res.send(csv);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
+exports.exportCustomersCsv = csvExport(Customer, {
+  sort: { createdAt: -1 },
+  columns: [
+    { label: 'Name', getValue: r => r.name },
+    { label: 'Phone', getValue: r => r.phone },
+    { label: 'Address', getValue: r => r.address },
+    { label: 'Created', getValue: r => new Date(r.createdAt).toLocaleDateString() },
+  ],
+  filename: 'customers.csv'
+});
 
-exports.exportCustomersPdf = async (req, res) => {
-  try {
-    const customers = await Customer.find({ personaId: req.personaId }).sort({ createdAt: -1 });
-    const columns = [
-      { label: 'Name', getValue: r => r.name },
-      { label: 'Phone', getValue: r => r.phone },
-      { label: 'Address', getValue: r => r.address },
-      { label: 'Date', getValue: r => new Date(r.createdAt).toLocaleDateString() },
-    ];
-    const doc = generatePdf('Customers List', customers, columns);
-    setPdfHeaders(res, 'customers.pdf');
-    doc.pipe(res);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
+exports.exportCustomersPdf = pdfExport(Customer, {
+  sort: { createdAt: -1 },
+  columns: [
+    { label: 'Name', getValue: r => r.name },
+    { label: 'Phone', getValue: r => r.phone },
+    { label: 'Address', getValue: r => r.address },
+    { label: 'Date', getValue: r => new Date(r.createdAt).toLocaleDateString() },
+  ],
+  title: 'Customers List',
+  filename: 'customers.pdf'
+});
 
 // Expense exports
-exports.exportExpensesCsv = async (req, res) => {
-  try {
-    const expenses = await Expense.find({ personaId: req.personaId }).sort({ expenseDate: -1 });
-    const columns = [
-      { label: 'Type', getValue: r => r.expenseType },
-      { label: 'Date', getValue: r => new Date(r.expenseDate).toLocaleDateString() },
-      { label: 'Amount', getValue: r => r.amount.toFixed(2) },
-      { label: 'Vendor', getValue: r => r.vendor || '' },
-      { label: 'Description', getValue: r => r.description },
-    ];
-    const csv = generateCsv(expenses, columns);
-    setCsvHeaders(res, 'expenses.csv');
-    res.send(csv);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
+exports.exportExpensesCsv = csvExport(Expense, {
+  sort: { expenseDate: -1 },
+  columns: [
+    { label: 'Type', getValue: r => r.expenseType },
+    { label: 'Date', getValue: r => new Date(r.expenseDate).toLocaleDateString() },
+    { label: 'Amount', getValue: r => r.amount.toFixed(2) },
+    { label: 'Vendor', getValue: r => r.vendor || '' },
+    { label: 'Description', getValue: r => r.description },
+  ],
+  filename: 'expenses.csv'
+});
 
-exports.exportExpensesPdf = async (req, res) => {
-  try {
-    const expenses = await Expense.find({ personaId: req.personaId }).sort({ expenseDate: -1 });
-    const columns = [
-      { label: 'Type', getValue: r => r.expenseType },
-      { label: 'Date', getValue: r => new Date(r.expenseDate).toLocaleDateString() },
-      { label: 'Amount', getValue: r => r.amount.toFixed(2) },
-      { label: 'Vendor', getValue: r => r.vendor || '' },
-    ];
-    const doc = generatePdf('Expenses List', expenses, columns);
-    setPdfHeaders(res, 'expenses.pdf');
-    doc.pipe(res);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
+exports.exportExpensesPdf = pdfExport(Expense, {
+  sort: { expenseDate: -1 },
+  columns: [
+    { label: 'Type', getValue: r => r.expenseType },
+    { label: 'Date', getValue: r => new Date(r.expenseDate).toLocaleDateString() },
+    { label: 'Amount', getValue: r => r.amount.toFixed(2) },
+    { label: 'Vendor', getValue: r => r.vendor || '' },
+  ],
+  title: 'Expenses List',
+  filename: 'expenses.pdf'
+});
 
 // Inventory exports
-exports.exportInventoryCsv = async (req, res) => {
-  try {
-    const items = await InventoryItem.find({ personaId: req.personaId }).populate('supplier', 'name');
-    const columns = [
-      { label: 'Item Name', getValue: r => r.name },
-      { label: 'Quantity', getValue: r => r.quantity },
-      { label: 'Price', getValue: r => r.price.toFixed(2) },
-      { label: 'Supplier', getValue: r => r.supplier ? r.supplier.name : '' },
-    ];
-    const csv = generateCsv(items, columns);
-    setCsvHeaders(res, 'inventory.csv');
-    res.send(csv);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
+exports.exportInventoryCsv = csvExport(InventoryItem, {
+  populate: { path: 'supplier', select: 'name' },
+  columns: [
+    { label: 'Item Name', getValue: r => r.name },
+    { label: 'Quantity', getValue: r => r.quantity },
+    { label: 'Price', getValue: r => r.price.toFixed(2) },
+    { label: 'Supplier', getValue: r => r.supplier ? r.supplier.name : '' },
+  ],
+  filename: 'inventory.csv'
+});
 
-exports.exportInventoryPdf = async (req, res) => {
-  try {
-    const items = await InventoryItem.find({ personaId: req.personaId }).populate('supplier', 'name');
-    const columns = [
-      { label: 'Item', getValue: r => r.name },
-      { label: 'Qty', getValue: r => r.quantity },
-      { label: 'Price', getValue: r => r.price.toFixed(2) },
-      { label: 'Supplier', getValue: r => r.supplier ? r.supplier.name : '' },
-    ];
-    const doc = generatePdf('Inventory List', items, columns);
-    setPdfHeaders(res, 'inventory.pdf');
-    doc.pipe(res);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
+exports.exportInventoryPdf = pdfExport(InventoryItem, {
+  populate: { path: 'supplier', select: 'name' },
+  columns: [
+    { label: 'Item', getValue: r => r.name },
+    { label: 'Qty', getValue: r => r.quantity },
+    { label: 'Price', getValue: r => r.price.toFixed(2) },
+    { label: 'Supplier', getValue: r => r.supplier ? r.supplier.name : '' },
+  ],
+  title: 'Inventory List',
+  filename: 'inventory.pdf'
+});
 
 // Branch exports
-exports.exportBranchesCsv = async (req, res) => {
-  try {
-    const branches = await Branch.find({ personaId: req.personaId });
-    const columns = [
-      { label: 'Restaurant Name', getValue: r => r.restaurantName },
-      { label: 'Owner', getValue: r => r.ownerName },
-      { label: 'City', getValue: r => r.city },
-      { label: 'Address', getValue: r => r.address },
-      { label: 'Email', getValue: r => r.email },
-      { label: 'Mobile', getValue: r => r.mobile },
-    ];
-    const csv = generateCsv(branches, columns);
-    setCsvHeaders(res, 'branches.csv');
-    res.send(csv);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
+exports.exportBranchesCsv = csvExport(Branch, {
+  columns: [
+    { label: 'Restaurant Name', getValue: r => r.restaurantName },
+    { label: 'Owner', getValue: r => r.ownerName },
+    { label: 'City', getValue: r => r.city },
+    { label: 'Address', getValue: r => r.address },
+    { label: 'Email', getValue: r => r.email },
+    { label: 'Mobile', getValue: r => r.mobile },
+  ],
+  filename: 'branches.csv'
+});
 
-exports.exportBranchesPdf = async (req, res) => {
-  try {
-    const branches = await Branch.find({ personaId: req.personaId });
-    const columns = [
-      { label: 'Restaurant', getValue: r => r.restaurantName },
-      { label: 'Owner', getValue: r => r.ownerName },
-      { label: 'City', getValue: r => r.city },
-      { label: 'Email', getValue: r => r.email },
-      { label: 'Mobile', getValue: r => r.mobile },
-    ];
-    const doc = generatePdf('Branches List', branches, columns);
-    setPdfHeaders(res, 'branches.pdf');
-    doc.pipe(res);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
+exports.exportBranchesPdf = pdfExport(Branch, {
+  columns: [
+    { label: 'Restaurant', getValue: r => r.restaurantName },
+    { label: 'Owner', getValue: r => r.ownerName },
+    { label: 'City', getValue: r => r.city },
+    { label: 'Email', getValue: r => r.email },
+    { label: 'Mobile', getValue: r => r.mobile },
+  ],
+  title: 'Branches List',
+  filename: 'branches.pdf'
+});
 
 // Supplier exports
-exports.exportSuppliersCsv = async (req, res) => {
-  try {
-    const suppliers = await Supplier.find({ personaId: req.personaId });
-    const columns = [
-      { label: 'Name', getValue: r => r.name },
-      { label: 'Contact Info', getValue: r => r.contactInfo },
-    ];
-    const csv = generateCsv(suppliers, columns);
-    setCsvHeaders(res, 'suppliers.csv');
-    res.send(csv);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
+exports.exportSuppliersCsv = csvExport(Supplier, {
+  columns: [
+    { label: 'Name', getValue: r => r.name },
+    { label: 'Contact Info', getValue: r => r.contactInfo },
+  ],
+  filename: 'suppliers.csv'
+});
 
-exports.exportSuppliersPdf = async (req, res) => {
-  try {
-    const suppliers = await Supplier.find({ personaId: req.personaId });
-    const columns = [
-      { label: 'Name', getValue: r => r.name },
-      { label: 'Contact', getValue: r => r.contactInfo },
-    ];
-    const doc = generatePdf('Suppliers List', suppliers, columns);
-    setPdfHeaders(res, 'suppliers.pdf');
-    doc.pipe(res);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
+exports.exportSuppliersPdf = pdfExport(Supplier, {
+  columns: [
+    { label: 'Name', getValue: r => r.name },
+    { label: 'Contact', getValue: r => r.contactInfo },
+  ],
+  title: 'Suppliers List',
+  filename: 'suppliers.pdf'
+});
 
-// Sales report exports
+// Sales report exports (special — has date range logic)
 exports.exportSalesCsv = async (req, res) => {
   try {
     const personaId = req.personaId;
@@ -305,9 +248,7 @@ exports.exportSalesCsv = async (req, res) => {
     const csv = generateCsv(orders, columns);
     setCsvHeaders(res, 'sales-report.csv');
     res.send(csv);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
+  } catch (err) { res.status(500).send(err.message); }
 };
 
 exports.exportSalesPdf = async (req, res) => {
@@ -340,47 +281,32 @@ exports.exportSalesPdf = async (req, res) => {
     const doc = generatePdf('Sales Report', orders, columns);
     setPdfHeaders(res, 'sales-report.pdf');
     doc.pipe(res);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
+  } catch (err) { res.status(500).send(err.message); }
 };
 
 // Purchase exports
-exports.exportPurchasesCsv = async (req, res) => {
-  try {
-    const purchases = await Purchase.find({ personaId: req.personaId })
-      .populate('supplier', 'name')
-      .sort({ purchaseDate: -1 });
-    const columns = [
-      { label: 'Date', getValue: r => new Date(r.purchaseDate).toLocaleDateString() },
-      { label: 'Supplier', getValue: r => r.supplier ? r.supplier.name : '' },
-      { label: 'Items', getValue: r => r.items.map(i => i.itemName + ' x' + i.quantity).join('; ') },
-      { label: 'Total Amount', getValue: r => r.totalAmount.toFixed(2) },
-      { label: 'Notes', getValue: r => r.notes || '' },
-    ];
-    const csv = generateCsv(purchases, columns);
-    setCsvHeaders(res, 'purchases.csv');
-    res.send(csv);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
+exports.exportPurchasesCsv = csvExport(Purchase, {
+  populate: { path: 'supplier', select: 'name' },
+  sort: { purchaseDate: -1 },
+  columns: [
+    { label: 'Date', getValue: r => new Date(r.purchaseDate).toLocaleDateString() },
+    { label: 'Supplier', getValue: r => r.supplier ? r.supplier.name : '' },
+    { label: 'Items', getValue: r => r.items.map(i => i.itemName + ' x' + i.quantity).join('; ') },
+    { label: 'Total Amount', getValue: r => r.totalAmount.toFixed(2) },
+    { label: 'Notes', getValue: r => r.notes || '' },
+  ],
+  filename: 'purchases.csv'
+});
 
-exports.exportPurchasesPdf = async (req, res) => {
-  try {
-    const purchases = await Purchase.find({ personaId: req.personaId })
-      .populate('supplier', 'name')
-      .sort({ purchaseDate: -1 });
-    const columns = [
-      { label: 'Date', getValue: r => new Date(r.purchaseDate).toLocaleDateString() },
-      { label: 'Supplier', getValue: r => r.supplier ? r.supplier.name : '' },
-      { label: 'Total', getValue: r => r.totalAmount.toFixed(2) },
-      { label: 'Notes', getValue: r => r.notes || '' },
-    ];
-    const doc = generatePdf('Purchases List', purchases, columns);
-    setPdfHeaders(res, 'purchases.pdf');
-    doc.pipe(res);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
+exports.exportPurchasesPdf = pdfExport(Purchase, {
+  populate: { path: 'supplier', select: 'name' },
+  sort: { purchaseDate: -1 },
+  columns: [
+    { label: 'Date', getValue: r => new Date(r.purchaseDate).toLocaleDateString() },
+    { label: 'Supplier', getValue: r => r.supplier ? r.supplier.name : '' },
+    { label: 'Total', getValue: r => r.totalAmount.toFixed(2) },
+    { label: 'Notes', getValue: r => r.notes || '' },
+  ],
+  title: 'Purchases List',
+  filename: 'purchases.pdf'
+});

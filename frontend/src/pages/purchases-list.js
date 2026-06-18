@@ -1,12 +1,12 @@
 import { registerRoute } from '../router.js';
-import { renderLayout } from '../components/Header.js';
+import { showLoading, showError, renderPage, bindDelete, extractList } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
 
 registerRoute('/purchases-list', async (app) => {
-  app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
+  showLoading(app);
   try {
     const res = await get('/purchases');
-    const purchases = res?.success ? (res.purchases || res.data || []) : [];
+    const purchases = extractList(res, 'purchases');
     const rows = purchases.length ? purchases.map(p => {
       const date = p.purchaseDate ? new Date(p.purchaseDate).toLocaleDateString() : (p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-');
       const total = typeof p.totalAmount === 'number' ? p.totalAmount.toFixed(2) : (p.totalAmount || '0.00');
@@ -60,40 +60,7 @@ registerRoute('/purchases-list', async (app) => {
 </div>
 </div>`;
 
-    renderLayout(app, 'purchases-list', html);
-
-    setTimeout(() => {
-      if (typeof $ !== 'undefined' && $.fn.DataTable) {
-        const $dt = $(app.querySelector('.datanew'));
-        if ($dt.length && !$.fn.DataTable.isDataTable($dt[0])) {
-          $dt.DataTable({ pageLength: 10, bFilter: false });
-        }
-      }
-      app.querySelectorAll('.delete-purchase').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const id = this.getAttribute('data-id');
-          Swal.fire({
-            title: 'Are you sure?',
-            text: "This purchase record will be deleted.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
-          }).then(result => {
-            if (result.isConfirmed) {
-              del('/purchases/' + id).then(() => {
-                Swal.fire('Deleted!', 'Purchase has been deleted.', 'success')
-                  .then(() => window.location.hash = '#/purchases-list');
-              }).catch(err => {
-                Swal.fire('Error!', err.message, 'error');
-              });
-            }
-          });
-        });
-      });
-    }, 100);
-  } catch (err) {
-    app.innerHTML = `<div class="page-wrapper"><div class="content"><p class="text-danger">Failed to load: ${err.message}</p></div></div>`;
-  }
+    renderPage(app, 'purchases-list', html);
+    bindDelete(app, '.delete-purchase', { del, endpoint: '/purchases/', successMsg: 'Purchase has been deleted.', listRoute: '#/purchases-list' });
+  } catch (err) { showError(app, err); }
 });

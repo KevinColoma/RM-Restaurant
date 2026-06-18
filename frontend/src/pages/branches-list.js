@@ -1,12 +1,12 @@
 import { registerRoute } from '../router.js';
-import { renderLayout } from '../components/Header.js';
+import { showLoading, showError, renderPage, bindDelete, extractList } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
 
 registerRoute('/branches-list', async (app) => {
-  app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
+  showLoading(app);
   try {
     const res = await get('/branches');
-    const branches = res?.success ? (res.branches || res.data || []) : [];
+    const branches = extractList(res, 'branches');
     const rows = branches.length ? branches.map(b => {
       return `<tr>
         <td>${b.restaurantName || b.name || '-'}</td>
@@ -73,40 +73,7 @@ registerRoute('/branches-list', async (app) => {
 </div>
 </div>`;
 
-    renderLayout(app, 'branches-list', html);
-
-    setTimeout(() => {
-      if (typeof $ !== 'undefined' && $.fn.DataTable) {
-        const $dt = $(app.querySelector('.datanew'));
-        if ($dt.length && !$.fn.DataTable.isDataTable($dt[0])) {
-          $dt.DataTable({ pageLength: 10, bFilter: false });
-        }
-      }
-      app.querySelectorAll('.delete-branch').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const id = this.getAttribute('data-id');
-          Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
-          }).then(result => {
-            if (result.isConfirmed) {
-              del('/branches/' + id).then(() => {
-                Swal.fire('Deleted!', 'Branch has been deleted.', 'success')
-                  .then(() => window.location.hash = '#/branches-list');
-              }).catch(err => {
-                Swal.fire('Error!', 'Request failed: ' + err.message, 'error');
-              });
-            }
-          });
-        });
-      });
-    }, 100);
-  } catch (err) {
-    app.innerHTML = `<div class="page-wrapper"><div class="content"><p class="text-danger">Failed to load: ${err.message}</p></div></div>`;
-  }
+    renderPage(app, 'branches-list', html);
+    bindDelete(app, '.delete-branch', { del, endpoint: '/branches/', successMsg: 'Branch has been deleted.', listRoute: '#/branches-list' });
+  } catch (err) { showError(app, err); }
 });
