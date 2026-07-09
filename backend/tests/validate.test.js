@@ -1,7 +1,37 @@
-const { isValidObjectId, sanitizeFields, isPositiveNumber, isValidEmail } = require('../utils/validate');
+const { isValidObjectId, validateObjectId, sanitizeFields, isPositiveNumber, isValidEmail } = require('../utils/validate');
 const mongoose = require('mongoose');
 
 describe('validate utils', () => {
+  describe('validateObjectId', () => {
+    it('calls next() when id is valid', () => {
+      const req = { params: { id: new mongoose.Types.ObjectId().toString() } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      const next = jest.fn();
+      validateObjectId(req, res, next);
+      expect(next).toHaveBeenCalled();
+      expect(res.status).not.toHaveBeenCalled();
+    });
+
+    it('returns 400 when id is invalid', () => {
+      const req = { params: { id: 'bad-id' } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      const next = jest.fn();
+      validateObjectId(req, res, next);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Invalid ID format' });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('calls next() when id is missing', () => {
+      const req = { params: {} };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      const next = jest.fn();
+      validateObjectId(req, res, next);
+      expect(next).toHaveBeenCalled();
+      expect(res.status).not.toHaveBeenCalled();
+    });
+  });
+
   describe('isValidObjectId', () => {
     it('returns true for valid ObjectId', () => {
       expect(isValidObjectId(new mongoose.Types.ObjectId().toString())).toBe(true);

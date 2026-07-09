@@ -14,6 +14,7 @@ module.exports = {
     'routes/**/*.js',
     'utils/audit.js',
     'utils/reportUtils.js',
+    'utils/validate.js',
     '!**/node_modules/**'
   ],
   coverageReporters: ['lcov', 'text', 'clover'],
