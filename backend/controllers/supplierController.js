@@ -1,17 +1,17 @@
-// controllers/supplierController.js
 const Supplier = require('../models/Supplier');
 const { logAudit } = require('../utils/audit');
+const { isValidObjectId } = require('../utils/validate');
 
-    exports.createSupplier = async (req, res) => {
+exports.createSupplier = async (req, res) => {
     try {
       const personaId = req.personaId;
+      const { name, contactInfo } = req.body;
 
         const newSupplier = new Supplier({
-            ...req.body,
-        personaId
+            name, contactInfo, personaId
         });
         await newSupplier.save();
-        await logAudit(req, 'create', 'Supplier', newSupplier._id, 'Created supplier: ' + req.body.name);
+        await logAudit(req, 'create', 'Supplier', newSupplier._id, 'Created supplier: ' + name);
         res.status(201).json(newSupplier);
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -31,6 +31,7 @@ exports.getSuppliers = async (req, res) => {
 exports.getSupplierById = async (req, res) => {
   try {
     const personaId = req.personaId;
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid ID' });
     const supplier = await Supplier.findOne({ _id: req.params.id, personaId });
     if (!supplier) {
       return res.status(404).json({ message: 'Supplier not found' });
@@ -44,10 +45,12 @@ exports.getSupplierById = async (req, res) => {
 exports.updateSupplier = async (req, res) => {
   try {
     const personaId = req.personaId;
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid ID' });
+    const { name, contactInfo } = req.body;
     const supplier = await Supplier.findOneAndUpdate(
       { _id: req.params.id, personaId },
-      req.body,
-      { new: true }
+      { name, contactInfo },
+      { new: true, runValidators: true }
     );
     if (!supplier) {
       return res.status(404).json({ message: 'Supplier not found' });
@@ -72,6 +75,7 @@ exports.getSuppliersPage = async (req, res) => {
 exports.deleteSupplier = async (req, res) => {
   try {
     const personaId = req.personaId;
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid ID' });
     const supplier = await Supplier.findOneAndDelete({ _id: req.params.id, personaId });
     if (!supplier) {
       return res.status(404).json({ message: 'Supplier not found' });

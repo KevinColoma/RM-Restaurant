@@ -40,10 +40,24 @@ async function printOrder(order, type, printerConnection) {
     console.error('Print failed:', error);
   }
 }
+const { isValidObjectId } = require('../utils/validate');
+
 const PlaceOrder = async (req, res) => {
   try {
       const personaId = req.personaId;
       const { items, orderType, comment } = req.body;
+
+      if (!Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ error: 'Items must be a non-empty array' });
+      }
+      for (const item of items) {
+        if (!isValidObjectId(item.menuItem)) {
+          return res.status(400).json({ error: 'Invalid menuItem ID' });
+        }
+        if (typeof item.quantity !== 'number' || item.quantity <= 0) {
+          return res.status(400).json({ error: 'Quantity must be a positive number' });
+        }
+      }
 
       const persona = await Persona.findById(personaId);
       const taxRate = (persona && persona.taxRate) ? persona.taxRate / 100 : 0.1;
@@ -119,6 +133,7 @@ const GetOrders = async (req, res) => {
 exports.deleteOrder = async (req, res) => {
   try {
     const personaId = req.personaId;
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
     const order = await Order.findOneAndDelete({ _id: req.params.id, personaId });
     if (!order) return res.status(404).json({ error: 'Order not found' });
     await logAudit(req, 'cancel', 'Order', order._id, 'Order cancelled: ' + order._id);

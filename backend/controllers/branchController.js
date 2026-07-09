@@ -1,5 +1,6 @@
 const { logAudit } = require('../utils/audit');
 const Branch = require('../models/branchRestaurant');
+const { isValidObjectId } = require('../utils/validate');
 
 exports.addBranchPage = (req, res) => {
     res.render('add-branch');
@@ -31,6 +32,7 @@ exports.createBranch = async (req, res) => {
 exports.getBranchById = async (req, res) => {
     try {
         const personaId = req.personaId;
+        if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
         const branch = await Branch.findOne({ _id: req.params.id, personaId });
         if (!branch) return res.status(404).json({ error: 'Branch not found' });
         res.json(branch);
@@ -42,10 +44,12 @@ exports.getBranchById = async (req, res) => {
 exports.updateBranch = async (req, res) => {
     try {
         const personaId = req.personaId;
+        if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+        const { Parent_Rest, ownerName, restaurantName, city, address, email, mobile } = req.body;
         const branch = await Branch.findOneAndUpdate(
             { _id: req.params.id, personaId },
-            req.body,
-            { new: true }
+            { Parent_Rest, ownerName, restaurantName, city, address, email, mobile },
+            { new: true, runValidators: true }
         );
         if (!branch) return res.status(404).json({ error: 'Branch not found' });
         await logAudit(req, 'update', 'Branch', branch._id, 'Updated branch: ' + branch.restaurantName);
@@ -58,6 +62,7 @@ exports.updateBranch = async (req, res) => {
 exports.deleteBranch = async (req, res) => {
     try {
         const personaId = req.personaId;
+        if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
         const branch = await Branch.findOneAndDelete({ _id: req.params.id, personaId });
         if (!branch) return res.status(404).json({ error: 'Branch not found' });
         await logAudit(req, 'delete', 'Branch', branch._id, 'Deleted branch: ' + branch.restaurantName);

@@ -10,14 +10,17 @@ const todayRange = () => {
   return { start, end };
 };
 
-const getOrdersInRange = async (start, end) => {
-  return Order.find({ createdAt: { $gte: start, $lte: end } }).populate('items.menuItem');
+const getOrdersInRange = async (start, end, personaId) => {
+  const filter = { createdAt: { $gte: start, $lte: end } };
+  if (personaId) filter.personaId = personaId;
+  return Order.find(filter).populate('items.menuItem');
 };
 
 const sales = async (req, res) => {
   try {
+    const personaId = req.personaId;
     const { start, end } = todayRange();
-    const orders = await getOrdersInRange(start, end);
+    const orders = await getOrdersInRange(start, end, personaId);
     const result = await aggregateSales(orders);
     res.json(result);
   } catch (error) {
@@ -27,8 +30,9 @@ const sales = async (req, res) => {
 
 const orders = async (req, res) => {
   try {
+    const personaId = req.personaId;
     const { start, end } = todayRange();
-    const orderDocs = await getOrdersInRange(start, end);
+    const orderDocs = await getOrdersInRange(start, end, personaId);
     const result = await aggregateOrders(orderDocs);
     res.json(result);
   } catch (error) {

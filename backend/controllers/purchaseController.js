@@ -2,6 +2,7 @@ const Purchase = require('../models/Purchase');
 const Supplier = require('../models/Supplier');
 const InventoryItem = require('../models/InventoryItem');
 const { logAudit } = require('../utils/audit');
+const { isValidObjectId } = require('../utils/validate');
 
 exports.listPurchases = async (req, res) => {
   try {
@@ -31,11 +32,17 @@ exports.createPurchase = async (req, res) => {
     const personaId = req.personaId;
     const { supplier, items, purchaseDate, notes } = req.body;
 
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'Items must be a non-empty array' });
+    }
+    if (!isValidObjectId(supplier)) {
+      return res.status(400).json({ error: 'Invalid supplier ID' });
+    }
     const parsedItems = items.map(item => ({
-      itemName: item.itemName,
-      quantity: Number(item.quantity),
-      unitPrice: Number(item.unitPrice),
-      totalPrice: Number(item.quantity) * Number(item.unitPrice)
+      itemName: String(item.itemName || ''),
+      quantity: Number(item.quantity) || 0,
+      unitPrice: Number(item.unitPrice) || 0,
+      totalPrice: (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0)
     }));
 
     const totalAmount = parsedItems.reduce((sum, item) => sum + item.totalPrice, 0);
@@ -68,6 +75,7 @@ exports.createPurchase = async (req, res) => {
 
 exports.getPurchaseById = async (req, res) => {
   try {
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
     const purchase = await Purchase.findOne({
       _id: req.params.id,
       personaId: req.personaId
@@ -81,6 +89,7 @@ exports.getPurchaseById = async (req, res) => {
 
 exports.deletePurchase = async (req, res) => {
   try {
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
     const purchase = await Purchase.findOneAndDelete({
       _id: req.params.id,
       personaId: req.personaId

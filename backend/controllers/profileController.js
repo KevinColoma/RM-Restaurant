@@ -1,4 +1,5 @@
 const Persona = require('../models/Persona');
+const Usuario = require('../models/Usuario');
 const bcrypt = require('bcrypt');
 const { logAudit } = require('../utils/audit');
 
@@ -50,15 +51,22 @@ exports.uploadAvatar = async (req, res) => {
 exports.changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    const persona = await Persona.findById(req.personaId);
-    if (!persona) return res.status(404).json({ error: 'Persona not found' });
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters' });
+    }
 
-    const isMatch = await bcrypt.compare(currentPassword, persona.password);
+    const usuario = await Usuario.findById(req.usuario._id);
+    if (!usuario) return res.status(404).json({ error: 'User not found' });
+
+    const isMatch = await bcrypt.compare(currentPassword, usuario.password);
     if (!isMatch) return res.status(400).json({ error: 'Current password is incorrect' });
 
-    persona.password = await bcrypt.hash(newPassword, 10);
-    await persona.save();
-    await logAudit(req, 'password_change', 'Persona', persona._id, 'Password changed');
+    usuario.password = await bcrypt.hash(newPassword, 10);
+    await usuario.save();
+    await logAudit(req, 'password_change', 'Usuario', usuario._id, 'Password changed');
     res.json({ success: true, message: 'Password changed successfully' });
   } catch (err) {
     res.status(400).json({ error: err.message });

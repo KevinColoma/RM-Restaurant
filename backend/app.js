@@ -11,6 +11,7 @@ const cookieParser = require('cookie-parser');
 const connectDB = require('./db'); 
 const session = require('express-session');
 const multer = require('multer');
+const mongoSanitize = require('express-mongo-sanitize');
 const webRoutes = require('./routes/restaurantRoutes')
 const port = process.env.PORT
 const app = express()
@@ -32,6 +33,7 @@ if (process.env.NODE_ENV !== 'test') {
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(mongoSanitize());
 
 app.use(express.static(path.join(__dirname, 'public')));
 if (process.env.NODE_ENV === 'production') {

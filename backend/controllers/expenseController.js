@@ -2,6 +2,7 @@
 
 const Expense = require('../models/Expense');
 const { logAudit } = require('../utils/audit');
+const { isValidObjectId } = require('../utils/validate');
 
 exports. addExpensePage = (req,res)=>{
     
@@ -56,6 +57,7 @@ exports.getExpense = async(req,res)=>{
 exports.deleteExpense = async (req, res) => {
     try {
         const personaId = req.personaId;
+        if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
         const expense = await Expense.findOneAndDelete({ _id: req.params.id, personaId });
         if (!expense) return res.status(404).json({ error: 'Expense not found' });
         await logAudit(req, 'delete', 'Expense', expense._id, 'Deleted expense: ' + expense.expenseType);
@@ -68,9 +70,12 @@ exports.deleteExpense = async (req, res) => {
 exports.updateExpense = async (req, res) => {
     try {
         const personaId = req.personaId;
+        if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
 
-        if (req.body.amount !== undefined) {
-            const numericAmount = Number(req.body.amount);
+        const { category, expenseDate, amount, invoiceNumber, vendor, description, paymentMethod, receiptURL } = req.body;
+
+        if (amount !== undefined) {
+            const numericAmount = Number(amount);
             if (isNaN(numericAmount) || numericAmount <= 0) {
                 return res.status(400).json({ message: 'Amount must be a valid number greater than zero' });
             }
@@ -78,7 +83,7 @@ exports.updateExpense = async (req, res) => {
 
         const expense = await Expense.findOneAndUpdate(
             { _id: req.params.id, personaId },
-            { ...req.body, updatedAt: new Date() },
+            { expenseType: category, expenseDate, amount, description, paymentMethod, invoiceNumber, vendor, category, receiptURL, updatedAt: new Date() },
             { new: true, runValidators: true }
         );
         if (!expense) return res.status(404).json({ error: 'Expense not found' });

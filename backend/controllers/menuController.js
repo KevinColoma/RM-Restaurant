@@ -1,6 +1,7 @@
 const Menu = require('../models/menu')
 const Customer = require('../models/Customer')
 const { logAudit } = require('../utils/audit');
+const { isValidObjectId } = require('../utils/validate');
 
 // const getNextCode = async (restaurantId) => {
 //     // Find the highest current code for the restaurant
@@ -61,6 +62,7 @@ const UpdateMenu = async (req, res) => {
     const personaId = req.personaId;
 
     try {
+        if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
         const updatedItem = await Menu.findOneAndUpdate(
             { _id: req.params.id, personaId },
             { item, category, subCategory, price },
@@ -82,6 +84,7 @@ const DeleteMenu = async (req, res) => {
     const personaId = req.personaId;
 
     try {
+        if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
         const deletedItem = await Menu.findOneAndDelete({ _id: req.params.id, personaId });
 
         if (!deletedItem) {

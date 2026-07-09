@@ -18,6 +18,7 @@ const settingsController = require('../controllers/settingsController')
 const purchaseController = require('../controllers/purchaseController')
 const auditController = require('../controllers/auditController')
 const Expense = require('../models/Expense')
+const { isValidObjectId } = require('../utils/validate')
 
 
 
@@ -48,6 +49,7 @@ router.get('/addmenupage',requireAuth,(req,res)=>{
 
 router.get('/edit-item/:id', requireAuth, async (req, res) => {
     try {
+        if (!isValidObjectId(req.params.id)) return res.status(400).send('Invalid ID');
         const Menu = require('../models/menu');
         const menu = await Menu.findOne({ _id: req.params.id, personaId: req.personaId });
         if (!menu) return res.status(404).send('Menu item not found');
@@ -73,8 +75,8 @@ router.get('/chart-js',requireAuth,(req,res)=>{
 
 })
 
-router.get('/api/reports/sales',reportController.sales)
-router.get('/api/reports/orders',reportController.orders)
+router.get('/api/reports/sales',requireAuth, reportController.sales)
+router.get('/api/reports/orders',requireAuth, reportController.orders)
 
 // All report releted  routes 
 
@@ -84,8 +86,8 @@ router.get('/datechart',requireAuth,(req,res)=>{
 
 })
 
-router.get('/api/reports/sales-by-date',datereportController.salesByDate)
-router.get('/api/reports/orders-by-date',datereportController.ordersByDate)
+router.get('/api/reports/sales-by-date',requireAuth, datereportController.salesByDate)
+router.get('/api/reports/orders-by-date',requireAuth, datereportController.ordersByDate)
 
 
 //inventroy coontroller routes 
@@ -95,6 +97,7 @@ router.post('/api/addinventory',requireAuth, inventoryController.addItem);
 router.get('/get-expense-list',requireAuth,inventoryController.getItem)
 router.get('/edit-inventory/:id', requireAuth, async (req, res) => {
     try {
+        if (!isValidObjectId(req.params.id)) return res.status(400).send('Invalid ID');
         const InventoryItem = require('../models/InventoryItem');
         const Supplier = require('../models/Supplier');
         const item = await InventoryItem.findOne({ _id: req.params.id, personaId: req.personaId });
@@ -160,6 +163,7 @@ router.delete('/api/purchases/:id', requireAuth, purchaseController.deletePurcha
 
 router.get('/edit-expense/:id', requireAuth, async (req, res) => {
     try {
+        if (!isValidObjectId(req.params.id)) return res.status(400).send('Invalid ID');
         const expense = await Expense.findOne({ _id: req.params.id, personaId: req.personaId });
         if (!expense) return res.status(404).send('Expense not found');
         res.render('edit-expense', { expense });

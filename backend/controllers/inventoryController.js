@@ -1,6 +1,7 @@
 const InventoryItem = require('../models/InventoryItem');
 const Supplier = require('../models/Supplier')
 const { logAudit } = require('../utils/audit');
+const { isValidObjectId } = require('../utils/validate');
 
 
 exports.addInventory = async (req,res)=>{
@@ -49,6 +50,7 @@ exports.addItem = async (req, res) => {
     try {
       const personaId = req.personaId;
       const { name, quantity, price, supplier } = req.body;
+      if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
       const item = await InventoryItem.findOneAndUpdate(
         { _id: req.params.id, personaId },
         { name, quantity, price, supplier },
@@ -65,6 +67,7 @@ exports.addItem = async (req, res) => {
   exports.deleteInventory = async (req, res) => {
     try {
         const personaId = req.personaId;
+        if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
         const item = await InventoryItem.findOneAndDelete({ _id: req.params.id, personaId });
         if (!item) return res.status(404).json({ error: 'Inventory item not found' });
         await logAudit(req, 'delete', 'InventoryItem', item._id, 'Deleted inventory item: ' + item.name);

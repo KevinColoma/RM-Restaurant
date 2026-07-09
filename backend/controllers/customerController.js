@@ -1,6 +1,7 @@
 
 const Customer = require('../models/Customer')
 const { logAudit } = require('../utils/audit');
+const { isValidObjectId } = require('../utils/validate');
 
 exports.createCustomers = async function(req,res){
 
@@ -33,6 +34,7 @@ exports.getCustomers = async (req, res) => {
 exports.deleteCustomer = async (req, res) => {
     try {
         const personaId = req.personaId;
+        if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
         const customer = await Customer.findOneAndDelete({ _id: req.params.id, personaId });
         if (!customer) return res.status(404).json({ error: 'Customer not found' });
         await logAudit(req, 'delete', 'Customer', customer._id, 'Deleted customer: ' + customer.name);
@@ -46,6 +48,7 @@ exports.updateCustomer = async (req, res) => {
   try {
     const personaId = req.personaId;
     const { name, phone, address } = req.body;
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
     const customer = await Customer.findOneAndUpdate(
       { _id: req.params.id, personaId },
       { name, phone, address },
