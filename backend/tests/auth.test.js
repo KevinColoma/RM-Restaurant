@@ -76,3 +76,40 @@ describe('POST /api/signin', () => {
     expect(res.body.success).toBe(false);
   });
 });
+
+describe('Single-session policy', () => {
+  it('should require device authorization on a second concurrent login', async () => {
+    const first = await request(app)
+      .post('/api/signin')
+      .send({ email: 'test@example.com', password: 'password123' });
+    expect(first.body.success).toBe(true);
+
+    const second = await request(app)
+      .post('/api/signin')
+      .send({ email: 'test@example.com', password: 'password123' });
+
+    expect(second.body.success).toBe(false);
+    expect(second.body.requiresDeviceAuthorization).toBe(true);
+  });
+
+  it('should invalidate the previous session once forceLogin authorizes the new device', async () => {
+    const first = await request(app)
+      .post('/api/signin')
+      .send({ email: 'test@example.com', password: 'password123' });
+    const firstToken = first.body.token;
+
+    const second = await request(app)
+      .post('/api/signin')
+      .send({ email: 'test@example.com', password: 'password123', forceLogin: true });
+
+    expect(second.body.success).toBe(true);
+    expect(second.body.token).toBeDefined();
+    expect(second.body.token).not.toBe(firstToken);
+
+    const staleCheck = await request(app)
+      .get('/api/personas')
+      .set('Cookie', [`jwt=${firstToken}`]);
+
+    expect(staleCheck.status).toBe(401);
+  });
+});

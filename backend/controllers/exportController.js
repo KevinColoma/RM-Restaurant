@@ -40,7 +40,9 @@ function pdfExport(model, opts) {
       if (opts.sort) query.sort(opts.sort);
       if (opts.populate) query.populate(opts.populate);
       const items = await query;
-      const doc = generatePdf(opts.title, items, opts.columns);
+      const doc = generatePdf(opts.title, items, opts.columns, {
+        restaurantName: req.usuario?.personaId?.restaurantName
+      });
       setPdfHeaders(res, opts.filename);
       doc.pipe(res);
     } catch (err) { res.status(500).send(err.message); }
@@ -278,7 +280,9 @@ exports.exportSalesPdf = async (req, res) => {
       { label: 'Total', getValue: r => r.totalAmount.toFixed(2) },
       { label: 'Date', getValue: r => new Date(r.createdAt).toLocaleDateString() },
     ];
-    const doc = generatePdf('Sales Report', orders, columns);
+    const doc = generatePdf('Sales Report', orders, columns, {
+      restaurantName: req.usuario?.personaId?.restaurantName
+    });
     setPdfHeaders(res, 'sales-report.pdf');
     doc.pipe(res);
   } catch (err) { res.status(500).send(err.message); }

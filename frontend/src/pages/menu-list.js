@@ -1,5 +1,5 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
 
 registerRoute('/menu-list', async (app) => {
@@ -7,7 +7,8 @@ registerRoute('/menu-list', async (app) => {
   try {
     const res = await get('/menu');
     const menus = extractList(res, 'menus');
-    const rows = menus.length ? menus.map(m => {
+
+    const renderRows = (list) => list.length ? list.map(m => {
       const price = typeof m.price === 'number' ? m.price.toFixed(2) : (m.price || '0.00');
       const available = m.available !== undefined ? m.available : (m.status !== 'inactive');
       const badge = available ? '<span class="badge bg-success">Available</span>' : '<span class="badge bg-danger">Unavailable</span>';
@@ -23,6 +24,12 @@ registerRoute('/menu-list', async (app) => {
         </td>
       </tr>`;
     }).join('') : '<tr><td colspan="6" class="text-center">No menu items found</td></tr>';
+
+    const filterPanel = renderFilterPanel([
+      { key: 'category', label: 'Choose Category', options: uniqueValues(menus, 'category') },
+      { key: 'subCategory', label: 'Choose Sub Category', options: uniqueValues(menus, 'subCategory') }
+    ]);
+    const rows = renderRows(menus);
 
     const html = `
 <div class="page-wrapper">
@@ -57,6 +64,7 @@ registerRoute('/menu-list', async (app) => {
 </ul>
 </div>
 </div>
+${filterPanel}
 <div class="table-responsive">
 <table class="table datanew">
 <thead>
@@ -77,7 +85,10 @@ registerRoute('/menu-list', async (app) => {
 </div>
 </div>`;
 
+    const bindItemDelete = () => bindDelete(app, '.delete-item', { del, endpoint: '/menu/', successMsg: 'Menu item has been deleted.', listRoute: '#/menu-list' });
+
     renderPage(app, 'menu-list', html);
-    bindDelete(app, '.delete-item', { del, endpoint: '/menu/', successMsg: 'Menu item has been deleted.', listRoute: '#/menu-list' });
+    bindItemDelete();
+    setTimeout(() => bindFilterPanel(app, { data: menus, renderRows, onRendered: bindItemDelete }), 100);
   } catch (err) { showError(app, err); }
 });

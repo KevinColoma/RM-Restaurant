@@ -15,6 +15,7 @@ function mockReqRes() {
     send(data) { this._data = data; return this; },
     redirect(url) { this._redirect = url; this._status = 302; return this; },
     json(data) { this._data = JSON.stringify(data); return this; },
+    clearCookie() { return this; },
     locals: this ? this._locals : {}
   };
   res.locals = {};
@@ -69,10 +70,11 @@ describe('authMiddleware', () => {
   it('should call next with valid user', async () => {
     const userId = '507f1f77bcf86cd799439011';
     const personaId = { _id: '507f1f77bcf86cd799439012', ownerName: 'Test', restaurantName: 'Test Rest', avatar: 'pic.jpg' };
+    const sessionId = 'session-abc-123';
 
-    jwtUtils.verifyToken.mockResolvedValue({ usuarioId: userId });
+    jwtUtils.verifyToken.mockResolvedValue({ usuarioId: userId, sessionId });
     Usuario.findById.mockReturnValue({
-      populate: jest.fn().mockResolvedValue({ _id: userId, personaId })
+      populate: jest.fn().mockResolvedValue({ _id: userId, personaId, activeSessionId: sessionId })
     });
 
     const { requireAuth } = require('../middleware/authMiddleware');
@@ -83,5 +85,24 @@ describe('authMiddleware', () => {
     await requireAuth(req, res, next);
     expect(next).toHaveBeenCalled();
     expect(req.personaId).toBe(personaId._id);
+  });
+
+  it('should reject when the session was invalidated by a login on another device', async () => {
+    const userId = '507f1f77bcf86cd799439011';
+    const personaId = { _id: '507f1f77bcf86cd799439012', ownerName: 'Test', restaurantName: 'Test Rest', avatar: 'pic.jpg' };
+
+    jwtUtils.verifyToken.mockResolvedValue({ usuarioId: userId, sessionId: 'old-session' });
+    Usuario.findById.mockReturnValue({
+      populate: jest.fn().mockResolvedValue({ _id: userId, personaId, activeSessionId: 'new-session' })
+    });
+
+    const { requireAuth } = require('../middleware/authMiddleware');
+    const { req, res } = mockReqRes();
+    req.cookies.jwt = 'stale-token';
+    const next = jest.fn();
+
+    await requireAuth(req, res, next);
+    expect(next).not.toHaveBeenCalled();
+    expect(res._status).toBe(401);
   });
 });

@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const crypto = require('crypto');
 const { logAudit } = require('../utils/audit');
 require('dotenv').config();
 const jwtUtils = require('../jwt');
@@ -47,7 +48,7 @@ exports.SignUp = async function (req, res) {
 }
 
 exports.SignIn = async function (req, res) {
-    const { email, password } = req.body;
+    const { email, password, forceLogin } = req.body;
 
     try {
         const usuario = await Usuario.findOne({ username: String(email) });
@@ -68,7 +69,24 @@ exports.SignIn = async function (req, res) {
             });
         }
 
-        const token = jwtUtils.generateToken({ usuarioId: usuario._id, personaId: usuario.personaId });
+        // Single-session policy: block a second concurrent login unless the
+        // user explicitly authorizes signing the previous device out.
+        if (usuario.activeSessionId && !forceLogin) {
+            return res.json({
+                success: false,
+                requiresDeviceAuthorization: true,
+                message: 'This account is already signed in on another device. Do you want to sign out that device and continue here?'
+            });
+        }
+
+        const sessionId = crypto.randomUUID();
+        const deviceInfo = req.headers['user-agent'] || 'Unknown device';
+
+        usuario.activeSessionId = sessionId;
+        usuario.activeDeviceInfo = deviceInfo;
+        await usuario.save();
+
+        const token = jwtUtils.generateToken({ usuarioId: usuario._id, personaId: usuario.personaId, sessionId });
         res.cookie('jwt', token, { httpOnly: true });
 
         await logAudit({ personaId: usuario.personaId }, 'login', 'Usuario', usuario._id, 'User logged in: ' + email);
@@ -126,8 +144,21 @@ exports.LogOut = async (req, res) => {
         if (token) {
             res.clearCookie('jwt');
 
-            const personaId = req.usuario ? req.usuario.personaId : null;
-            await logAudit(req, 'logout', 'Usuario', req.usuario ? req.usuario._id : null, 'User logged out');
+            let usuario = req.usuario;
+            if (!usuario) {
+                const decoded = await jwtUtils.verifyToken(token);
+                if (decoded) {
+                    usuario = await Usuario.findById(decoded.usuarioId);
+                }
+            }
+
+            if (usuario) {
+                usuario.activeSessionId = null;
+                usuario.activeDeviceInfo = null;
+                await usuario.save();
+            }
+
+            await logAudit(req, 'logout', 'Usuario', usuario ? usuario._id : null, 'User logged out');
         }
         res.status(200).json({ success: true, message: 'Logged out successfully' });
 

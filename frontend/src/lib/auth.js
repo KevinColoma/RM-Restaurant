@@ -4,8 +4,8 @@ export function isAuthenticated() {
   return !!localStorage.getItem('token');
 }
 
-export async function signin(email, password) {
-  const data = await post('/signin', { email, password });
+export async function signin(email, password, forceLogin = false) {
+  const data = await post('/signin', { email, password, forceLogin });
   if (data?.success) {
     localStorage.setItem('token', data.token);
     localStorage.setItem('username', data.usuario.username);

@@ -1,5 +1,5 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
 
 registerRoute('/expenses-list', async (app) => {
@@ -7,7 +7,8 @@ registerRoute('/expenses-list', async (app) => {
   try {
     const res = await get('/expenses');
     const expenses = extractList(res, 'expenses');
-    const rows = expenses.length ? expenses.map(e => {
+
+    const renderRows = (list) => list.length ? list.map(e => {
       const date = e.expenseDate ? new Date(e.expenseDate).toDateString() : (e.createdAt ? new Date(e.createdAt).toDateString() : '-');
       const amount = typeof e.amount === 'number' ? e.amount.toFixed(2) : (e.amount || '0.00');
       return `<tr>
@@ -23,6 +24,12 @@ registerRoute('/expenses-list', async (app) => {
         </td>
       </tr>`;
     }).join('') : '<tr><td colspan="7" class="text-center">No expenses found</td></tr>';
+
+    const filterPanel = renderFilterPanel([
+      { key: 'category', label: 'Choose Category', options: uniqueValues(expenses, 'category') },
+      { key: 'paymentMethod', label: 'Payment Method', options: uniqueValues(expenses, 'paymentMethod') }
+    ]);
+    const rows = renderRows(expenses);
 
     const html = `
 <div class="page-wrapper">
@@ -57,6 +64,7 @@ registerRoute('/expenses-list', async (app) => {
 </ul>
 </div>
 </div>
+${filterPanel}
 <div class="table-responsive">
 <table class="table datanew">
 <thead>
@@ -78,7 +86,10 @@ registerRoute('/expenses-list', async (app) => {
 </div>
 </div>`;
 
+    const bindExpenseDelete = () => bindDelete(app, '.delete-expense', { del, endpoint: '/expense/', successMsg: 'Expense has been deleted.', listRoute: '#/expenses-list' });
+
     renderPage(app, 'expenses-list', html);
-    bindDelete(app, '.delete-expense', { del, endpoint: '/expense/', successMsg: 'Expense has been deleted.', listRoute: '#/expenses-list' });
+    bindExpenseDelete();
+    setTimeout(() => bindFilterPanel(app, { data: expenses, renderRows, onRendered: bindExpenseDelete }), 100);
   } catch (err) { showError(app, err); }
 });

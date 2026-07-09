@@ -15,6 +15,14 @@ const requireAuth = async (req, res, next) => {
             return res.redirect('/signin');
         }
 
+        // Single-session enforcement: if this token's session no longer
+        // matches the account's active session, it means the user logged in
+        // from another device and this session was invalidated.
+        if (!decoded.sessionId || usuario.activeSessionId !== decoded.sessionId) {
+            res.clearCookie('jwt');
+            return res.status(401).json({ message: 'Session expired: this account was signed in from another device.' });
+        }
+
         req.usuario = usuario;
         req.personaId = usuario.personaId._id;
         req.restaurant = { restaurantId: usuario.personaId._id };

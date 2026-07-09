@@ -58,7 +58,7 @@ ${catOptions}
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
 <label>Amount</label>
-<input type="number" id="amount" class="form-control" step="0.01" value="${expense.amount || 0}" required>
+<input type="number" id="amount" class="form-control" step="0.01" min="0.01" value="${expense.amount || 0}" required>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
@@ -103,10 +103,17 @@ ${pmOptions}
 
     document.getElementById('edit-expense-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      const amountValue = Number(document.getElementById('amount').value);
+      if (isNaN(amountValue) || amountValue <= 0) {
+        Swal.fire('Error!', 'Amount must be a valid number greater than zero.', 'error');
+        return;
+      }
+
       const data = {
         category: document.getElementById('category').value,
         expenseDate: document.getElementById('expenseDate').value,
-        amount: document.getElementById('amount').value,
+        amount: amountValue,
         paymentMethod: document.getElementById('paymentMethod').value,
         invoiceNumber: document.getElementById('invoiceNumber').value,
         vendor: document.getElementById('vendor').value,

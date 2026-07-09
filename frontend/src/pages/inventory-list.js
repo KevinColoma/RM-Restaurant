@@ -1,5 +1,5 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
 
 registerRoute('/inventory-list', async (app) => {
@@ -7,7 +7,8 @@ registerRoute('/inventory-list', async (app) => {
   try {
     const res = await get('/inventory');
     const items = extractList(res, 'inventoryItems');
-    const rows = items.length ? items.map(item => {
+
+    const renderRows = (list) => list.length ? list.map(item => {
       const price = typeof item.price === 'number' ? item.price.toFixed(2) : (item.price || '0.00');
       const supplierName = item.supplier?.name || '-';
       return `<tr>
@@ -22,6 +23,12 @@ registerRoute('/inventory-list', async (app) => {
         </td>
       </tr>`;
     }).join('') : '<tr><td colspan="6" class="text-center">No inventory items found</td></tr>';
+
+    const filterableItems = items.map(item => ({ ...item, supplierName: item.supplier?.name || '' }));
+    const filterPanel = renderFilterPanel([
+      { key: 'supplierName', label: 'Choose Supplier', options: uniqueValues(filterableItems, 'supplierName') }
+    ]);
+    const rows = renderRows(items);
 
     const html = `
 <div class="page-wrapper">
@@ -56,6 +63,7 @@ registerRoute('/inventory-list', async (app) => {
 </ul>
 </div>
 </div>
+${filterPanel}
 <div class="table-responsive">
 <table class="table datanew">
 <thead>
@@ -76,7 +84,10 @@ registerRoute('/inventory-list', async (app) => {
 </div>
 </div>`;
 
+    const bindItemDelete = () => bindDelete(app, '.delete-item', { del, endpoint: '/inventory/', successMsg: 'Inventory item has been deleted.', listRoute: '#/inventory-list' });
+
     renderPage(app, 'inventory-list', html);
-    bindDelete(app, '.delete-item', { del, endpoint: '/inventory/', successMsg: 'Inventory item has been deleted.', listRoute: '#/inventory-list' });
+    bindItemDelete();
+    setTimeout(() => bindFilterPanel(app, { data: filterableItems, renderRows, onRendered: bindItemDelete }), 100);
   } catch (err) { showError(app, err); }
 });

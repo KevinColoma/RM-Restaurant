@@ -70,7 +70,27 @@ registerRoute('/signin', (app) => {
     btn.disabled = true;
     btn.textContent = 'Signing in...';
 
-    const data = await signin(email, password);
+    let data = await signin(email, password);
+
+    if (!data?.success && data?.requiresDeviceAuthorization) {
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+      const confirmResult = await Swal.fire({
+        title: 'Already signed in elsewhere',
+        text: data.message || 'This account is already signed in on another device. Sign out that device and continue here?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sign out other device',
+        cancelButtonText: 'Cancel'
+      });
+      if (!confirmResult.isConfirmed) {
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+      data = await signin(email, password, true);
+    }
+
     if (data?.success) {
       window.location.hash = '#/dashboard';
     } else {

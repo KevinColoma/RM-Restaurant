@@ -23,6 +23,14 @@ const usuarioSchema = new mongoose.Schema({
     isadmin: {
         type: Boolean,
         default: false
+    },
+    activeSessionId: {
+        type: String,
+        default: null
+    },
+    activeDeviceInfo: {
+        type: String,
+        default: null
     }
 }, {
     timestamps: true

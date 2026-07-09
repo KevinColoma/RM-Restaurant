@@ -1,5 +1,5 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
 
 registerRoute('/branches-list', async (app) => {
@@ -7,7 +7,8 @@ registerRoute('/branches-list', async (app) => {
   try {
     const res = await get('/branches');
     const branches = extractList(res, 'branches');
-    const rows = branches.length ? branches.map(b => {
+
+    const renderRows = (list) => list.length ? list.map(b => {
       return `<tr>
         <td>${b.restaurantName || b.name || '-'}</td>
         <td>${b.city || '-'}</td>
@@ -19,6 +20,11 @@ registerRoute('/branches-list', async (app) => {
         </td>
       </tr>`;
     }).join('') : '<tr><td colspan="6" class="text-center">No branches found</td></tr>';
+
+    const filterPanel = renderFilterPanel([
+      { key: 'city', label: 'Choose City', options: uniqueValues(branches, 'city') }
+    ]);
+    const rows = renderRows(branches);
 
     const html = `
 <div class="page-wrapper">
@@ -53,6 +59,7 @@ registerRoute('/branches-list', async (app) => {
 </ul>
 </div>
 </div>
+${filterPanel}
 <div class="table-responsive">
 <table class="table datanew">
 <thead>
@@ -73,7 +80,10 @@ registerRoute('/branches-list', async (app) => {
 </div>
 </div>`;
 
+    const bindBranchDelete = () => bindDelete(app, '.delete-branch', { del, endpoint: '/branches/', successMsg: 'Branch has been deleted.', listRoute: '#/branches-list' });
+
     renderPage(app, 'branches-list', html);
-    bindDelete(app, '.delete-branch', { del, endpoint: '/branches/', successMsg: 'Branch has been deleted.', listRoute: '#/branches-list' });
+    bindBranchDelete();
+    setTimeout(() => bindFilterPanel(app, { data: branches, renderRows, onRendered: bindBranchDelete }), 100);
   } catch (err) { showError(app, err); }
 });

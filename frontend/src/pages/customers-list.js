@@ -1,5 +1,5 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel } from '../lib/listPage.js';
 import { get, put, del } from '../lib/api.js';
 
 registerRoute('/customers-list', async (app) => {
@@ -7,7 +7,8 @@ registerRoute('/customers-list', async (app) => {
   try {
     const res = await get('/customers');
     const customers = extractList(res, 'customers');
-    const rows = customers.length ? customers.map(c => {
+
+    const renderRows = (list) => list.length ? list.map(c => {
       const date = c.createdAt ? new Date(c.createdAt).toDateString() : '-';
       return `<tr data-customer-id="${c._id}">
         <td class="cust-name">${c.name || '-'}</td>
@@ -21,6 +22,12 @@ registerRoute('/customers-list', async (app) => {
         </td>
       </tr>`;
     }).join('') : '<tr><td colspan="6" class="text-center">No customers found</td></tr>';
+
+    const filterableCustomers = customers.map(c => ({ ...c, ordersStatus: c.orders && c.orders.length ? 'Has Orders' : 'No Orders' }));
+    const filterPanel = renderFilterPanel([
+      { key: 'ordersStatus', label: 'Orders', options: ['Has Orders', 'No Orders'] }
+    ]);
+    const rows = renderRows(customers);
 
     const html = `
 <div class="page-wrapper">
@@ -52,6 +59,7 @@ registerRoute('/customers-list', async (app) => {
 </ul>
 </div>
 </div>
+${filterPanel}
 <div class="table-responsive">
 <table class="table datanew">
 <thead>
@@ -72,9 +80,7 @@ registerRoute('/customers-list', async (app) => {
 </div>
 </div>`;
 
-    renderPage(app, 'customers-list', html);
-
-    setTimeout(() => {
+    const bindCustomerActions = () => {
       app.querySelectorAll('.edit-customer').forEach(btn => {
         btn.addEventListener('click', function(e) {
           e.preventDefault();
@@ -109,6 +115,12 @@ registerRoute('/customers-list', async (app) => {
         });
       });
       bindDelete(app, '.delete-customer', { del, endpoint: '/customers/', successMsg: 'Customer has been deleted.', listRoute: '#/customers-list' });
+    };
+
+    renderPage(app, 'customers-list', html);
+    setTimeout(() => {
+      bindCustomerActions();
+      bindFilterPanel(app, { data: filterableCustomers, renderRows, onRendered: bindCustomerActions });
     }, 100);
   } catch (err) { showError(app, err); }
 });

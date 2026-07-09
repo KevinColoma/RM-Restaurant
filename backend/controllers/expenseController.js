@@ -13,6 +13,12 @@ exports.addExpense = async (req, res) => {
     try {
         const { category, expenseDate, amount, invoiceNumber, vendor, description } = req.body;
         const personaId = req.personaId;
+
+        const numericAmount = Number(amount);
+        if (isNaN(numericAmount) || numericAmount <= 0) {
+            return res.status(400).json({ message: 'Amount must be a valid number greater than zero' });
+        }
+
         const newExpense = new Expense({
             personaId,
             expenseType: category,
@@ -62,10 +68,18 @@ exports.deleteExpense = async (req, res) => {
 exports.updateExpense = async (req, res) => {
     try {
         const personaId = req.personaId;
+
+        if (req.body.amount !== undefined) {
+            const numericAmount = Number(req.body.amount);
+            if (isNaN(numericAmount) || numericAmount <= 0) {
+                return res.status(400).json({ message: 'Amount must be a valid number greater than zero' });
+            }
+        }
+
         const expense = await Expense.findOneAndUpdate(
             { _id: req.params.id, personaId },
             { ...req.body, updatedAt: new Date() },
-            { new: true }
+            { new: true, runValidators: true }
         );
         if (!expense) return res.status(404).json({ error: 'Expense not found' });
         await logAudit(req, 'update', 'Expense', expense._id, 'Updated expense: ' + expense.expenseType);
