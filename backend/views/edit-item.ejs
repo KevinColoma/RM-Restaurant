@@ -49,7 +49,7 @@
                         <div class="col-lg-3 col-sm-6 col-12">
                             <div class="form-group">
                                 <label>Price</label>
-                                <input type="text" name="price" id="price" value="<%= menu.price %>" required>
+                                <input type="number" name="price" id="price" step="0.01" min="0" value="<%= menu.price %>" required>
                             </div>
                         </div>
                         <div class="col-lg-12">
@@ -88,18 +88,19 @@
                 body: JSON.stringify(data)
             });
 
+            const result = await response.json();
+
             if (response.ok) {
-                const updatedItem = await response.json();
-                console.log("Item updated successfully:", updatedItem);
-                window.location.href = "/getmenu";
+                console.log("Item updated successfully:", result);
+                Swal.fire('Success!', 'Item updated successfully!', 'success')
+                    .then(() => window.location.href = "/getmenu");
             } else {
-                const error = await response.json();
-                console.error("Error updating item:", error);
-                alert("Error: " + error.message);
+                console.error("Error updating item:", result);
+                Swal.fire('Error!', result.message || 'Failed to update item.', 'error');
             }
         } catch (err) {
             console.error("Request failed:", err);
-            alert("Request failed: " + err.message);
+            Swal.fire('Error!', 'Request failed: ' + err.message, 'error');
         }
     });
 </script>

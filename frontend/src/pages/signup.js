@@ -28,7 +28,7 @@ registerRoute('/', (app) => {
   <div class="form-login">
     <label>Owner Name</label>
     <div class="form-addons">
-      <input type="text" name="ownerName" id="ownerName" placeholder="Enter owner name" required>
+      <input type="text" name="ownerName" id="ownerName" placeholder="Enter owner name" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" required>
       <img src="assets/img/icons/user.svg" alt="img">
     </div>
   </div>
@@ -42,7 +42,7 @@ registerRoute('/', (app) => {
   <div class="form-login">
     <label>City</label>
     <div class="form-addons">
-      <input type="text" name="city" id="city" placeholder="Enter city" required>
+      <input type="text" name="city" id="city" placeholder="Enter city" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" required>
       <img src="assets/img/icons/city.svg" alt="img">
     </div>
   </div>
@@ -56,7 +56,7 @@ registerRoute('/', (app) => {
   <div class="form-login">
     <label>Mobile</label>
     <div class="form-addons">
-      <input type="tel" name="mobile" id="mobile" placeholder="Enter mobile number" required>
+      <input type="tel" name="mobile" id="mobile" placeholder="Enter mobile number" pattern="[0-9+ -]+" title="Only numbers are allowed" required>
       <img src="assets/img/icons/phone.svg" alt="img">
     </div>
   </div>

@@ -119,7 +119,7 @@
                               <div class="col-lg-6 col-sm-12 col-12">
                                 <div class="form-group">
                                   <label data-i18n="form.phone">Phone</label>
-                                  <input type="text" value="" id="customerPhone" class="form-control">
+                                  <input type="tel" value="" id="customerPhone" pattern="[0-9+\- ]*" class="form-control">
                                 </div>
                               </div>
                               <div class="col-lg-6 col-sm-12 col-12">
@@ -276,12 +276,12 @@
 
     checkoutButton.addEventListener('click', async function () {
         if (!selectedOrderType) {
-            alert('Please select an order type (Dine In, Take Away, or Online).');
+            Swal.fire('Warning', 'Please select an order type (Dine In, Take Away, or Online).', 'warning');
             return;
         }
         const items = Array.from(billingItems.querySelectorAll('tr'));
         if (items.length === 0) {
-            alert('Please add at least one item to the order.');
+            Swal.fire('Warning', 'Please add at least one item to the order.', 'warning');
             return;
         }
         const comment = document.getElementById('order-comment').value;
@@ -314,15 +314,24 @@
                 document.querySelectorAll('.ordermethod').forEach(btn => btn.classList.remove('selected'));
                 updateTotals();
             } else {
-                const errText = await response.text();
-                alert('Failed to place order: ' + errText);
+                const errData = await response.json().catch(() => ({}));
+                Swal.fire('Error!', errData.message || 'Failed to place order.', 'error');
             }
     });
 
     submitButton.addEventListener('click', async function () {
-        const name = document.getElementById('customerName').value;
-        const phone = document.getElementById('customerPhone').value;
+        const name = document.getElementById('customerName').value.trim();
+        const phone = document.getElementById('customerPhone').value.trim();
         const address = document.getElementById('customerAddress').value;
+
+        if (!name) {
+            Swal.fire('Warning', 'Customer name is required.', 'warning');
+            return;
+        }
+        if (phone && !/^[0-9+\- ]+$/.test(phone)) {
+            Swal.fire('Warning', 'Phone number can only contain digits.', 'warning');
+            return;
+        }
 
         const response = await fetch('/api/customers', {
             method: 'POST',
@@ -344,8 +353,8 @@
             $('#create').modal('hide');
             document.getElementById('customerForm').reset();
         } else {
-            const err = await response.text();
-            alert('Failed to create customer: ' + err);
+            const errData = await response.json().catch(() => ({}));
+            Swal.fire('Error!', errData.message || 'Failed to create customer.', 'error');
         }
     });
 

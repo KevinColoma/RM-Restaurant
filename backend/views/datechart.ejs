@@ -182,7 +182,7 @@
             const endDate = document.getElementById('endDate').value;
             
             if (!startDate || !endDate) {
-                alert('Please select both start and end dates.');
+                Swal.fire('Warning', 'Please select both start and end dates.', 'warning');
                 return;
             }
             
@@ -402,6 +402,9 @@
 <script src="assets/js/jquery.slimscroll.min.js"></script>
 
 <script src="assets/js/bootstrap.bundle.min.js"></script>
+
+<script src="assets/plugins/sweetalert/sweetalert2.all.min.js"></script>
+<script src="assets/plugins/sweetalert/sweetalerts.min.js"></script>
 
 <script src="assets/js/script.js"></script>
 </body>

@@ -35,13 +35,13 @@ registerRoute('/inventory-add', async (app) => {
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
 <label>Quantity</label>
-<input type="number" name="quantity" id="quantity" class="form-control" required>
+<input type="number" name="quantity" id="quantity" class="form-control" min="0" step="1" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
 <label>Price</label>
-<input type="number" name="price" id="price" step="0.01" class="form-control" required>
+<input type="number" name="price" id="price" step="0.01" min="0" class="form-control" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">

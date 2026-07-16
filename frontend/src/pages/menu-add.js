@@ -56,7 +56,7 @@ registerRoute('/menu-add', async (app) => {
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
 <label>Price</label>
-<input type="number" name="price" id="price" class="form-control" step="0.01" required>
+<input type="number" name="price" id="price" class="form-control" step="0.01" min="0" required>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">

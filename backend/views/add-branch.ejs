@@ -22,7 +22,7 @@
                         <div class="col-lg-3 col-sm-6 col-12">
                             <div class="form-group">
                                 <label data-i18n="form.branch_owner">Owner Name</label>
-                                <input type="text" name="ownerName" id="ownerName" required>
+                                <input type="text" name="ownerName" id="ownerName" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" required>
                             </div>
                         </div>
                         <div class="col-lg-3 col-sm-6 col-12">
@@ -34,7 +34,7 @@
                         <div class="col-lg-3 col-sm-6 col-12">
                             <div class="form-group">
                                 <label data-i18n="form.branch_city">City</label>
-                                <input type="text" name="city" id="city" required>
+                                <input type="text" name="city" id="city" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" required>
                             </div>
                         </div>
                         <div class="col-lg-3 col-sm-6 col-12">
@@ -52,7 +52,7 @@
                         <div class="col-lg-3 col-sm-6 col-12">
                             <div class="form-group">
                                 <label data-i18n="form.branch_mobile">Mobile</label>
-                                <input type="text" name="mobile" id="mobile" required>
+                                <input type="tel" name="mobile" id="mobile" pattern="[0-9+\- ]+" title="Only numbers are allowed" required>
                             </div>
                         </div>
                         <div class="col-lg-12">
@@ -89,16 +89,16 @@
                 body: JSON.stringify(data)
             });
 
+            const result = await response.json();
+
             if (response.ok) {
-                const saved = await response.json();
-                alert("Branch added successfully!");
-                window.location.href = "/branches";
+                Swal.fire('Success!', 'Branch added successfully!', 'success')
+                    .then(() => window.location.href = "/branches");
             } else {
-                const error = await response.json();
-                alert("Error: " + error.message);
+                Swal.fire('Error!', result.message || 'Failed to add branch.', 'error');
             }
         } catch (err) {
-            alert("Request failed: " + err.message);
+            Swal.fire('Error!', 'Request failed: ' + err.message, 'error');
         }
     });
 </script>

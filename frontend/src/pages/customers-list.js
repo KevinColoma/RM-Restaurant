@@ -99,9 +99,19 @@ ${filterPanel}
             showCancelButton: true,
             confirmButtonText: 'Update',
             preConfirm: () => {
+              const nameVal = document.getElementById('swal-name').value.trim();
+              const phoneVal = document.getElementById('swal-phone').value.trim();
+              if (!/^[A-Za-zÀ-ÿ\s]+$/.test(nameVal)) {
+                Swal.showValidationMessage('Name can only contain letters');
+                return false;
+              }
+              if (phoneVal && !/^[0-9+\-\s]+$/.test(phoneVal)) {
+                Swal.showValidationMessage('Phone can only contain numbers');
+                return false;
+              }
               return put('/customers/' + id, {
-                name: document.getElementById('swal-name').value,
-                phone: document.getElementById('swal-phone').value,
+                name: nameVal,
+                phone: phoneVal,
                 address: document.getElementById('swal-address').value
               }).then(res => {
                 if (res && !res.error) {

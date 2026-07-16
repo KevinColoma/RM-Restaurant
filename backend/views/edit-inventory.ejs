@@ -21,13 +21,13 @@
                         <div class="col-lg-4 col-sm-6 col-12">
                             <div class="form-group">
                                 <label>Quantity</label>
-                                <input type="number" name="quantity" id="quantity" class="form-control" value="<%= item.quantity %>" required>
+                                <input type="number" name="quantity" id="quantity" class="form-control" min="0" step="1" value="<%= item.quantity %>" required>
                             </div>
                         </div>
                         <div class="col-lg-4 col-sm-6 col-12">
                             <div class="form-group">
                                 <label>Price</label>
-                                <input type="number" name="price" id="price" step="0.01" class="form-control" value="<%= item.price %>" required>
+                                <input type="number" name="price" id="price" step="0.01" min="0" class="form-control" value="<%= item.price %>" required>
                             </div>
                         </div>
                         <div class="col-lg-4 col-sm-6 col-12">
@@ -67,15 +67,16 @@
                 body: JSON.stringify({ name, quantity, price, supplier })
             });
 
+            const result = await response.json();
+
             if (response.ok) {
-                alert("Item updated successfully!");
-                window.location.href = "/get-expense-list";
+                Swal.fire('Success!', 'Item updated successfully!', 'success')
+                    .then(() => window.location.href = "/get-expense-list");
             } else {
-                const err = await response.json();
-                alert("Error: " + err.message);
+                Swal.fire('Error!', result.message || 'Failed to update item.', 'error');
             }
         } catch (err) {
-            alert("Request failed: " + err.message);
+            Swal.fire('Error!', 'Request failed: ' + err.message, 'error');
         }
     });
 </script>

@@ -1,6 +1,7 @@
 import { registerRoute } from '../router.js';
 import { renderLayout } from '../components/Header.js';
 import { get, post } from '../lib/api.js';
+import { notifySuccess, notifyError, notifyWarning } from '../lib/notify.js';
 
 registerRoute('/pos', async (app) => {
   app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
@@ -175,7 +176,7 @@ registerRoute('/pos', async (app) => {
     </div>
     <div class="form-group">
       <label>Phone</label>
-      <input type="text" id="customerPhone" placeholder="Enter phone">
+      <input type="tel" id="customerPhone" pattern="[0-9+ -]*" placeholder="Enter phone">
     </div>
     <div class="form-group">
       <label>Address</label>
@@ -312,20 +313,12 @@ registerRoute('/pos', async (app) => {
 
     checkoutButton.addEventListener('click', async () => {
       if (!selectedOrderType) {
-        if (typeof Swal !== 'undefined') {
-          Swal.fire('Warning', 'Please select an order type (Dine In, Take Away, or Online).', 'warning');
-        } else {
-          alert('Please select an order type.');
-        }
+        notifyWarning('Please select an order type (Dine In, Take Away, or Online).');
         return;
       }
       const entries = Object.entries(cart);
       if (entries.length === 0) {
-        if (typeof Swal !== 'undefined') {
-          Swal.fire('Warning', 'Please add at least one item to the order.', 'warning');
-        } else {
-          alert('Please add at least one item.');
-        }
+        notifyWarning('Please add at least one item to the order.');
         return;
       }
 
@@ -343,11 +336,7 @@ registerRoute('/pos', async (app) => {
 
       try {
         const result = await post('/placeorder', payload);
-        if (typeof Swal !== 'undefined') {
-          Swal.fire('Success!', 'Order placed successfully!', 'success');
-        } else {
-          alert('Order placed successfully!');
-        }
+        notifySuccess('Order placed successfully!');
         Object.keys(cart).forEach(k => delete cart[k]);
         orderComment.value = '';
         customerSelect.value = '';
@@ -355,11 +344,7 @@ registerRoute('/pos', async (app) => {
         orderTypeBtns.forEach(b => b.classList.remove('selected'));
         updateCartDisplay();
       } catch (err) {
-        if (typeof Swal !== 'undefined') {
-          Swal.fire('Error', 'Failed to place order: ' + err.message, 'error');
-        } else {
-          alert('Failed to place order: ' + err.message);
-        }
+        notifyError('Failed to place order: ' + err.message);
       }
     });
 
@@ -395,23 +380,19 @@ registerRoute('/pos', async (app) => {
     document.getElementById('modal-submit').addEventListener('click', async () => {
       const name = document.getElementById('customerName').value.trim();
       if (!name) {
-        if (typeof Swal !== 'undefined') {
-          Swal.fire('Warning', 'Customer name is required.', 'warning');
-        } else {
-          alert('Customer name is required.');
-        }
+        notifyWarning('Customer name is required.');
         return;
       }
       const phone = document.getElementById('customerPhone').value.trim();
+      if (phone && !/^[0-9+\-\s]+$/.test(phone)) {
+        notifyWarning('Phone number can only contain digits.');
+        return;
+      }
       const address = document.getElementById('customerAddress').value.trim();
 
       try {
         const customer = await post('/customers', { name, phone, address });
-        if (typeof Swal !== 'undefined') {
-          Swal.fire('Success!', 'Customer "' + customer.name + '" created successfully!', 'success');
-        } else {
-          alert('Customer created successfully!');
-        }
+        notifySuccess('Customer "' + customer.name + '" created successfully!');
         const opt = document.createElement('option');
         opt.value = customer._id;
         opt.textContent = customer.name + (customer.phone ? ' - ' + customer.phone : '');
@@ -422,11 +403,7 @@ registerRoute('/pos', async (app) => {
         document.getElementById('customerPhone').value = '';
         document.getElementById('customerAddress').value = '';
       } catch (err) {
-        if (typeof Swal !== 'undefined') {
-          Swal.fire('Error', 'Failed to create customer: ' + err.message, 'error');
-        } else {
-          alert('Failed to create customer: ' + err.message);
-        }
+        notifyError('Failed to create customer: ' + err.message);
       }
     });
   } catch (err) {

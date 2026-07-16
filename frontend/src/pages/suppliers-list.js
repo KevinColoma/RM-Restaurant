@@ -62,17 +62,27 @@ registerRoute('/suppliers-list', async (app) => {
           title: 'Add New Supplier',
           html: `
             <input id="swal-name" class="swal2-input" placeholder="Supplier Name">
-            <input id="swal-email" class="swal2-input" placeholder="Email">
+            <input id="swal-email" type="email" class="swal2-input" placeholder="Email">
             <input id="swal-phone" class="swal2-input" placeholder="Phone">
             <input id="swal-address" class="swal2-input" placeholder="Address">
           `,
           showCancelButton: true,
           confirmButtonText: 'Save',
           preConfirm: () => {
+            const nameVal = document.getElementById('swal-name').value.trim();
+            const phoneVal = document.getElementById('swal-phone').value.trim();
+            if (!/^[A-Za-zÀ-ÿ\s]+$/.test(nameVal)) {
+              Swal.showValidationMessage('Name can only contain letters');
+              return false;
+            }
+            if (phoneVal && !/^[0-9+\-\s]+$/.test(phoneVal)) {
+              Swal.showValidationMessage('Phone can only contain numbers');
+              return false;
+            }
             return post('/suppliers', {
-              name: document.getElementById('swal-name').value,
+              name: nameVal,
               email: document.getElementById('swal-email').value,
-              phone: document.getElementById('swal-phone').value,
+              phone: phoneVal,
               address: document.getElementById('swal-address').value
             }).then(res => {
               if (res && !res.error) {

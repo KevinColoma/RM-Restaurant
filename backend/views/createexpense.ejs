@@ -1,6 +1,7 @@
 <%- include('header') -%>
 <link rel="stylesheet" href="assets/plugins/select2/css/select2.min.css">
 <link rel="stylesheet" href="assets/css/bootstrap-datetimepicker.min.css">
+<link rel="stylesheet" href="assets/css/form-improvements.css">
 
 <div class="page-wrapper">
     <div class="content">
@@ -12,12 +13,12 @@
         </div>
         <div class="card">
             <div class="card-body">
-                <form id="add-expense-form">
+                <form id="add-expense-form" novalidate>
                     <div class="row">
                         <!-- Expense Category -->
                         <div class="col-lg-3 col-sm-6 col-12">
-                            <div class="form-group">
-                                <label for="category" data-i18n="form.expense_category">Expense Category</label>
+                            <div class="form-group" id="category-group">
+                                <label for="category" class="form-label" data-i18n="form.expense_category">Expense Category <span class="text-danger">*</span></label>
                                 <select class="form-control custom-select" id="category" required>
                                     <option value="" disabled selected> expense category</option>
                                     <option value="supplies">Supplies</option>
@@ -39,53 +40,53 @@
                         
                         <!-- Expense Date -->
                         <div class="col-lg-3 col-sm-6 col-12">
-                            <div class="form-group">
-                                <label for="expenseDate" data-i18n="form.expense_date">Expense Date</label>
+                            <div class="form-group" id="expenseDate-group">
+                                <label for="expenseDate" class="form-label" data-i18n="form.expense_date">Expense Date <span class="text-danger">*</span></label>
                                 <input type="date" id="expenseDate" class="form-control" required>
                             </div>
                         </div>
-                        
+
                         <!-- Amount -->
                         <div class="col-lg-3 col-sm-6 col-12">
-                            <div class="form-group">
-                                <label for="amount" data-i18n="form.amount">Amount</label>
+                            <div class="form-group" id="amount-group">
+                                <label for="amount" class="form-label" data-i18n="form.amount">Amount <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <input type="number" id="amount" class="form-control" step="0.01" required>
+                                    <input type="number" id="amount" class="form-control" step="0.01" min="0.01" placeholder="0.00" required>
                                     <div class="input-group-append">
                                         <span class="input-group-text">$</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Reference No. -->
                         <div class="col-lg-3 col-sm-6 col-12">
-                            <div class="form-group">
-                                <label for="invoiceNumber">InvoiceNumber / Reference No.</label>
-                                <input type="text" id="invoiceNumber" class="form-control">
+                            <div class="form-group" id="invoiceNumber-group">
+                                <label for="invoiceNumber" class="form-label">Invoice / Reference No.</label>
+                                <input type="text" id="invoiceNumber" class="form-control" placeholder="Optional">
                             </div>
                         </div>
-                        
+
                         <!-- Expense for -->
                         <div class="col-lg-12">
-                            <div class="form-group">
-                                <label for="vendor" data-i18n="form.vendor">Expense for (vendor/employee)</label>
-                                <input type="text" id="vendor" class="form-control">
+                            <div class="form-group" id="vendor-group">
+                                <label for="vendor" class="form-label" data-i18n="form.vendor">Expense for (vendor/employee)</label>
+                                <input type="text" id="vendor" class="form-control" placeholder="Who did you pay?">
                             </div>
                         </div>
-                        
+
                         <!-- Description -->
                         <div class="col-lg-12">
-                            <div class="form-group">
-                                <label for="description" data-i18n="form.description">Description</label>
-                                <textarea class="form-control" id="description"></textarea>
+                            <div class="form-group" id="description-group">
+                                <label for="description" class="form-label" data-i18n="form.description">Description</label>
+                                <textarea class="form-control" id="description" rows="3" placeholder="What was this expense for?"></textarea>
                             </div>
                         </div>
                         
                         <!-- Buttons -->
                         <div class="col-lg-12">
-                            <button type="submit" class="btn btn-submit me-2" data-i18n="form.submit">Submit</button>
-                            <a href="/getexpense" class="btn btn-cancel" data-i18n="form.cancel">Cancel</a>
+                            <button type="submit" id="submit-btn" class="btn btn-primary me-2" data-i18n="form.submit">Submit</button>
+                            <a href="/getexpense" class="btn btn-secondary" data-i18n="form.cancel">Cancel</a>
                         </div>
                     </div>
                 </form>
@@ -95,15 +96,98 @@
 </div>
 </div>
 <script>
-    document.getElementById("add-expense-form").addEventListener("submit", async function(event) {
+    // Form utilities
+    function disableSubmit(btn) {
+        btn.disabled = true;
+        btn.classList.add('btn-loading');
+        btn.setAttribute('aria-busy', 'true');
+        const originalText = btn.textContent;
+        btn.innerHTML = '<span class="spinner-sm"></span> ' + originalText;
+        return originalText;
+    }
+
+    function enableSubmit(btn, originalText = 'Submit') {
+        btn.disabled = false;
+        btn.classList.remove('btn-loading');
+        btn.removeAttribute('aria-busy');
+        btn.textContent = originalText;
+    }
+
+    function showFieldError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        field.classList.add('is-invalid');
+        field.setAttribute('aria-invalid', 'true');
+        let errorEl = field.parentElement.querySelector('.invalid-feedback');
+        if (!errorEl) {
+            errorEl = document.createElement('div');
+            errorEl.className = 'invalid-feedback d-block';
+            field.parentElement.appendChild(errorEl);
+        }
+        errorEl.textContent = message;
+    }
+
+    function clearFieldError(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        field.classList.remove('is-invalid');
+        field.removeAttribute('aria-invalid');
+        const errorEl = field.parentElement.querySelector('.invalid-feedback');
+        if (errorEl) errorEl.remove();
+    }
+
+    function clearAllErrors(form) {
+        form.querySelectorAll('.is-invalid').forEach(field => {
+            clearFieldError(field.id);
+        });
+    }
+
+    const form = document.getElementById("add-expense-form");
+    const submitBtn = document.getElementById("submit-btn");
+
+    form.addEventListener("submit", async function(event) {
         event.preventDefault();
-        
+
+        // Limpiar errores previos
+        clearAllErrors(form);
+
+        // Obtener valores
         const category = document.getElementById("category").value;
         const expenseDate = document.getElementById("expenseDate").value;
         const amount = document.getElementById("amount").value;
         const invoiceNumber = document.getElementById("invoiceNumber").value;
         const vendor = document.getElementById("vendor").value;
         const description = document.getElementById("description").value;
+
+        let hasErrors = false;
+
+        // Validación de categoría
+        if (!category) {
+            showFieldError("category", "Please select an expense category");
+            hasErrors = true;
+        }
+
+        // Validación de fecha
+        if (!expenseDate) {
+            showFieldError("expenseDate", "Please select an expense date");
+            hasErrors = true;
+        }
+
+        // Validación de monto
+        const numAmount = Number(amount);
+        if (!amount || isNaN(numAmount) || numAmount <= 0) {
+            showFieldError("amount", "Amount must be a valid number greater than 0.01");
+            hasErrors = true;
+        }
+
+        // Si hay errores, no continuar
+        if (hasErrors) {
+            Swal.fire('Validation Error', 'Please fill in all required fields correctly.', 'warning');
+            return;
+        }
+
+        // Deshabilitar botón y mostrar spinner
+        const originalText = disableSubmit(submitBtn);
 
         const data = {
             category,
@@ -123,27 +207,46 @@
                 body: JSON.stringify(data)
             });
 
-            if (response.ok) {
-                const savedExpense = await response.json();
-                console.log("Expense saved successfully:", savedExpense);
-                alert("Expense added successfully!");
+            const result = await response.json();
 
-                // Clear form fields
-                document.getElementById("category").value = "";
-                document.getElementById("expenseDate").value = "";
-                document.getElementById("amount").value = "";
-                document.getElementById("invoiceNumber").value = "";
-                document.getElementById("vendor").value = "";
-                document.getElementById("description").value = "";
+            if (response.ok) {
+                // Éxito
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Expense added successfully!',
+                    showConfirmButton: true,
+                    timer: 2000
+                });
+
+                // Limpiar formulario
+                form.reset();
+                clearAllErrors(form);
+
+                // Re-habilitar botón
+                enableSubmit(submitBtn, originalText);
             } else {
-                const errorText = await response.text();
-                console.error("Error saving expense:", errorText);
-                alert("Error: " + errorText);
+                // Error del servidor
+                const message = result.message || 'Failed to save expense. Please try again.';
+                Swal.fire('Error', message, 'error');
+                enableSubmit(submitBtn, originalText);
             }
         } catch (err) {
             console.error("Request failed:", err);
-            alert("Request failed: " + err.message);
+            Swal.fire('Error', 'Network error. Please check your connection and try again.', 'error');
+            enableSubmit(submitBtn, originalText);
         }
+    });
+
+    // Validación en tiempo real: limpiar error cuando el usuario empieza a escribir
+    ['category', 'expenseDate', 'amount'].forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        field.addEventListener('change', function() {
+            clearFieldError(fieldId);
+        });
+        field.addEventListener('input', function() {
+            clearFieldError(fieldId);
+        });
     });
 </script>
 

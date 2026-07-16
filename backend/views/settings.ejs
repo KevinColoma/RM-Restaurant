@@ -30,7 +30,7 @@
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
 <label data-i18n="settings.tax_rate">Tax Rate (%)</label>
-<input type="number" name="taxRate" id="taxRate" class="form-control" step="0.1" value="<%= persona.taxRate %>" required>
+<input type="number" name="taxRate" id="taxRate" class="form-control" step="0.1" min="0" max="100" value="<%= persona.taxRate %>" required>
 <small class="text-muted">Applied automatically to all orders (default: 10%)</small>
 </div>
 </div>
@@ -78,7 +78,7 @@ headers: {"Content-Type":"application/json"},
 body: JSON.stringify(data)
 });
 if (res.ok) {
-alert("Settings saved successfully!");
+Swal.fire('Success!', 'Settings saved successfully!', 'success');
 if (data.theme === 'dark') {
 document.body.classList.add('dark-mode');
 localStorage.setItem('rms-theme', 'dark');
@@ -88,10 +88,10 @@ localStorage.setItem('rms-theme', 'light');
 }
 } else {
 const err = await res.json();
-alert("Error: " + err.error);
+Swal.fire('Error!', err.error || 'Failed to save settings.', 'error');
 }
 } catch(err) {
-alert("Request failed: " + err.message);
+Swal.fire('Error!', 'Request failed: ' + err.message, 'error');
 }
 });
 

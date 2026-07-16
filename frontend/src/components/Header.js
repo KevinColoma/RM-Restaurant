@@ -1,3 +1,5 @@
+import { notifyError, notifyWarning } from '../lib/notify.js';
+
 export function renderLayout(app, activePage, contentHtml) {
   const sidebarItems = [
     { href: '#/dashboard', icon: 'dashboard.svg', label: 'nav.dashboard', children: null },
@@ -73,8 +75,9 @@ export function renderLayout(app, activePage, contentHtml) {
     }).join('');
   }
 
+  if (localStorage.getItem('rms-theme') === 'dark') document.body.classList.add('dark-mode');
+
   app.innerHTML = `
-<script>(function(){var t=localStorage.getItem('rms-theme')||'light';if(t==='dark')document.body.classList.add('dark-mode')})();</script>
 <div id="global-loader">
   <div class="whirly-loader"></div>
 </div>
@@ -220,16 +223,6 @@ export function renderLayout(app, activePage, contentHtml) {
     </div>
   </div>
 </div>
-<script src="assets/js/jquery-3.6.0.min.js"></script>
-<script src="assets/js/bootstrap.bundle.min.js"></script>
-<script src="assets/js/jquery.dataTables.min.js"></script>
-<script src="assets/js/dataTables.bootstrap4.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="assets/plugins/apexchart/apexcharts.min.js"></script>
-<script src="assets/js/feather.min.js"></script>
-<script src="assets/js/jquery.slimscroll.min.js"></script>
-<script src="assets/js/i18n.js"></script>
-<script src="assets/js/script.js"></script>
   `;
 
   // Fetch user profile
@@ -316,7 +309,7 @@ export function renderLayout(app, activePage, contentHtml) {
             localStorage.removeItem('token');
             window.location.hash = '#/signin';
           } else {
-            alert('Logout failed: ' + data.message);
+            notifyError('Logout failed: ' + data.message);
           }
         })
         .catch(() => {
@@ -361,7 +354,7 @@ export function renderLayout(app, activePage, contentHtml) {
           }
         }
       }
-      alert('No matching page found for "' + q + '". Try: menu, billing, report, inventory, expense, customer, orders');
+      notifyWarning('No matching page found for "' + q + '". Try: menu, billing, report, inventory, expense, customer, orders');
     });
   }
 }

@@ -59,7 +59,7 @@
                         <div class="col-lg-3 col-sm-6 col-12">
                             <div class="form-group">
                                 <label data-i18n="form.price">Price</label>
-                                <input type="text" name="price" id="price" required>
+                                <input type="number" name="price" id="price" step="0.01" min="0" required>
                             </div>
                         </div>
                         <div class="col-lg-12">
@@ -98,19 +98,19 @@
                 body: JSON.stringify(data)
             });
 
+            const result = await response.json();
+
             if (response.ok) {
-                const savedItem = await response.json();
-                console.log("Item saved successfully:", savedItem);
-                alert("Item added successfully!");
-                // Optionally, redirect to another page or give user feedback
+                console.log("Item saved successfully:", result);
+                Swal.fire('Success!', 'Item added successfully!', 'success');
+                document.getElementById("add-item-form").reset();
             } else {
-                const error = await response.json();
-                console.error("Error saving item:", error);
-                alert("Error: " + error.message);
+                console.error("Error saving item:", result);
+                Swal.fire('Error!', result.message || 'Failed to add item.', 'error');
             }
         } catch (err) {
             console.error("Request failed:", err);
-            alert("Request failed: " + err.message);
+            Swal.fire('Error!', 'Request failed: ' + err.message, 'error');
         }
     });
 </script>

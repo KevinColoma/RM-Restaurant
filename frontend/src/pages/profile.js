@@ -36,7 +36,7 @@ Change Photo
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
 <label>Owner Name</label>
-<input type="text" name="ownerName" id="ownerName" class="form-control" value="${persona.ownerName || ''}" required>
+<input type="text" name="ownerName" id="ownerName" class="form-control" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" value="${persona.ownerName || ''}" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
@@ -48,7 +48,7 @@ Change Photo
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
 <label>City</label>
-<input type="text" name="city" id="city" class="form-control" value="${persona.city || ''}" required>
+<input type="text" name="city" id="city" class="form-control" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" value="${persona.city || ''}" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
@@ -60,7 +60,7 @@ Change Photo
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
 <label>Mobile</label>
-<input type="text" name="mobile" id="mobile" class="form-control" value="${persona.mobile || ''}" required>
+<input type="tel" name="mobile" id="mobile" class="form-control" pattern="[0-9+ -]+" title="Only numbers are allowed" value="${persona.mobile || ''}" required>
 </div>
 </div>
 <div class="col-lg-12">

@@ -160,7 +160,7 @@ ${itemOpts}
         const itemName = row.querySelector('.item-select').value;
         const qty = parseInt(row.querySelector('.item-qty').value);
         const price = parseFloat(row.querySelector('.item-price').value);
-        if (!itemName || !qty || !price) {
+        if (!itemName || !(qty > 0) || !(price > 0)) {
           valid = false;
           return;
         }

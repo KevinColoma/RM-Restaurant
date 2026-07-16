@@ -27,7 +27,7 @@ registerRoute('/branches-add', async (app) => {
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
 <label>City</label>
-<input type="text" name="city" id="city" class="form-control" required>
+<input type="text" name="city" id="city" class="form-control" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" required>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
@@ -45,7 +45,7 @@ registerRoute('/branches-add', async (app) => {
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
 <label>Mobile</label>
-<input type="text" name="mobile" id="mobile" class="form-control" required>
+<input type="tel" name="mobile" id="mobile" class="form-control" pattern="[0-9+ -]+" title="Only numbers are allowed" required>
 </div>
 </div>
 <div class="col-lg-12">

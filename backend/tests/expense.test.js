@@ -69,4 +69,86 @@ describe('Expense CRUD', () => {
 
     expect(res.status).toBe(200);
   });
+
+  describe('Expense validation - Form improvements', () => {
+    it('should reject negative amount', async () => {
+      const res = await request(app)
+        .post('/api/addexpense')
+        .set('Cookie', [`jwt=${token}`])
+        .send({
+          category: 'supplies',
+          expenseDate: new Date().toISOString(),
+          amount: -50.00,
+          description: 'Invalid negative amount',
+          vendor: 'Test Vendor'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('Amount must be a valid number greater than zero');
+    });
+
+    it('should reject zero amount', async () => {
+      const res = await request(app)
+        .post('/api/addexpense')
+        .set('Cookie', [`jwt=${token}`])
+        .send({
+          category: 'supplies',
+          expenseDate: new Date().toISOString(),
+          amount: 0,
+          description: 'Invalid zero amount',
+          vendor: 'Test Vendor'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('Amount must be a valid number greater than zero');
+    });
+
+    it('should require description field', async () => {
+      const res = await request(app)
+        .post('/api/addexpense')
+        .set('Cookie', [`jwt=${token}`])
+        .send({
+          category: 'supplies',
+          expenseDate: new Date().toISOString(),
+          amount: 100.00,
+          vendor: 'Test Vendor'
+          // description missing
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('description');
+    });
+
+    it('should accept valid decimal amounts', async () => {
+      const res = await request(app)
+        .post('/api/addexpense')
+        .set('Cookie', [`jwt=${token}`])
+        .send({
+          category: 'supplies',
+          expenseDate: new Date().toISOString(),
+          amount: 99.99,
+          description: 'Valid decimal amount',
+          vendor: 'Test Vendor'
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.amount).toBe(99.99);
+    });
+
+    it('should accept minimum valid amount 0.01', async () => {
+      const res = await request(app)
+        .post('/api/addexpense')
+        .set('Cookie', [`jwt=${token}`])
+        .send({
+          category: 'supplies',
+          expenseDate: new Date().toISOString(),
+          amount: 0.01,
+          description: 'Minimum valid amount',
+          vendor: 'Test Vendor'
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.amount).toBe(0.01);
+    });
+  });
 });

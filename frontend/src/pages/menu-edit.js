@@ -63,7 +63,7 @@ registerRoute('/menu-edit/', async (app) => {
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
 <label>Price</label>
-<input type="number" name="price" id="price" class="form-control" step="0.01" value="${menu.price || ''}" required>
+<input type="number" name="price" id="price" class="form-control" step="0.01" min="0" value="${menu.price || ''}" required>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">

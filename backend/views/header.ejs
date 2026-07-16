@@ -22,6 +22,7 @@
 <link rel="stylesheet" href="assets/plugins/fontawesome/css/all.min.css">
 
 <link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/form-improvements.css">
 <style>
 body.dark-mode { background: #1a1a2e; color: #ffffff !important; }
 body.dark-mode .header { background: #16213e; }
@@ -382,7 +383,7 @@ body.dark-mode .topnav-dropdown-header { background: #16213e; color: #fff; }
                 }
             }
         }
-        alert('No matching page found for "' + q + '". Try: menu, billing, report, inventory, expense, customer, orders');
+        Swal.fire('Warning', 'No matching page found for "' + q + '". Try: menu, billing, report, inventory, expense, customer, orders', 'warning');
     });
     document.getElementById('searchForm').addEventListener('reset', function() {
         document.getElementById('searchInput').value = '';
@@ -398,7 +399,7 @@ body.dark-mode .topnav-dropdown-header { background: #16213e; color: #fff; }
               if (data.success) {
                 window.location.href = '/signin';
               } else {
-                  alert('Logout failed: ' + data.message);
+                  Swal.fire('Error!', 'Logout failed: ' + data.message, 'error');
               }
           })
           .catch(error => console.error('Error:', error));

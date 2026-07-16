@@ -44,7 +44,7 @@
                             <div class="form-group">
                                 <label for="amount">Amount</label>
                                 <div class="input-group">
-                                    <input type="number" id="amount" class="form-control" step="0.01" value="<%= expense.amount %>" required>
+                                    <input type="number" id="amount" class="form-control" step="0.01" min="0.01" value="<%= expense.amount %>" required>
                                     <div class="input-group-append">
                                         <span class="input-group-text">$</span>
                                     </div>
@@ -97,6 +97,11 @@
 
         const data = { category, expenseDate, amount, invoiceNumber, vendor, description };
 
+        if (Number(amount) <= 0 || isNaN(Number(amount))) {
+            Swal.fire('Warning', 'Amount must be a valid number greater than zero.', 'warning');
+            return;
+        }
+
         try {
             const response = await fetch("/api/expense/<%= expense._id %>", {
                 method: "PUT",
@@ -106,16 +111,16 @@
                 body: JSON.stringify(data)
             });
 
+            const result = await response.json();
+
             if (response.ok) {
-                const updated = await response.json();
-                alert("Expense updated successfully!");
-                window.location.href = "/getexpense";
+                Swal.fire('Success!', 'Expense updated successfully!', 'success')
+                    .then(() => window.location.href = "/getexpense");
             } else {
-                const errorText = await response.text();
-                alert("Error: " + errorText);
+                Swal.fire('Error!', result.message || 'Failed to update expense.', 'error');
             }
         } catch (err) {
-            alert("Request failed: " + err.message);
+            Swal.fire('Error!', 'Request failed: ' + err.message, 'error');
         }
     });
 </script>
