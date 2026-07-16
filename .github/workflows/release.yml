@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
       - run: cd backend && npm ci
       # Ejecuta tests backend con cobertura para validar la release
       - run: cd backend && npm test -- --coverage 2>&1 | tee test-release.log
