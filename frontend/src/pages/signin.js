@@ -76,25 +76,30 @@ registerRoute('/signin', (app) => {
       if (!data?.success && data?.requiresDeviceAuthorization) {
         btn.disabled = false;
         btn.textContent = 'Sign In';
-        const confirmResult = await Swal.fire({
-          title: 'Already signed in elsewhere',
-          text: data.message || 'This account is already signed in on another device. Sign out that device and continue here?',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Sign out other device',
-          cancelButtonText: 'Cancel'
-        });
-        if (!confirmResult.isConfirmed) {
+
+        const hasSwal = typeof Swal !== 'undefined';
+        const confirmed = hasSwal
+          ? (await Swal.fire({
+              title: 'Already signed in elsewhere',
+              text: data.message || 'This account is already signed in on another device. Sign out that device and continue here?',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Sign out other device',
+              cancelButtonText: 'Cancel'
+            })).isConfirmed
+          : window.confirm(data.message || 'This account is already signed in on another device. Sign out that device and continue here?');
+
+        if (!confirmed) {
           return;
         }
-        Swal.close();
+        if (hasSwal) Swal.close();
         btn.disabled = true;
         btn.textContent = 'Signing in...';
         data = await signin(email, password, true);
       }
 
       if (data?.success) {
-        Swal.close();
+        if (typeof Swal !== 'undefined') Swal.close();
         window.location.hash = '#/dashboard';
         return;
       }
