@@ -44,3 +44,7 @@ function clearAllErrors(form) {
         clearFieldError(field.id);
     });
 }
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { disableSubmit, enableSubmit, showFieldError, clearFieldError, clearAllErrors };
+}

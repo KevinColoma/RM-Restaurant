@@ -12,6 +12,7 @@ module.exports = {
     'middleware/authMiddleware.js',
     'models/**/*.js',
     'routes/**/*.js',
+    'public/assets/js/form-utils.js',
     'utils/audit.js',
     'utils/reportUtils.js',
     'utils/validate.js',

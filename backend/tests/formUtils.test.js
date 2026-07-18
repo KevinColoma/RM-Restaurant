@@ -1,226 +1,140 @@
 /**
- * Form Utilities Test Suite
- * Tests form validation and UX improvement functions
+ * @jest-environment jsdom
  */
+const {
+  disableSubmit,
+  enableSubmit,
+  showFieldError,
+  clearFieldError,
+  clearAllErrors
+} = require('../public/assets/js/form-utils.js');
 
-describe('Form Utilities - Frontend Validation', () => {
-  // Mock DOM objects for testing
-  const createMockElement = (id, tagName = 'input') => {
-    const el = {
-      id,
-      tagName,
-      disabled: false,
-      textContent: '',
-      innerHTML: '',
-      classList: new Set(),
-      attributes: {},
-      parentElement: {
-        querySelector: (selector) => null,
-        appendChild: jest.fn()
-      },
-      querySelector: (selector) => null,
-      querySelectorAll: (selector) => [],
-      setAttribute: function(key, val) {
-        this.attributes[key] = val;
-      },
-      getAttribute: function(key) {
-        return this.attributes[key] || null;
-      },
-      removeAttribute: function(key) {
-        delete this.attributes[key];
-      }
-    };
-    el.classList.add = jest.fn((cls) => el.classList.add(cls));
-    el.classList.remove = jest.fn((cls) => el.classList.delete(cls));
-    el.classList.contains = jest.fn((cls) => el.classList.has(cls));
-    return el;
-  };
-
-  describe('Form validation rules', () => {
-    it('should require category field for expenses', () => {
-      const category = '';
-      expect(category).toBeFalsy();
-    });
-
-    it('should require date field for expenses', () => {
-      const date = '';
-      expect(date).toBeFalsy();
-    });
-
-    it('should require amount field for expenses', () => {
-      const amount = null;
-      expect(amount).toBeFalsy();
-    });
-
-    it('should require description field for expenses', () => {
-      const description = '';
-      expect(description).toBeFalsy();
-    });
+describe('form-utils.js', () => {
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <form id="test-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="amount">Amount</label>
+          <input type="number" id="amount" class="form-control" min="0.01">
+        </div>
+        <button type="submit" id="submit-btn" class="btn btn-primary">Submit</button>
+      </form>
+    `;
   });
 
-  describe('Amount validation rules', () => {
-    it('should reject zero amount', () => {
-      const amount = 0;
-      const isValid = Number(amount) > 0;
-      expect(isValid).toBe(false);
-    });
+  describe('disableSubmit', () => {
+    it('disables the button and marks it as loading/busy', () => {
+      const btn = document.getElementById('submit-btn');
+      btn.textContent = 'Submit';
 
-    it('should reject negative amount', () => {
-      const amount = -50;
-      const isValid = Number(amount) > 0;
-      expect(isValid).toBe(false);
-    });
+      const originalText = disableSubmit(btn);
 
-    it('should accept positive amount', () => {
-      const amount = 100.50;
-      const isValid = Number(amount) > 0;
-      expect(isValid).toBe(true);
-    });
-
-    it('should accept minimum valid amount 0.01', () => {
-      const amount = 0.01;
-      const isValid = Number(amount) > 0;
-      expect(isValid).toBe(true);
-    });
-
-    it('should accept decimal amounts', () => {
-      const amount = 99.99;
-      const isValid = !isNaN(Number(amount)) && Number(amount) > 0;
-      expect(isValid).toBe(true);
-    });
-  });
-
-  describe('Client-side validation logic', () => {
-    it('should validate required category', () => {
-      const category = 'supplies';
-      const isValid = category !== '' && category !== undefined;
-      expect(isValid).toBe(true);
-    });
-
-    it('should validate required date', () => {
-      const date = '2026-07-16';
-      const isValid = date !== '' && date !== undefined;
-      expect(isValid).toBe(true);
-    });
-
-    it('should validate amount as number', () => {
-      const amount = '150.50';
-      const numAmount = Number(amount);
-      const isValid = !isNaN(numAmount) && numAmount > 0;
-      expect(isValid).toBe(true);
-    });
-
-    it('should reject non-numeric amount', () => {
-      const amount = 'abc';
-      const numAmount = Number(amount);
-      const isValid = !isNaN(numAmount) && numAmount > 0;
-      expect(isValid).toBe(false);
-    });
-  });
-
-  describe('Button state management', () => {
-    it('should handle submit button disabled state', () => {
-      const btn = { disabled: false };
-      btn.disabled = true;
       expect(btn.disabled).toBe(true);
+      expect(btn.classList.contains('btn-loading')).toBe(true);
+      expect(btn.getAttribute('aria-busy')).toBe('true');
+      expect(originalText).toBe('Submit');
     });
 
-    it('should handle button class management', () => {
-      const classes = new Set();
-      classes.add('btn-loading');
-      expect(classes.has('btn-loading')).toBe(true);
-      classes.delete('btn-loading');
-      expect(classes.has('btn-loading')).toBe(false);
+    it('injects a spinner into the button while preserving the original text', () => {
+      const btn = document.getElementById('submit-btn');
+      btn.textContent = 'Save changes';
+
+      disableSubmit(btn);
+
+      expect(btn.innerHTML).toContain('spinner-sm');
+      expect(btn.innerHTML).toContain('Save changes');
+    });
+  });
+
+  describe('enableSubmit', () => {
+    it('re-enables the button and clears loading state', () => {
+      const btn = document.getElementById('submit-btn');
+      disableSubmit(btn);
+
+      enableSubmit(btn, 'Submit');
+
+      expect(btn.disabled).toBe(false);
+      expect(btn.classList.contains('btn-loading')).toBe(false);
+      expect(btn.getAttribute('aria-busy')).toBeNull();
+      expect(btn.textContent).toBe('Submit');
     });
 
-    it('should handle button text content', () => {
-      const btn = { textContent: '' };
-      const originalText = 'Submit';
-      btn.textContent = originalText;
+    it('defaults to "Submit" when no original text is given', () => {
+      const btn = document.getElementById('submit-btn');
+
+      enableSubmit(btn);
+
       expect(btn.textContent).toBe('Submit');
     });
   });
 
-  describe('Field error display logic', () => {
-    it('should track field error state', () => {
-      const field = { hasError: false };
-      field.hasError = true;
-      expect(field.hasError).toBe(true);
+  describe('showFieldError', () => {
+    it('marks the field invalid and appends an error message', () => {
+      showFieldError('email', 'Email is required');
+
+      const field = document.getElementById('email');
+      const errorEl = field.parentElement.querySelector('.invalid-feedback');
+
+      expect(field.classList.contains('is-invalid')).toBe(true);
+      expect(field.getAttribute('aria-invalid')).toBe('true');
+      expect(errorEl).not.toBeNull();
+      expect(errorEl.textContent).toBe('Email is required');
     });
 
-    it('should store error messages', () => {
-      const errors = {};
-      errors['email'] = 'Email is required';
-      expect(errors['email']).toBe('Email is required');
+    it('reuses the existing error element instead of duplicating it', () => {
+      showFieldError('email', 'First error');
+      showFieldError('email', 'Second error');
+
+      const field = document.getElementById('email');
+      const errorEls = field.parentElement.querySelectorAll('.invalid-feedback');
+
+      expect(errorEls.length).toBe(1);
+      expect(errorEls[0].textContent).toBe('Second error');
     });
 
-    it('should clear field errors', () => {
-      const errors = { email: 'Error', amount: 'Error' };
-      delete errors['email'];
-      expect(errors['email']).toBeUndefined();
-      expect(errors['amount']).toBeDefined();
-    });
-
-    it('should clear all errors', () => {
-      const errors = { email: 'Error', amount: 'Error' };
-      Object.keys(errors).forEach(key => delete errors[key]);
-      expect(Object.keys(errors).length).toBe(0);
+    it('does nothing when the field does not exist', () => {
+      expect(() => showFieldError('nonexistent', 'msg')).not.toThrow();
     });
   });
 
-  describe('Form submission validation', () => {
-    it('should validate all required fields before submit', () => {
-      const formData = {
-        category: 'supplies',
-        expenseDate: '2026-07-16',
-        amount: 150.50,
-        description: 'Test expense',
-        vendor: 'Vendor Name'
-      };
+  describe('clearFieldError', () => {
+    it('removes the invalid state and error message', () => {
+      showFieldError('email', 'Invalid');
+      clearFieldError('email');
 
-      const isValid =
-        Boolean(formData.category) &&
-        Boolean(formData.expenseDate) &&
-        Number(formData.amount) > 0 &&
-        Boolean(formData.description);
-
-      expect(isValid).toBe(true);
+      const field = document.getElementById('email');
+      expect(field.classList.contains('is-invalid')).toBe(false);
+      expect(field.getAttribute('aria-invalid')).toBeNull();
+      expect(field.parentElement.querySelector('.invalid-feedback')).toBeNull();
     });
 
-    it('should reject form if any required field is missing', () => {
-      const formData = {
-        category: 'supplies',
-        expenseDate: '2026-07-16',
-        amount: 150.50,
-        // description missing
-        vendor: 'Vendor Name'
-      };
-
-      const isValid =
-        Boolean(formData.category) &&
-        Boolean(formData.expenseDate) &&
-        Number(formData.amount) > 0 &&
-        Boolean(formData.description);
-
-      expect(isValid).toBe(false);
+    it('does nothing when the field has no error', () => {
+      expect(() => clearFieldError('amount')).not.toThrow();
     });
 
-    it('should reject form if amount is invalid', () => {
-      const formData = {
-        category: 'supplies',
-        expenseDate: '2026-07-16',
-        amount: -50,
-        description: 'Test expense',
-        vendor: 'Vendor Name'
-      };
+    it('does nothing when the field does not exist', () => {
+      expect(() => clearFieldError('nonexistent')).not.toThrow();
+    });
+  });
 
-      const isValid =
-        Boolean(formData.category) &&
-        Boolean(formData.expenseDate) &&
-        Number(formData.amount) > 0 &&
-        Boolean(formData.description);
+  describe('clearAllErrors', () => {
+    it('clears every invalid field within the form', () => {
+      showFieldError('email', 'Email error');
+      showFieldError('amount', 'Amount error');
 
-      expect(isValid).toBe(false);
+      clearAllErrors(document.getElementById('test-form'));
+
+      expect(document.getElementById('email').classList.contains('is-invalid')).toBe(false);
+      expect(document.getElementById('amount').classList.contains('is-invalid')).toBe(false);
+      expect(document.querySelectorAll('.invalid-feedback').length).toBe(0);
+    });
+
+    it('is a no-op when there are no invalid fields', () => {
+      expect(() => clearAllErrors(document.getElementById('test-form'))).not.toThrow();
     });
   });
 });
