@@ -15,7 +15,7 @@ reportes y más. Disponible como **SSR (EJS)** y como **SPA (Vite + vanilla JS)*
 | CI/CD      | GitHub Actions, SonarCloud, CodeQL, Telegram |
 
 ## Estructura
-
+ 
 ```
 RMS-restaurant-management-system-nodejs/
 ├── backend/          ← Express + EJS + API
