@@ -45,7 +45,6 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: markdown
           message: |
             ${{ env.TELEGRAM_PREFIX }}
             ─────────────────────
@@ -75,7 +74,6 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: markdown
           message: |
             ${{ env.TELEGRAM_PREFIX }}
             ─────────────────────
@@ -104,7 +102,6 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: markdown
           message: |
             ${{ env.TELEGRAM_PREFIX }}
             ─────────────────────
@@ -164,7 +161,6 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: markdown
           message: |
             ${{ env.TELEGRAM_PREFIX }}
             ─────────────────────
@@ -195,7 +191,6 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: markdown
           message: |
             ${{ env.TELEGRAM_PREFIX }}
             ─────────────────────
@@ -232,7 +227,6 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: markdown
           message: |
             ${{ env.TELEGRAM_PREFIX }}
             ─────────────────────
@@ -272,7 +266,6 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: markdown
           message: |
             ${{ env.TELEGRAM_PREFIX }}
             ─────────────────────
@@ -291,7 +284,6 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: markdown
           message: |
             ${{ env.TELEGRAM_PREFIX }}
             ─────────────────────
@@ -313,7 +305,6 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: markdown
           message: |
             ❌ *Pipeline Bloqueado — ${{ github.repository }}*
             🌿 Rama: \`${{ github.ref_name }}\`
@@ -339,7 +330,6 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: markdown
           message: |
             ⏹ *Pipeline cancelado — ${{ github.repository }}*
             🌿 Rama: \`${{ github.ref_name }}\`

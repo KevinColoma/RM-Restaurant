@@ -38,7 +38,6 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: markdown
           message: |
             ${{ env.TELEGRAM_PREFIX }}
             ─────────────────────
@@ -82,7 +81,6 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: markdown
           message: |
             ${{ env.TELEGRAM_PREFIX }}
             ─────────────────────
@@ -115,7 +113,6 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: markdown
           message: |
             ${{ env.TELEGRAM_PREFIX }}
             ─────────────────────
@@ -134,7 +131,6 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: markdown
           message: |
             ${{ env.TELEGRAM_PREFIX }}
             ─────────────────────
@@ -152,7 +148,6 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: markdown
           message: |
             ❌ *Release Falló — ${{ github.repository }}*
             🏷️ Tag: \`${{ github.event.release.tag_name }}\`
