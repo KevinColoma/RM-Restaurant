@@ -26,7 +26,7 @@ const auditLogSchema = new mongoose.Schema({
   changes: {
     type: mongoose.Schema.Types.Mixed
   }
-}, { timestamps: true });
+}, { timestamps: true, suppressReservedKeysWarning: true });
 
 auditLogSchema.index({ personaId: 1, createdAt: -1 });
 
