@@ -78,9 +78,6 @@ export function renderLayout(app, activePage, contentHtml) {
   if (localStorage.getItem('rms-theme') === 'dark') document.body.classList.add('dark-mode');
 
   app.innerHTML = `
-<div id="global-loader">
-  <div class="whirly-loader"></div>
-</div>
 <div class="main-wrapper">
   <div class="header">
     <div class="header-left active">

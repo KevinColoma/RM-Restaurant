@@ -85,7 +85,11 @@ registerRoute('/signin', (app) => {
               icon: 'warning',
               showCancelButton: true,
               confirmButtonText: 'Sign out other device',
-              cancelButtonText: 'Cancel'
+              cancelButtonText: 'Cancel',
+              // Close instantly: the default hide animation depends on an
+              // animationend event that never fires in backgrounded tabs,
+              // leaving the modal stuck over the dashboard after login.
+              hideClass: { popup: '', backdrop: '' }
             })).isConfirmed
           : window.confirm(data.message || 'This account is already signed in on another device. Sign out that device and continue here?');
 
