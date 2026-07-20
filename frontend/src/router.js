@@ -12,7 +12,11 @@ export function navigate(path) {
 
 export function initRouter() {
   function resolve() {
-    const hash = window.location.hash.slice(1) || '/signin';
+    // A stray anchor (href="#") can wipe the hash. Falling back to /signin then
+    // strands an authenticated user on the login screen, so send them to the
+    // dashboard instead and only default to /signin when actually signed out.
+    const fallback = isAuthenticated() ? '/dashboard' : '/signin';
+    const hash = window.location.hash.slice(1) || fallback;
     const base = hash.split('?')[0];
 
     if (!isAuthenticated() && base !== '/signin' && base !== '/signup' && base !== '/forgot-password') {

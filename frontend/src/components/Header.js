@@ -68,8 +68,14 @@ export function renderLayout(app, activePage, contentHtml) {
 
       const ulStyle = active ? '' : ' style="display:none"';
 
+      // Never use href="#" here: the base template's script.js auto-expands the
+      // active submenu with .trigger('click') on this parent toggle, and its
+      // preventDefault handler is bound once at page load - which the SPA blows
+      // away every time renderLayout re-renders the sidebar. The click then
+      // performs its default action, navigating to "#", wiping the hash, and
+      // dumping the (still authenticated) user on the sign-in screen.
       return `<li${submenuOpen}>
-        <a href="#"><img src="assets/img/icons/${item.icon}" alt="img"><span data-i18n="${item.label}">${item.label}</span> <span class="menu-arrow"></span></a>
+        <a href="javascript:void(0);" class="submenu-toggle"><img src="assets/img/icons/${item.icon}" alt="img"><span data-i18n="${item.label}">${item.label}</span> <span class="menu-arrow"></span></a>
         <ul${ulStyle}>${childrenHtml}</ul>
       </li>`;
     }).join('');
@@ -189,7 +195,7 @@ export function renderLayout(app, activePage, contentHtml) {
             <a class="dropdown-item" href="#/profile"> <i class="me-2" data-feather="user"></i> <span data-i18n="nav.my_profile">My Profile</span></a>
             <a class="dropdown-item" href="#/settings"><i class="me-2" data-feather="settings"></i><span data-i18n="nav.settings">Settings</span></a>
             <hr class="m-0">
-            <a class="dropdown-item logout pb-0" href="#" id="logout-btn">
+            <a class="dropdown-item logout pb-0" href="javascript:void(0);" id="logout-btn">
               <img src="assets/img/icons/log-out.svg" class="me-2" alt="img"><span data-i18n="nav.logout">Logout</span>
             </a>
           </div>
@@ -201,7 +207,7 @@ export function renderLayout(app, activePage, contentHtml) {
       <div class="dropdown-menu dropdown-menu-right">
         <a class="dropdown-item" href="#/profile">My Profile</a>
         <a class="dropdown-item" href="#/settings">Settings</a>
-        <a class="dropdown-item" href="#" id="logout-btn-mobile">Logout</a>
+        <a class="dropdown-item" href="javascript:void(0);" id="logout-btn-mobile">Logout</a>
       </div>
     </div>
   </div>
@@ -263,6 +269,19 @@ export function renderLayout(app, activePage, contentHtml) {
         }
       }
     }
+  });
+
+  // Submenu open/close. The template's jQuery handler is bound once at page
+  // load, so it is lost every time the SPA re-renders this sidebar; bind our
+  // own so parent menus keep toggling on every route.
+  app.querySelectorAll('.submenu-toggle').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      const list = toggle.parentElement.querySelector('ul');
+      if (!list) return;
+      const isOpen = list.style.display !== 'none';
+      list.style.display = isOpen ? 'none' : 'block';
+      toggle.parentElement.classList.toggle('active', !isOpen);
+    });
   });
 
   // Language selector
