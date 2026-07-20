@@ -175,14 +175,16 @@ registerRoute('/dashboard', async (app) => {
 
     setTimeout(() => {
       if (typeof $ !== 'undefined' && $.fn.DataTable) {
-        const $dt = $(app.querySelector('.datanew'));
-        if ($dt.length && !$.fn.DataTable.isDataTable($dt[0])) {
-          $dt.DataTable({ pageLength: 10, bFilter: false });
-        }
-        const $most = $(app.querySelector('.datatable'));
-        if ($most.length && !$.fn.DataTable.isDataTable($most[0])) {
-          $most.DataTable({ pageLength: 5, bFilter: false, bInfo: false });
-        }
+        // Skip DataTables when the body is just a "No data" colspan placeholder;
+        // initializing over it throws a _DT_CellIndex error.
+        const initDataTable = (selector, opts) => {
+          const table = app.querySelector(selector);
+          if (!table || table.querySelector('tbody td[colspan]')) return;
+          const $t = $(table);
+          if ($t.length && !$.fn.DataTable.isDataTable($t[0])) $t.DataTable(opts);
+        };
+        initDataTable('.datanew', { pageLength: 10, bFilter: false });
+        initDataTable('.datatable', { pageLength: 5, bFilter: false, bInfo: false });
       }
 
       if (typeof ApexCharts !== 'undefined') {

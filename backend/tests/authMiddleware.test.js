@@ -87,7 +87,11 @@ describe('authMiddleware', () => {
     expect(req.personaId).toBe(personaId._id);
   });
 
-  it('should reject when the session was invalidated by a login on another device', async () => {
+  it('should still authenticate when another device holds the active session (soft single-session)', async () => {
+    // Soft single-session: an already-authenticated token stays valid even
+    // after a later login elsewhere changed activeSessionId. "One at a time"
+    // is only surfaced at login, never enforced mid-session, so the user is
+    // not kicked out on navigation.
     const userId = '507f1f77bcf86cd799439011';
     const personaId = { _id: '507f1f77bcf86cd799439012', ownerName: 'Test', restaurantName: 'Test Rest', avatar: 'pic.jpg' };
 
@@ -102,7 +106,7 @@ describe('authMiddleware', () => {
     const next = jest.fn();
 
     await requireAuth(req, res, next);
-    expect(next).not.toHaveBeenCalled();
-    expect(res._status).toBe(401);
+    expect(next).toHaveBeenCalled();
+    expect(req.personaId).toBe(personaId._id);
   });
 });

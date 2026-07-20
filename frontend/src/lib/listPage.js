@@ -15,8 +15,13 @@ export function renderPage(app, pageName, html) {
 
 function setupPage(app) {
   if (typeof $ !== 'undefined' && $.fn.DataTable) {
-    const $dt = $(app.querySelector('.datanew'));
-    if ($dt.length && !$.fn.DataTable.isDataTable($dt[0])) {
+    const table = app.querySelector('.datanew');
+    // A "No X found" placeholder row uses a single colspan cell. Initializing
+    // DataTables over it throws "Cannot set properties of undefined (setting
+    // '_DT_CellIndex')", so only init when the body has real, per-column rows.
+    const hasPlaceholder = table && table.querySelector('tbody td[colspan]');
+    const $dt = $(table);
+    if (table && !hasPlaceholder && $dt.length && !$.fn.DataTable.isDataTable($dt[0])) {
       $dt.DataTable({ pageLength: 10, bFilter: false });
     }
   }

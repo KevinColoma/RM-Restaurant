@@ -15,13 +15,13 @@ const requireAuth = async (req, res, next) => {
             return res.redirect('/signin');
         }
 
-        // Single-session enforcement: if this token's session no longer
-        // matches the account's active session, it means the user logged in
-        // from another device and this session was invalidated.
-        if (!decoded.sessionId || usuario.activeSessionId !== decoded.sessionId) {
-            res.clearCookie('jwt');
-            return res.status(401).json({ message: 'Session expired: this account was signed in from another device.' });
-        }
+        // Soft single-session: a valid, unexpired token always authenticates.
+        // "One session at a time" is surfaced only at login time (the SignIn
+        // controller prompts to sign out the other device), but an already
+        // active session is never torn down mid-use by a later login
+        // elsewhere. This avoids kicking users out on navigation when the same
+        // account is open in more than one place (e.g. dev + production, two
+        // browsers, or a stale tab).
 
         req.usuario = usuario;
         req.personaId = usuario.personaId._id;

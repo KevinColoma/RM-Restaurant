@@ -20,14 +20,14 @@ registerRoute('/signin', (app) => {
   <div class="form-login">
     <label>Email</label>
     <div class="form-addons">
-      <input type="email" name="email" id="email" placeholder="Enter your email address" required>
+      <input type="email" name="email" id="email" placeholder="Enter your email address" autocomplete="username" required>
       <img src="assets/img/icons/mail.svg" alt="img">
     </div>
   </div>
   <div class="form-login">
     <label>Password</label>
     <div class="pass-group">
-      <input type="password" name="password" id="password" class="pass-input" placeholder="Enter your password" required minlength="3">
+      <input type="password" name="password" id="password" class="pass-input" placeholder="Enter your password" autocomplete="current-password" required minlength="3">
       <span class="fas toggle-password fa-eye-slash"></span>
     </div>
   </div>

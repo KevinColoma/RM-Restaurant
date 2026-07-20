@@ -2,6 +2,7 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const { setupDB, teardownDB } = require('./helpers/db');
 const Rol = require('../models/Rol');
+const Usuario = require('../models/Usuario');
 const app = require('../app');
 
 beforeAll(async () => {
@@ -78,6 +79,13 @@ describe('POST /api/signin', () => {
 });
 
 describe('Single-session policy', () => {
+  // Earlier tests in this file leave test@example.com with an active session,
+  // which would make the "first" login below already prompt for device
+  // authorization. Reset to a clean, signed-out state before each case.
+  beforeEach(async () => {
+    await Usuario.updateOne({ username: 'test@example.com' }, { activeSessionId: null });
+  });
+
   it('should require device authorization on a second concurrent login', async () => {
     const first = await request(app)
       .post('/api/signin')
@@ -92,7 +100,7 @@ describe('Single-session policy', () => {
     expect(second.body.requiresDeviceAuthorization).toBe(true);
   });
 
-  it('should invalidate the previous session once forceLogin authorizes the new device', async () => {
+  it('should issue a fresh session on forceLogin without tearing down the previous one (soft single-session)', async () => {
     const first = await request(app)
       .post('/api/signin')
       .send({ email: 'test@example.com', password: 'password123' });
@@ -106,10 +114,12 @@ describe('Single-session policy', () => {
     expect(second.body.token).toBeDefined();
     expect(second.body.token).not.toBe(firstToken);
 
+    // The previous session's token stays valid: soft single-session never
+    // kicks an already-active session out mid-use, so navigation keeps working.
     const staleCheck = await request(app)
       .get('/api/personas')
       .set('Cookie', [`jwt=${firstToken}`]);
 
-    expect(staleCheck.status).toBe(401);
+    expect(staleCheck.status).toBe(200);
   });
 });
