@@ -17,6 +17,7 @@ const profileController = require('../controllers/profileController')
 const settingsController = require('../controllers/settingsController')
 const purchaseController = require('../controllers/purchaseController')
 const auditController = require('../controllers/auditController')
+const apiController = require('../controllers/apiController')
 const Expense = require('../models/Expense')
 const { isValidObjectId } = require('../utils/validate')
 
@@ -134,14 +135,40 @@ router.post('/api/addexpense',requireAuth,expenseController.addExpense)
 router.get('/getexpense',requireAuth, expenseController.getExpense);
 router.delete('/api/expense/:id', requireAuth, expenseController.deleteExpense);
 
-// JSON API consumed by the SPA. The routes above serve the EJS app and stay as
-// they are; these expose the same data as JSON under the paths the SPA already
-// calls, which until now matched nothing and fell through to the catch-all.
+// ── JSON API consumed by the SPA ─────────────────────────────────────────────
+// Everything above serves the EJS app and stays as it is. These expose the same
+// data as JSON under the paths the SPA already calls, which until now matched
+// no route and fell through to the catch-all - so lists came back as the app's
+// own HTML and reads looked empty while writes 404'd.
+
+// Expenses
 router.get('/api/expenses', requireAuth, expenseController.listExpenses);
 router.post('/api/expenses', requireAuth, expenseController.addExpense);
 router.get('/api/expenses/edit/:id', requireAuth, expenseController.getExpenseById);
 router.put('/api/expenses/:id', requireAuth, expenseController.updateExpense);
 router.delete('/api/expenses/:id', requireAuth, expenseController.deleteExpense);
+
+// Menu
+router.get('/api/menu', requireAuth, apiController.listMenu);
+router.post('/api/menu', requireAuth, menuController.AddMenu);
+
+// Inventory
+router.get('/api/inventory', requireAuth, apiController.listInventory);
+router.post('/api/inventory', requireAuth, inventoryController.addItem);
+router.get('/api/inventory/edit/:id', requireAuth, apiController.getInventoryItem);
+
+// Customers, branches, purchases and orders (creates/updates already existed)
+router.get('/api/customers', requireAuth, apiController.listCustomers);
+router.get('/api/branches', requireAuth, apiController.listBranches);
+router.get('/api/purchases', requireAuth, apiController.listPurchases);
+router.get('/api/orders', requireAuth, apiController.listOrders);
+
+// Screens that read a composite payload
+router.get('/api/dashboard', requireAuth, dashboardController.DashboardJson);
+router.get('/api/pos', requireAuth, apiController.getPos);
+router.get('/api/profile', requireAuth, apiController.getProfile);
+router.get('/api/settings', requireAuth, apiController.getSettings);
+router.get('/api/audit-log', requireAuth, apiController.listAuditLog);
 
 
 

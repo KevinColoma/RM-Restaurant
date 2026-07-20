@@ -4,10 +4,10 @@ const Expense = require('../models/Expense');
 const Menu = require('../models/menu');
 const Purchase = require('../models/Purchase');
 
-exports.Dashboard = async (req, res) => {
-    try {
-        const personaId = req.personaId;
-
+// Today's figures for one account. Shared by the EJS page and the SPA's JSON
+// endpoint so both always report the same numbers.
+async function buildDashboard(personaId) {
+    {
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
 
@@ -77,16 +77,32 @@ exports.Dashboard = async (req, res) => {
             .sort((a, b) => b.quantity - a.quantity)
             .slice(0, 7); // Get top 7 items
 
-        res.render('index', {
+        return {
             totalPurchases,
             totalOrders,
             totalEarnings: totalEarnings.length ? totalEarnings[0].total : 0,
             totalExpenses: totalExpenses.length ? totalExpenses[0].total : 0,
             menus,
             mostPopularItems
-        });
+        };
+    }
+}
+
+exports.Dashboard = async (req, res) => {
+    try {
+        res.render('index', await buildDashboard(req.personaId));
     } catch (error) {
         console.error(error);
         res.status(500).send('Server Error');
+    }
+};
+
+// Same figures as JSON, for the SPA dashboard.
+exports.DashboardJson = async (req, res) => {
+    try {
+        const data = await buildDashboard(req.personaId);
+        res.json({ success: true, ...data });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
