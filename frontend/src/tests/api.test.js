@@ -9,6 +9,7 @@ describe('API client', () => {
   it('should set auth header when token exists', async () => {
     localStorage.setItem('token', 'test-token-123');
     global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
       status: 200,
       headers: { get: () => 'application/json' },
       json: () => Promise.resolve({ data: 'ok' })
@@ -27,6 +28,7 @@ describe('API client', () => {
 
   it('should not set auth header when no token', async () => {
     global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
       status: 200,
       headers: { get: () => 'application/json' },
       json: () => Promise.resolve({ data: 'ok' })
@@ -58,6 +60,7 @@ describe('API client', () => {
 
   it('should POST with JSON body', async () => {
     global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
       status: 200,
       headers: { get: () => 'application/json' },
       json: () => Promise.resolve({ success: true })
@@ -78,6 +81,7 @@ describe('API client', () => {
 
   it('should DELETE with correct method', async () => {
     global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
       status: 200,
       headers: { get: () => 'application/json' },
       json: () => Promise.resolve({ message: 'deleted' })
@@ -94,20 +98,37 @@ describe('API client', () => {
     });
   });
 
-  it('should handle non-JSON response', async () => {
+  it('should reject a non-JSON 200, which means the endpoint is missing', async () => {
+    // The server's catch-all answers unknown /api paths with the SPA shell.
+    // Handing that back to callers made a missing endpoint look like an empty
+    // list, so it has to surface as an error instead.
     global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
       status: 200,
       headers: { get: () => 'text/html' }
     });
 
     const { get } = await import('../lib/api.js');
-    const res = await get('/page');
 
-    expect(res.status).toBe(200);
+    await expect(get('/page')).rejects.toThrow(/Expected JSON/);
+  });
+
+  it('should reject on an error status instead of reporting success', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      headers: { get: () => 'application/json' },
+      json: () => Promise.resolve({ message: 'Not Found' })
+    });
+
+    const { post } = await import('../lib/api.js');
+
+    await expect(post('/expenses', { amount: 1 })).rejects.toThrow('Not Found');
   });
 
   it('should PUT with JSON body', async () => {
     global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
       status: 200,
       headers: { get: () => 'application/json' },
       json: () => Promise.resolve({ success: true })

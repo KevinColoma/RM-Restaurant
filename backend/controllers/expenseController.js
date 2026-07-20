@@ -54,6 +54,30 @@ exports.getExpense = async(req,res)=>{
 
 }
 
+// JSON list for the SPA. getExpense above renders the EJS page instead, which
+// is why /api/expenses previously fell through to the catch-all and handed the
+// SPA an HTML document where it expected data.
+exports.listExpenses = async (req, res) => {
+    try {
+        const expenses = await Expense.find({ personaId: req.personaId }).sort({ expenseDate: -1 });
+        res.json({ success: true, expenses });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+}
+
+// Single expense as JSON, for the SPA's edit screen.
+exports.getExpenseById = async (req, res) => {
+    try {
+        if (!isValidObjectId(req.params.id)) return res.status(400).json({ success: false, error: 'Invalid ID' });
+        const expense = await Expense.findOne({ _id: req.params.id, personaId: req.personaId });
+        if (!expense) return res.status(404).json({ success: false, error: 'Expense not found' });
+        res.json({ success: true, expense });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+}
+
 exports.deleteExpense = async (req, res) => {
     try {
         const personaId = req.personaId;

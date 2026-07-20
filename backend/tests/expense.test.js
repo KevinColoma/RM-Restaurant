@@ -152,3 +152,100 @@ describe('Expense CRUD', () => {
     });
   });
 });
+
+// The SPA calls /api/expenses. Those paths matched no route before, so GET fell
+// through to the SPA catch-all (HTML, read as an empty list) and POST 404'd
+// while the UI still reported success. These lock the JSON contract in place.
+describe('Expense JSON API (/api/expenses)', () => {
+  it('should create an expense and return it in the list', async () => {
+    const created = await request(app)
+      .post('/api/expenses')
+      .set('Cookie', [`jwt=${token}`])
+      .send({
+        category: 'supplies',
+        expenseDate: new Date().toISOString(),
+        amount: 42.5,
+        description: 'Saved through the SPA endpoint',
+        vendor: 'Acme'
+      });
+    expect(created.status).toBe(201);
+
+    const list = await request(app)
+      .get('/api/expenses')
+      .set('Cookie', [`jwt=${token}`]);
+
+    expect(list.status).toBe(200);
+    expect(list.headers['content-type']).toMatch(/application\/json/);
+    expect(list.body.success).toBe(true);
+    expect(Array.isArray(list.body.expenses)).toBe(true);
+    expect(list.body.expenses.some(e => e.description === 'Saved through the SPA endpoint')).toBe(true);
+  });
+
+  it('should fetch a single expense for the edit screen', async () => {
+    const created = await request(app)
+      .post('/api/expenses')
+      .set('Cookie', [`jwt=${token}`])
+      .send({ category: 'rent', expenseDate: new Date().toISOString(), amount: 10, description: 'Editable', vendor: 'V' });
+
+    const res = await request(app)
+      .get('/api/expenses/edit/' + created.body._id)
+      .set('Cookie', [`jwt=${token}`]);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.expense.description).toBe('Editable');
+  });
+
+  it('should return 400 for an invalid id and 404 when missing', async () => {
+    const bad = await request(app)
+      .get('/api/expenses/edit/not-an-id')
+      .set('Cookie', [`jwt=${token}`]);
+    expect(bad.status).toBe(400);
+
+    const missing = await request(app)
+      .get('/api/expenses/edit/507f1f77bcf86cd799439011')
+      .set('Cookie', [`jwt=${token}`]);
+    expect(missing.status).toBe(404);
+  });
+
+  it('should update and delete through the plural paths the SPA uses', async () => {
+    const created = await request(app)
+      .post('/api/expenses')
+      .set('Cookie', [`jwt=${token}`])
+      .send({ category: 'labor', expenseDate: new Date().toISOString(), amount: 5, description: 'Before', vendor: 'V' });
+
+    const updated = await request(app)
+      .put('/api/expenses/' + created.body._id)
+      .set('Cookie', [`jwt=${token}`])
+      .send({ category: 'labor', expenseDate: new Date().toISOString(), amount: 7, description: 'After', vendor: 'V' });
+    expect(updated.status).toBe(200);
+    expect(updated.body.description).toBe('After');
+
+    const removed = await request(app)
+      .delete('/api/expenses/' + created.body._id)
+      .set('Cookie', [`jwt=${token}`]);
+    expect(removed.status).toBe(200);
+
+    const gone = await request(app)
+      .get('/api/expenses/edit/' + created.body._id)
+      .set('Cookie', [`jwt=${token}`]);
+    expect(gone.status).toBe(404);
+  });
+
+  it('should only list expenses belonging to the signed-in account', async () => {
+    const otherPersona = await Persona.create({
+      ownerName: 'Other', restaurantName: 'Other', city: 'X', address: 'Y', mobile: '999'
+    });
+    const Expense = require('../models/Expense');
+    await Expense.create({
+      personaId: otherPersona._id, expenseType: 'rent', expenseDate: new Date(),
+      amount: 500, description: 'Someone else expense', paymentMethod: 'cash'
+    });
+
+    const list = await request(app)
+      .get('/api/expenses')
+      .set('Cookie', [`jwt=${token}`]);
+
+    expect(list.body.expenses.every(e => e.description !== 'Someone else expense')).toBe(true);
+  });
+});

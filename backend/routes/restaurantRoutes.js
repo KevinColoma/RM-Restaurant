@@ -134,6 +134,15 @@ router.post('/api/addexpense',requireAuth,expenseController.addExpense)
 router.get('/getexpense',requireAuth, expenseController.getExpense);
 router.delete('/api/expense/:id', requireAuth, expenseController.deleteExpense);
 
+// JSON API consumed by the SPA. The routes above serve the EJS app and stay as
+// they are; these expose the same data as JSON under the paths the SPA already
+// calls, which until now matched nothing and fell through to the catch-all.
+router.get('/api/expenses', requireAuth, expenseController.listExpenses);
+router.post('/api/expenses', requireAuth, expenseController.addExpense);
+router.get('/api/expenses/edit/:id', requireAuth, expenseController.getExpenseById);
+router.put('/api/expenses/:id', requireAuth, expenseController.updateExpense);
+router.delete('/api/expenses/:id', requireAuth, expenseController.deleteExpense);
+
 
 
 // all cutomer related routes 
