@@ -143,6 +143,55 @@ describe('Single-session policy', () => {
     expect(retry.body.success).toBe(true);
   });
 
+  it('should free the account when the tab releases its session on exit', async () => {
+    const first = await signIn();
+
+    const released = await request(app)
+      .post('/api/session/release')
+      .set('Cookie', [`jwt=${first.body.token}`]);
+    expect(released.status).toBe(204);
+
+    const retry = await signIn();
+    expect(retry.body.success).toBe(true);
+  });
+
+  it('should ignore a stale release beacon for a session another device now owns', async () => {
+    const first = await signIn();
+    const staleToken = first.body.token;
+
+    // That session goes away and someone else signs in and owns the account.
+    await request(app).post('/api/session/release').set('Cookie', [`jwt=${staleToken}`]);
+    const second = await signIn();
+
+    // A beacon from the old tab arriving late must not release the new session.
+    await request(app).post('/api/session/release').set('Cookie', [`jwt=${staleToken}`]);
+
+    const blocked = await signIn();
+    expect(blocked.body.success).toBe(false);
+    expect(blocked.body.sessionInUse).toBe(true);
+    expect(second.body.success).toBe(true);
+  });
+
+  it('should re-claim a released session when the page comes back from a refresh', async () => {
+    const first = await signIn();
+
+    // pagehide fired on refresh and released the slot.
+    await request(app).post('/api/session/release').set('Cookie', [`jwt=${first.body.token}`]);
+
+    // The reloaded page makes an authenticated request and takes its slot back.
+    const afterReload = await request(app)
+      .get('/api/personas')
+      .set('Cookie', [`jwt=${first.body.token}`]);
+    expect(afterReload.status).toBe(200);
+
+    const usuario = await Usuario.findOne({ username: 'test@example.com' });
+    expect(usuario.activeSessionId).not.toBeNull();
+
+    // And the account is protected again, rather than left looking free.
+    const blocked = await signIn();
+    expect(blocked.body.sessionInUse).toBe(true);
+  });
+
   it('should refresh lastSeenAt as the active session makes requests', async () => {
     const first = await signIn();
     await Usuario.updateOne({ username: 'test@example.com' }, { lastSeenAt: new Date(0) });

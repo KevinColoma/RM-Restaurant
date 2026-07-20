@@ -147,6 +147,30 @@ exports.getPersonas = async function (req, res) {
     }
 }
 
+// "This tab is going away" signal, sent with navigator.sendBeacon on pagehide.
+// Frees the account right away instead of making the next login wait out the
+// idle window. Deliberately best effort and side-effect free beyond releasing
+// the slot: a beacon has nobody to report an error back to, and pagehide also
+// fires on refresh, so requireAuth re-claims a free slot on the next request
+// and a reloaded page simply picks its session back up.
+exports.ReleaseSession = async (req, res) => {
+    try {
+        const token = req.cookies.jwt;
+        if (token) {
+            const decoded = await jwtUtils.verifyToken(token);
+            if (decoded && decoded.sessionId) {
+                // Scope the release to our own session so a beacon arriving late
+                // can never knock out a session another device has since taken.
+                await Usuario.updateOne(
+                    { _id: decoded.usuarioId, activeSessionId: decoded.sessionId },
+                    { activeSessionId: null, lastSeenAt: null }
+                );
+            }
+        }
+    } catch (error) { /* nothing to report back to on a beacon */ }
+    return res.status(204).end();
+}
+
 exports.LogOut = async (req, res) => {
     try {
         const token = req.cookies.jwt;

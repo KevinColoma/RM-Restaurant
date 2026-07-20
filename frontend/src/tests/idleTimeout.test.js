@@ -56,6 +56,25 @@ describe('idle timeout', () => {
     expect(localStorage.getItem('token')).toBeNull();
   });
 
+  it('releases the session when the tab goes away', async () => {
+    localStorage.setItem('token', 'active-token');
+    navigator.sendBeacon = vi.fn();
+
+    initIdleTimeout();
+    window.dispatchEvent(new Event('pagehide'));
+
+    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/session/release');
+  });
+
+  it('does not release anything on exit when signed out', async () => {
+    navigator.sendBeacon = vi.fn();
+
+    initIdleTimeout();
+    window.dispatchEvent(new Event('pagehide'));
+
+    expect(navigator.sendBeacon).not.toHaveBeenCalled();
+  });
+
   it('does nothing when no user is signed in', async () => {
     initIdleTimeout();
     vi.advanceTimersByTime(IDLE_LIMIT_MS * 2);

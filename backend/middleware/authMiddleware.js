@@ -30,11 +30,21 @@ const requireAuth = async (req, res, next) => {
         // Strictly best effort: this bookkeeping must never be able to fail the
         // request and sign a legitimate user out, so it is fully isolated.
         try {
-            if (decoded.sessionId && usuario.activeSessionId === decoded.sessionId) {
-                const last = usuario.lastSeenAt ? usuario.lastSeenAt.getTime() : 0;
-                if (Date.now() - last > LAST_SEEN_THROTTLE_MS) {
+            if (decoded.sessionId) {
+                if (!usuario.activeSessionId) {
+                    // The slot is free - typically because this tab's pagehide
+                    // beacon released it and the page then came back from a
+                    // refresh. Re-claim it so a reload keeps its session rather
+                    // than leaving the account looking signed out.
+                    usuario.activeSessionId = decoded.sessionId;
                     usuario.lastSeenAt = new Date();
                     await usuario.save();
+                } else if (usuario.activeSessionId === decoded.sessionId) {
+                    const last = usuario.lastSeenAt ? usuario.lastSeenAt.getTime() : 0;
+                    if (Date.now() - last > LAST_SEEN_THROTTLE_MS) {
+                        usuario.lastSeenAt = new Date();
+                        await usuario.save();
+                    }
                 }
             }
         } catch (e) { /* activity tracking is not worth failing auth over */ }

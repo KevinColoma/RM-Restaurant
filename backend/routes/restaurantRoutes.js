@@ -40,6 +40,7 @@ router.get('/index',requireAuth,dashboardController.Dashboard)
 router.post('/api/signup', restaurantController.SignUp );
 router.post('/api/signin',restaurantController.SignIn)
 router.post('/api/log-out',restaurantController.LogOut)
+router.post('/api/session/release',restaurantController.ReleaseSession)
 router.get('/api/personas', requireAuth, restaurantController.getPersonas)
 
 // All menu relate routes are here

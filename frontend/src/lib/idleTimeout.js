@@ -49,11 +49,27 @@ function resetIdleTimer() {
   timer = setTimeout(expireSession, IDLE_LIMIT_MS);
 }
 
+// Tell the server this tab is going away, so the account frees up immediately
+// instead of the next login waiting out the idle window. sendBeacon is built
+// for exactly this: it survives the page being torn down, unlike fetch.
+//
+// pagehide also fires on a plain refresh, which would release a session the
+// user is still using - that is fine here, because the server re-claims a free
+// slot on the reloaded page's next authenticated request. Releasing eagerly and
+// re-claiming on return is far safer than trying to guess, at unload time,
+// whether the page is coming back.
+function releaseSessionOnExit() {
+  if (!localStorage.getItem('token')) return;
+  if (!navigator.sendBeacon) return;
+  navigator.sendBeacon('/api/session/release');
+}
+
 export function initIdleTimeout() {
   ACTIVITY_EVENTS.forEach(evt =>
     window.addEventListener(evt, resetIdleTimer, { passive: true }));
   // Navigating between pages counts as activity and (re)arms the timer, which
   // also starts it right after a fresh login redirects to the dashboard.
   window.addEventListener('hashchange', resetIdleTimer);
+  window.addEventListener('pagehide', releaseSessionOnExit);
   resetIdleTimer();
 }
