@@ -7,6 +7,7 @@ const jwtUtils = require('../jwt');
 const Persona = require("../models/Persona");
 const Usuario = require("../models/Usuario");
 const Rol = require("../models/Rol");
+const { SESSION_IDLE_MS } = require("../config/session");
 
 exports.SignUp = async function (req, res) {
     const { email, ownerName, restaurantName, city, address, mobile, password } = req.body;
@@ -48,7 +49,7 @@ exports.SignUp = async function (req, res) {
 }
 
 exports.SignIn = async function (req, res) {
-    const { email, password, forceLogin } = req.body;
+    const { email, password } = req.body;
 
     try {
         const usuario = await Usuario.findOne({ username: String(email) });
@@ -69,13 +70,21 @@ exports.SignIn = async function (req, res) {
             });
         }
 
-        // Single-session policy: block a second concurrent login unless the
-        // user explicitly authorizes signing the previous device out.
-        if (usuario.activeSessionId && !forceLogin) {
+        // Single-session policy: refuse a second concurrent login outright.
+        // The block only applies while the other session is demonstrably alive
+        // (it made an authenticated request within SESSION_IDLE_MS). A session
+        // whose browser was closed, crashed or lost power can never sign itself
+        // out, so it goes stale on its own and the account frees up instead of
+        // staying locked forever.
+        const lastSeen = usuario.lastSeenAt ? usuario.lastSeenAt.getTime() : 0;
+        const otherSessionAlive = Date.now() - lastSeen < SESSION_IDLE_MS;
+
+        if (usuario.activeSessionId && otherSessionAlive) {
+            const minutesLeft = Math.max(1, Math.ceil((SESSION_IDLE_MS - (Date.now() - lastSeen)) / 60000));
             return res.json({
                 success: false,
-                requiresDeviceAuthorization: true,
-                message: 'This account is already signed in on another device. Do you want to sign out that device and continue here?'
+                sessionInUse: true,
+                message: `This account is already signed in on another device. Sign out there first, or try again in about ${minutesLeft} minute(s).`
             });
         }
 
@@ -84,6 +93,7 @@ exports.SignIn = async function (req, res) {
 
         usuario.activeSessionId = sessionId;
         usuario.activeDeviceInfo = deviceInfo;
+        usuario.lastSeenAt = new Date();
         await usuario.save();
 
         const token = jwtUtils.generateToken({ usuarioId: usuario._id, personaId: usuario.personaId, sessionId });
@@ -155,6 +165,7 @@ exports.LogOut = async (req, res) => {
             if (usuario) {
                 usuario.activeSessionId = null;
                 usuario.activeDeviceInfo = null;
+                usuario.lastSeenAt = null;
                 await usuario.save();
             }
 

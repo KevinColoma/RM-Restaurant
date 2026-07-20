@@ -31,6 +31,13 @@ const usuarioSchema = new mongoose.Schema({
     activeDeviceInfo: {
         type: String,
         default: null
+    },
+    // Last time the active session made an authenticated request. Lets a dead
+    // session (browser closed, crash, power loss - none of which can notify the
+    // server) expire on its own instead of locking the account out forever.
+    lastSeenAt: {
+        type: Date,
+        default: null
     }
 }, {
     timestamps: true

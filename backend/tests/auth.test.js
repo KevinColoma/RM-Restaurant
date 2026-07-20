@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const { setupDB, teardownDB } = require('./helpers/db');
 const Rol = require('../models/Rol');
 const Usuario = require('../models/Usuario');
+const { SESSION_IDLE_MS } = require('../config/session');
 const app = require('../app');
 
 beforeAll(async () => {
@@ -79,47 +80,78 @@ describe('POST /api/signin', () => {
 });
 
 describe('Single-session policy', () => {
-  // Earlier tests in this file leave test@example.com with an active session,
-  // which would make the "first" login below already prompt for device
-  // authorization. Reset to a clean, signed-out state before each case.
+  const signIn = () => request(app)
+    .post('/api/signin')
+    .send({ email: 'test@example.com', password: 'password123' });
+
+  // Earlier tests in this file leave test@example.com signed in, which would
+  // make the "first" login below hit the block. Start each case signed out.
   beforeEach(async () => {
-    await Usuario.updateOne({ username: 'test@example.com' }, { activeSessionId: null });
+    await Usuario.updateOne(
+      { username: 'test@example.com' },
+      { activeSessionId: null, lastSeenAt: null }
+    );
   });
 
-  it('should require device authorization on a second concurrent login', async () => {
-    const first = await request(app)
-      .post('/api/signin')
-      .send({ email: 'test@example.com', password: 'password123' });
+  it('should refuse a second login while another session is alive', async () => {
+    const first = await signIn();
     expect(first.body.success).toBe(true);
 
-    const second = await request(app)
-      .post('/api/signin')
-      .send({ email: 'test@example.com', password: 'password123' });
+    const second = await signIn();
 
     expect(second.body.success).toBe(false);
-    expect(second.body.requiresDeviceAuthorization).toBe(true);
+    expect(second.body.sessionInUse).toBe(true);
+    expect(second.body.token).toBeUndefined();
   });
 
-  it('should issue a fresh session on forceLogin without tearing down the previous one (soft single-session)', async () => {
-    const first = await request(app)
-      .post('/api/signin')
-      .send({ email: 'test@example.com', password: 'password123' });
-    const firstToken = first.body.token;
+  it('should keep the live session working after a blocked login attempt', async () => {
+    const first = await signIn();
+    await signIn(); // blocked, must not disturb the existing session
 
-    const second = await request(app)
-      .post('/api/signin')
-      .send({ email: 'test@example.com', password: 'password123', forceLogin: true });
-
-    expect(second.body.success).toBe(true);
-    expect(second.body.token).toBeDefined();
-    expect(second.body.token).not.toBe(firstToken);
-
-    // The previous session's token stays valid: soft single-session never
-    // kicks an already-active session out mid-use, so navigation keeps working.
-    const staleCheck = await request(app)
+    const stillValid = await request(app)
       .get('/api/personas')
-      .set('Cookie', [`jwt=${firstToken}`]);
+      .set('Cookie', [`jwt=${first.body.token}`]);
 
-    expect(staleCheck.status).toBe(200);
+    expect(stillValid.status).toBe(200);
+  });
+
+  it('should allow signing in again once the previous session goes stale', async () => {
+    await signIn();
+
+    // Simulate the browser vanishing without logging out: the session record
+    // stays behind, but nothing refreshes lastSeenAt past the idle window.
+    await Usuario.updateOne(
+      { username: 'test@example.com' },
+      { lastSeenAt: new Date(Date.now() - (SESSION_IDLE_MS + 1000)) }
+    );
+
+    const retry = await signIn();
+
+    expect(retry.body.success).toBe(true);
+    expect(retry.body.token).toBeDefined();
+  });
+
+  it('should free the account immediately after an explicit logout', async () => {
+    const first = await signIn();
+
+    await request(app)
+      .post('/api/log-out')
+      .set('Cookie', [`jwt=${first.body.token}`]);
+
+    const retry = await signIn();
+
+    expect(retry.body.success).toBe(true);
+  });
+
+  it('should refresh lastSeenAt as the active session makes requests', async () => {
+    const first = await signIn();
+    await Usuario.updateOne({ username: 'test@example.com' }, { lastSeenAt: new Date(0) });
+
+    await request(app)
+      .get('/api/personas')
+      .set('Cookie', [`jwt=${first.body.token}`]);
+
+    const usuario = await Usuario.findOne({ username: 'test@example.com' });
+    expect(usuario.lastSeenAt.getTime()).toBeGreaterThan(Date.now() - 60000);
   });
 });

@@ -74,7 +74,10 @@ describe('authMiddleware', () => {
 
     jwtUtils.verifyToken.mockResolvedValue({ usuarioId: userId, sessionId });
     Usuario.findById.mockReturnValue({
-      populate: jest.fn().mockResolvedValue({ _id: userId, personaId, activeSessionId: sessionId })
+      populate: jest.fn().mockResolvedValue({
+        _id: userId, personaId, activeSessionId: sessionId,
+        lastSeenAt: null, save: jest.fn().mockResolvedValue()
+      })
     });
 
     const { requireAuth } = require('../middleware/authMiddleware');
@@ -85,6 +88,30 @@ describe('authMiddleware', () => {
     await requireAuth(req, res, next);
     expect(next).toHaveBeenCalled();
     expect(req.personaId).toBe(personaId._id);
+  });
+
+  it('should still authenticate when the lastSeenAt write fails', async () => {
+    // Activity tracking is bookkeeping; a failed write must never cost a
+    // legitimate user their session.
+    const userId = '507f1f77bcf86cd799439011';
+    const personaId = { _id: '507f1f77bcf86cd799439012', ownerName: 'Test', restaurantName: 'Test Rest', avatar: '' };
+    const sessionId = 'session-abc-123';
+
+    jwtUtils.verifyToken.mockResolvedValue({ usuarioId: userId, sessionId });
+    Usuario.findById.mockReturnValue({
+      populate: jest.fn().mockResolvedValue({
+        _id: userId, personaId, activeSessionId: sessionId,
+        lastSeenAt: null, save: jest.fn().mockRejectedValue(new Error('DB down'))
+      })
+    });
+
+    const { requireAuth } = require('../middleware/authMiddleware');
+    const { req, res } = mockReqRes();
+    req.cookies.jwt = 'valid-token';
+    const next = jest.fn();
+
+    await requireAuth(req, res, next);
+    expect(next).toHaveBeenCalled();
   });
 
   it('should still authenticate when another device holds the active session (soft single-session)', async () => {

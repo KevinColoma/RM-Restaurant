@@ -71,39 +71,9 @@ registerRoute('/signin', (app) => {
     btn.textContent = 'Signing in...';
 
     try {
-      let data = await signin(email, password);
-
-      if (!data?.success && data?.requiresDeviceAuthorization) {
-        btn.disabled = false;
-        btn.textContent = 'Sign In';
-
-        const hasSwal = typeof Swal !== 'undefined';
-        const confirmed = hasSwal
-          ? (await Swal.fire({
-              title: 'Already signed in elsewhere',
-              text: data.message || 'This account is already signed in on another device. Sign out that device and continue here?',
-              icon: 'warning',
-              showCancelButton: true,
-              confirmButtonText: 'Sign out other device',
-              cancelButtonText: 'Cancel',
-              // Close instantly: the default hide animation depends on an
-              // animationend event that never fires in backgrounded tabs,
-              // leaving the modal stuck over the dashboard after login.
-              hideClass: { popup: '', backdrop: '' }
-            })).isConfirmed
-          : window.confirm(data.message || 'This account is already signed in on another device. Sign out that device and continue here?');
-
-        if (!confirmed) {
-          return;
-        }
-        if (hasSwal) Swal.close();
-        btn.disabled = true;
-        btn.textContent = 'Signing in...';
-        data = await signin(email, password, true);
-      }
+      const data = await signin(email, password);
 
       if (data?.success) {
-        if (typeof Swal !== 'undefined') Swal.close();
         window.location.hash = '#/dashboard';
         return;
       }

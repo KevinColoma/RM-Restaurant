@@ -11,7 +11,10 @@ let token;
 let personaId;
 
 async function getToken(email, pass) {
-  const res = await request(app).post('/api/signin').send({ email, password: pass, forceLogin: true });
+  // Signing in is refused while a live session exists, so release any session
+  // left over from an earlier sign-in in this file first.
+  await Usuario.updateOne({ username: email }, { activeSessionId: null, lastSeenAt: null });
+  const res = await request(app).post('/api/signin').send({ email, password: pass });
   return res.body.token;
 }
 
