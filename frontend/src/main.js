@@ -1,5 +1,6 @@
 import { initRouter, registerRoute } from './router.js';
 import { isAuthenticated } from './lib/auth.js';
+import { initIdleTimeout } from './lib/idleTimeout.js';
 
 // Pages (lazy loaded)
 import './pages/signin.js';
@@ -34,4 +35,5 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.hash = '#/dashboard';
   }
   initRouter();
+  initIdleTimeout();
 });
