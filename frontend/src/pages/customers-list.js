@@ -21,7 +21,7 @@ registerRoute('/customers-list', async (app) => {
           <a href="javascript:void(0);" class="delete-customer" data-id="${c._id}"><img src="assets/img/icons/delete.svg" alt="img"></a>
         </td>
       </tr>`;
-    }).join('') : '<tr><td colspan="6" class="text-center">No customers found</td></tr>';
+    }).join('') : '<tr><td colspan="6" class="text-center" data-i18n="table.no_customers">No customers found</td></tr>';
 
     const filterableCustomers = customers.map(c => ({ ...c, ordersStatus: c.orders && c.orders.length ? 'Has Orders' : 'No Orders' }));
     const filterPanel = renderFilterPanel([

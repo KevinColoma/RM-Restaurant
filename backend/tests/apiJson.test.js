@@ -108,6 +108,10 @@ describe('Composite screens', () => {
     expect(res.body).toHaveProperty('totalOrders');
     expect(res.body).toHaveProperty('totalEarnings');
     expect(res.body).toHaveProperty('totalExpenses');
+    expect(res.body).toHaveProperty('totalPurchaseAmount');
+    expect(res.body).toHaveProperty('netProfit');
+    expect(Array.isArray(res.body.orderTypeBreakdown)).toBe(true);
+    expect(Array.isArray(res.body.expensesByCategory)).toBe(true);
     expect(Array.isArray(res.body.mostPopularItems)).toBe(true);
   });
 

@@ -58,7 +58,7 @@ describe('Menu CRUD', () => {
       .post('/api/addmenu')
       .send({ item: 'Pizza', category: 'Veg', subCategory: 'Main Course', price: 15.99 });
 
-    expect(res.status).toBe(302);
+    expect(res.status).toBe(401);
   });
 
   it('should update a menu item', async () => {

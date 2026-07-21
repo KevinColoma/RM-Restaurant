@@ -27,7 +27,7 @@ registerRoute('/audit-log', async (app) => {
         <td>${log.details || ''}</td>
         <td>${date}</td>
       </tr>`;
-    }).join('') : '<tr><td colspan="5" class="text-center">No activity recorded yet.</td></tr>';
+    }).join('') : '<tr><td colspan="5" class="text-center" data-i18n="table.no_activity">No activity recorded yet.</td></tr>';
 
     const html = `
 <div class="page-wrapper">

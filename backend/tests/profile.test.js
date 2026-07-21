@@ -91,7 +91,7 @@ describe('Profile', () => {
     const res = await request(app)
       .put('/api/profile/password')
       .send({ currentPassword: 'password123', newPassword: 'newpass123' });
-    expect(res.status).toBe(302);
+    expect(res.status).toBe(401);
   });
 
   it('should reject empty current password', async () => {

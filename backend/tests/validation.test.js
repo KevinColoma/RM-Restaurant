@@ -217,22 +217,22 @@ describe('Input validation - Order items', () => {
 describe('Report endpoints - auth required', () => {
   it('should reject unauthenticated access to sales report', async () => {
     const res = await request(app).get('/api/reports/sales');
-    expect(res.status).toBe(302);
+    expect(res.status).toBe(401);
   });
 
   it('should reject unauthenticated access to orders report', async () => {
     const res = await request(app).get('/api/reports/orders');
-    expect(res.status).toBe(302);
+    expect(res.status).toBe(401);
   });
 
   it('should reject unauthenticated access to sales by date report', async () => {
     const res = await request(app).get('/api/reports/sales-by-date?startDate=2026-01-01&endDate=2026-01-31');
-    expect(res.status).toBe(302);
+    expect(res.status).toBe(401);
   });
 
   it('should reject unauthenticated access to orders by date report', async () => {
     const res = await request(app).get('/api/reports/orders-by-date?startDate=2026-01-01&endDate=2026-01-31');
-    expect(res.status).toBe(302);
+    expect(res.status).toBe(401);
   });
 });
 

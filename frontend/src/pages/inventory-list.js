@@ -22,7 +22,7 @@ registerRoute('/inventory-list', async (app) => {
           <a href="javascript:void(0);" class="delete-item" data-id="${item._id}"><img src="assets/img/icons/delete.svg" alt="img"></a>
         </td>
       </tr>`;
-    }).join('') : '<tr><td colspan="6" class="text-center">No inventory items found</td></tr>';
+    }).join('') : '<tr><td colspan="6" class="text-center" data-i18n="table.no_inventory">No inventory items found</td></tr>';
 
     const filterableItems = items.map(item => ({ ...item, supplierName: item.supplier?.name || '' }));
     const filterPanel = renderFilterPanel([

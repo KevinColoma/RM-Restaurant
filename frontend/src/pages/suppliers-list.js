@@ -16,7 +16,7 @@ registerRoute('/suppliers-list', async (app) => {
           <a href="javascript:void(0);" class="delete-supplier" data-id="${s._id}"><img src="assets/img/icons/delete.svg" alt="img"></a>
         </td>
       </tr>`;
-    }).join('') : '<tr><td colspan="3" class="text-center">No suppliers found</td></tr>';
+    }).join('') : '<tr><td colspan="3" class="text-center" data-i18n="table.no_suppliers">No suppliers found</td></tr>';
 
     const html = `
 <div class="page-wrapper">

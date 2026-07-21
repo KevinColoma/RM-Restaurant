@@ -17,7 +17,13 @@ registerRoute('/dashboard', async (app) => {
     const totalEarnings = data.totalEarnings || 0;
     const totalExpenses = data.totalExpenses || 0;
     const totalPurchases = data.totalPurchases || 0;
+    const totalPurchaseAmount = data.totalPurchaseAmount || 0;
+    const netProfit = data.netProfit ?? (totalEarnings - totalExpenses);
     const mostPopular = data.mostPopularItems || [];
+    const orderTypes = Array.isArray(data.orderTypeBreakdown) ? data.orderTypeBreakdown : [];
+    const expenseCats = Array.isArray(data.expensesByCategory) ? data.expensesByCategory : [];
+
+    const profitColor = netProfit >= 0 ? 'dash2' : 'dash3';
 
     const html = `
 <div class="page-wrapper">
@@ -109,11 +115,44 @@ registerRoute('/dashboard', async (app) => {
                       <td>${item.item}</td>
                       <td>${item.quantity}</td>
                     </tr>`).join('')
-                  : '<tr><td colspan="3" class="text-center">No sales today</td></tr>'
+                  : '<tr><td colspan="3" class="text-center" data-i18n="dash.no_sales">No sales today</td></tr>'
                 }
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-4 col-sm-12 col-12 d-flex">
+      <div class="card flex-fill">
+        <div class="card-header pb-0">
+          <h4 class="card-title mb-0" data-i18n="dash.orders_by_type">Orders by Type</h4>
+        </div>
+        <div class="card-body">
+          <div id="orders_chart"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4 col-sm-12 col-12 d-flex">
+      <div class="card flex-fill">
+        <div class="card-header pb-0">
+          <h4 class="card-title mb-0" data-i18n="dash.expenses_by_category">Expenses by Category</h4>
+        </div>
+        <div class="card-body">
+          <div id="expenses_chart"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4 col-sm-12 col-12 d-flex">
+      <div class="card flex-fill ${profitColor}">
+        <div class="card-header pb-0">
+          <h4 class="card-title mb-0" data-i18n="dash.net_profit">Net Profit</h4>
+        </div>
+        <div class="card-body d-flex align-items-center justify-content-center" style="min-height:200px">
+          <h2 class="${netProfit >= 0 ? 'text-success' : 'text-danger'}" style="font-size:3rem">Rs ${netProfit.toFixed(2)}</h2>
         </div>
       </div>
     </div>
@@ -158,9 +197,9 @@ registerRoute('/dashboard', async (app) => {
                   <td>${menu.category || '-'}</td>
                   <td>${menu.subCategory || '-'}</td>
                   <td>${price}</td>
-                  <td>${available ? '<span class="badge bg-success">Available</span>' : '<span class="badge bg-danger">Unavailable</span>'}</td>
+                  <td>${available ? '<span class="badge bg-success" data-i18n="dash.available">Available</span>' : '<span class="badge bg-danger" data-i18n="dash.unavailable">Unavailable</span>'}</td>
                 </tr>`}).join('')
-              : '<tr><td colspan="6" class="text-center">No menu items found</td></tr>'
+              : '<tr><td colspan="6" class="text-center" data-i18n="dash.no_items">No menu items found</td></tr>'
             }
           </tbody>
         </table>
@@ -175,8 +214,6 @@ registerRoute('/dashboard', async (app) => {
 
     setTimeout(() => {
       if (typeof $ !== 'undefined' && $.fn.DataTable) {
-        // Skip DataTables when the body is just a "No data" colspan placeholder;
-        // initializing over it throws a _DT_CellIndex error.
         const initDataTable = (selector, opts) => {
           const table = app.querySelector(selector);
           if (!table || table.querySelector('tbody td[colspan]')) return;
@@ -188,18 +225,38 @@ registerRoute('/dashboard', async (app) => {
       }
 
       if (typeof ApexCharts !== 'undefined') {
-        const chartEl = app.querySelector('#sales_charts');
-        if (chartEl) {
-          const options = {
+        const t = (typeof window !== 'undefined' && window.t) || (x => x);
+        const salesEl = app.querySelector('#sales_charts');
+        if (salesEl) {
+          new ApexCharts(salesEl, {
             chart: { type: 'line', height: 300 },
-            series: [{
-              name: 'Sales',
-              data: [totalEarnings]
-            }],
-            xaxis: { categories: ['Today'] },
-            title: { text: 'Today Sales', align: 'center' }
-          };
-          new ApexCharts(chartEl, options).render();
+            series: [{ name: t('dash.sales'), data: [totalEarnings] }, { name: t('dash.purchase'), data: [totalPurchaseAmount] }],
+            colors: ['#28c76f', '#ea5455'],
+            xaxis: { categories: [t('dash.sno')] },
+            title: { text: t('dash.today_sales_purchases'), align: 'center' }
+          }).render();
+        }
+
+        const ordersEl = app.querySelector('#orders_chart');
+        if (ordersEl && orderTypes.length) {
+          new ApexCharts(ordersEl, {
+            chart: { type: 'donut', height: 280 },
+            series: orderTypes.map(o => o.count),
+            labels: orderTypes.map(o => o._id),
+            colors: ['#28c76f', '#ff9f43', '#7367f0'],
+            title: { text: t('dash.orders'), align: 'center' }
+          }).render();
+        }
+
+        const expEl = app.querySelector('#expenses_chart');
+        if (expEl && expenseCats.length) {
+          new ApexCharts(expEl, {
+            chart: { type: 'bar', height: 280 },
+            series: [{ name: t('dash.amount'), data: expenseCats.map(c => c.total) }],
+            xaxis: { categories: expenseCats.map(c => c._id || t('dash.category')) },
+            colors: ['#ea5455'],
+            title: { text: t('dash.expenses'), align: 'center' }
+          }).render();
         }
       }
     }, 100);

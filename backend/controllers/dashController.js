@@ -19,6 +19,21 @@ async function buildDashboard(personaId) {
             purchaseDate: { $gte: startOfDay, $lte: endOfDay }
         });
 
+        const totalPurchaseAmount = await Purchase.aggregate([
+            {
+                $match: {
+                    personaId: new mongoose.Types.ObjectId(personaId),
+                    purchaseDate: { $gte: startOfDay, $lte: endOfDay }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: "$totalAmount" }
+                }
+            }
+        ]);
+
         const totalOrders = await Order.countDocuments({
             personaId: new mongoose.Types.ObjectId(personaId),
             createdAt: { $gte: startOfDay, $lte: endOfDay }
@@ -54,6 +69,38 @@ async function buildDashboard(personaId) {
             }
         ]);
 
+        const orderTypeBreakdown = await Order.aggregate([
+            {
+                $match: {
+                    personaId: new mongoose.Types.ObjectId(personaId),
+                    createdAt: { $gte: startOfDay, $lte: endOfDay }
+                }
+            },
+            {
+                $group: {
+                    _id: "$orderType",
+                    count: { $sum: 1 },
+                    total: { $sum: "$totalAmount" }
+                }
+            }
+        ]);
+
+        const expensesByCategory = await Expense.aggregate([
+            {
+                $match: {
+                    personaId: new mongoose.Types.ObjectId(personaId),
+                    createdAt: { $gte: startOfDay, $lte: endOfDay }
+                }
+            },
+            {
+                $group: {
+                    _id: "$category",
+                    total: { $sum: "$amount" },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
         const menus = await Menu.find({ personaId: new mongoose.Types.ObjectId(personaId) });
 
         const orders = await Order.find({
@@ -77,11 +124,18 @@ async function buildDashboard(personaId) {
             .sort((a, b) => b.quantity - a.quantity)
             .slice(0, 7); // Get top 7 items
 
+        const totalEarningsVal = totalEarnings.length ? totalEarnings[0].total : 0;
+        const totalExpensesVal = totalExpenses.length ? totalExpenses[0].total : 0;
+
         return {
             totalPurchases,
             totalOrders,
-            totalEarnings: totalEarnings.length ? totalEarnings[0].total : 0,
-            totalExpenses: totalExpenses.length ? totalExpenses[0].total : 0,
+            totalEarnings: totalEarningsVal,
+            totalExpenses: totalExpensesVal,
+            totalPurchaseAmount: totalPurchaseAmount.length ? totalPurchaseAmount[0].total : 0,
+            netProfit: totalEarningsVal - totalExpensesVal,
+            orderTypeBreakdown,
+            expensesByCategory,
             menus,
             mostPopularItems
         };

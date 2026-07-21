@@ -172,6 +172,38 @@
 
 </div>
 
+<div class="row">
+<div class="col-lg-4 col-sm-12 col-12 d-flex">
+    <div class="card flex-fill">
+        <div class="card-header pb-0">
+            <h4 class="card-title mb-0" data-i18n="dash.orders_by_type">Orders by Type</h4>
+        </div>
+        <div class="card-body">
+            <div id="orders_chart"></div>
+        </div>
+    </div>
+</div>
+<div class="col-lg-4 col-sm-12 col-12 d-flex">
+    <div class="card flex-fill">
+        <div class="card-header pb-0">
+            <h4 class="card-title mb-0" data-i18n="dash.expenses_by_category">Expenses by Category</h4>
+        </div>
+        <div class="card-body">
+            <div id="expenses_chart"></div>
+        </div>
+    </div>
+</div>
+<div class="col-lg-4 col-sm-12 col-12 d-flex">
+    <div class="card flex-fill">
+        <div class="card-header pb-0">
+            <h4 class="card-title mb-0" data-i18n="dash.net_profit">Net Profit</h4>
+        </div>
+        <div class="card-body d-flex align-items-center justify-content-center" style="min-height:200px">
+            <h2 style="font-size:3rem;color:<%= netProfit >= 0 ? '#28c76f' : '#ea5455' %>">Rs <%= netProfit.toFixed(2) %></h2>
+        </div>
+    </div>
+</div>
+</div>
 
 <div class="card mb-0">
 <div class="card-body">
@@ -239,14 +271,42 @@
 var options = {
   chart: { type: 'line', height: 300 },
   series: [{
-    name: 'Sales',
+    name: t('dash.sales'),
     data: [<%= totalEarnings.toFixed(2) %>]
+  }, {
+    name: t('dash.purchase'),
+    data: [<%= totalPurchaseAmount.toFixed(2) %>]
   }],
+  colors: ['#28c76f', '#ea5455'],
   xaxis: { categories: ['Today'] },
-  title: { text: 'Today Sales', align: 'center' }
+  title: { text: t('dash.today_sales_purchases'), align: 'center' }
 };
 var chart = new ApexCharts(document.querySelector('#sales_charts'), options);
 chart.render();
+
+<% if (orderTypeBreakdown.length > 0) { %>
+  var orderLabels = [<% orderTypeBreakdown.forEach(function(o,i){ %><%= i>0 ? ',' : '' %>'<%= o._id %>'<% }); %>];
+  var orderCounts = [<% orderTypeBreakdown.forEach(function(o,i){ %><%= i>0 ? ',' : '' %><%= o.count %><% }); %>];
+  new ApexCharts(document.querySelector('#orders_chart'), {
+    chart: { type: 'donut', height: 280 },
+    series: orderCounts,
+    labels: orderLabels,
+    colors: ['#28c76f', '#ff9f43', '#7367f0'],
+    title: { text: t('dash.orders'), align: 'center' }
+  }).render();
+<% } %>
+
+<% if (expensesByCategory.length > 0) { %>
+  var expLabels = [<% expensesByCategory.forEach(function(e,i){ %><%= i>0 ? ',' : '' %>'<%= e._id || t('dash.category') %>'<% }); %>];
+  var expAmounts = [<% expensesByCategory.forEach(function(e,i){ %><%= i>0 ? ',' : '' %><%= e.total %><% }); %>];
+  new ApexCharts(document.querySelector('#expenses_chart'), {
+    chart: { type: 'bar', height: 280 },
+    series: [{ name: t('dash.amount'), data: expAmounts }],
+    xaxis: { categories: expLabels },
+    colors: ['#ea5455'],
+    title: { text: t('dash.expenses'), align: 'center' }
+  }).render();
+<% } %>
 
 function confirmDeleteMenu(id) {
     Swal.fire({

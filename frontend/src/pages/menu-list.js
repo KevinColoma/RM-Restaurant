@@ -23,7 +23,7 @@ registerRoute('/menu-list', async (app) => {
           <a href="javascript:void(0);" class="delete-item" data-id="${m._id}"><img src="assets/img/icons/delete.svg" alt="img"></a>
         </td>
       </tr>`;
-    }).join('') : '<tr><td colspan="6" class="text-center">No menu items found</td></tr>';
+    }).join('') : '<tr><td colspan="6" class="text-center" data-i18n="table.no_menu_items">No menu items found</td></tr>';
 
     const filterPanel = renderFilterPanel([
       { key: 'category', label: 'Choose Category', options: uniqueValues(menus, 'category') },

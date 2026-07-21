@@ -22,7 +22,7 @@ registerRoute('/purchases-list', async (app) => {
           <a href="javascript:void(0);" class="delete-purchase" data-id="${p._id}"><img src="assets/img/icons/delete.svg" alt="img"></a>
         </td>
       </tr>`;
-    }).join('') : '<tr><td colspan="6" class="text-center">No purchases found</td></tr>';
+    }).join('') : '<tr><td colspan="6" class="text-center" data-i18n="table.no_purchases">No purchases found</td></tr>';
 
     const html = `
 <div class="page-wrapper">

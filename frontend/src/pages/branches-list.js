@@ -22,7 +22,7 @@ registerRoute('/branches-list', async (app) => {
           <a href="javascript:void(0);" class="delete-branch" data-id="${b._id}"><img src="assets/img/icons/delete.svg" alt="img"></a>
         </td>
       </tr>`;
-    }).join('') : '<tr><td colspan="8" class="text-center">No branches found</td></tr>';
+    }).join('') : '<tr><td colspan="8" class="text-center" data-i18n="table.no_branches">No branches found</td></tr>';
 
     const filterPanel = renderFilterPanel([
       { key: 'Parent_Rest', label: 'Parent Restaurant', options: uniqueValues(branches, 'Parent_Rest') },

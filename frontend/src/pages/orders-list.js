@@ -22,7 +22,7 @@ registerRoute('/orders-list', async (app) => {
           <a href="javascript:void(0);" class="btn btn-sm btn-danger cancel-order" data-id="${o._id}">Cancel</a>
         </td>
       </tr>`;
-    }).join('') : '<tr><td colspan="8" class="text-center">No orders found</td></tr>';
+    }).join('') : '<tr><td colspan="8" class="text-center" data-i18n="table.no_orders">No orders found</td></tr>';
 
     const html = `
 <div class="page-wrapper">

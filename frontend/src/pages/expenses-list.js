@@ -23,7 +23,7 @@ registerRoute('/expenses-list', async (app) => {
           <a href="javascript:void(0);" class="delete-expense" data-id="${e._id}"><img src="assets/img/icons/delete.svg" alt="img"></a>
         </td>
       </tr>`;
-    }).join('') : '<tr><td colspan="7" class="text-center">No expenses found</td></tr>';
+    }).join('') : '<tr><td colspan="7" class="text-center" data-i18n="table.no_expenses">No expenses found</td></tr>';
 
     const filterPanel = renderFilterPanel([
       { key: 'category', label: 'Choose Category', options: uniqueValues(expenses, 'category') },

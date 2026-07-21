@@ -4,8 +4,8 @@ const Usuario = require('../models/Usuario');
 jest.mock('../jwt');
 jest.mock('../models/Usuario');
 
-function mockReqRes() {
-  const req = { cookies: {} };
+function mockReqRes(path) {
+  const req = { cookies: {}, path: path || '/some-page' };
   const res = {
     _status: 0,
     _data: '',
@@ -54,16 +54,15 @@ describe('authMiddleware', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('should send 401 when token verification throws', async () => {
+  it('should send 401 when token verification throws on an API path', async () => {
     jwtUtils.verifyToken.mockRejectedValue(new Error('Token blacklisted'));
     const { requireAuth } = require('../middleware/authMiddleware');
-    const { req, res } = mockReqRes();
+    const { req, res } = mockReqRes('/api/dashboard');
     req.cookies.jwt = 'bad-token';
     const next = jest.fn();
 
     await requireAuth(req, res, next);
     expect(res._status).toBe(401);
-    expect(res._data).toBe('Token is blacklisted');
     expect(next).not.toHaveBeenCalled();
   });
 

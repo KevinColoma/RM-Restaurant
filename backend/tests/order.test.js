@@ -71,7 +71,7 @@ describe('Order Placement', () => {
         orderType: 'take away'
       });
 
-    expect(res.status).toBe(302);
+    expect(res.status).toBe(401);
   });
 
   it('should list orders', async () => {
