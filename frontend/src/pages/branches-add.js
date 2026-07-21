@@ -21,43 +21,43 @@ registerRoute('/branches-add', async (app) => {
 <div class="row">
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label>Parent Restaurant</label>
+<label for="Parent_Rest">Parent Restaurant</label>
 <input type="text" name="Parent_Rest" id="Parent_Rest" class="form-control" required>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label>Owner Name</label>
+<label for="ownerName">Owner Name</label>
 <input type="text" name="ownerName" id="ownerName" class="form-control" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" required>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label>Restaurant Name</label>
+<label for="restaurantName">Restaurant Name</label>
 <input type="text" name="restaurantName" id="restaurantName" class="form-control" required>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label>City</label>
+<label for="city">City</label>
 <input type="text" name="city" id="city" class="form-control" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" required>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label>Address</label>
+<label for="address">Address</label>
 <input type="text" name="address" id="address" class="form-control" required>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label>Email</label>
+<label for="email">Email</label>
 <input type="email" name="email" id="email" class="form-control" required>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label>Mobile</label>
+<label for="mobile">Mobile</label>
 <input type="tel" name="mobile" id="mobile" class="form-control" pattern="[0-9+ -]+" title="Only numbers are allowed" required>
 </div>
 </div>

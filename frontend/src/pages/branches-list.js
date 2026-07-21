@@ -18,8 +18,8 @@ registerRoute('/branches-list', async (app) => {
         <td class="br-email">${b.email || '-'}</td>
         <td class="br-mobile">${b.mobile || '-'}</td>
         <td>
-          <a class="me-3" href="javascript:void(0);" class="edit-branch" data-id="${b._id}"><img src="assets/img/icons/edit.svg" alt="img"></a>
-          <a href="javascript:void(0);" class="delete-branch" data-id="${b._id}"><img src="assets/img/icons/delete.svg" alt="img"></a>
+          <a class="me-3 edit-branch" href="javascript:void(0);" aria-label="Edit branch" title="Edit branch" data-i18n-aria="action.edit_branch" data-id="${b._id}"><img src="assets/img/icons/edit.svg" alt=""></a>
+          <a href="javascript:void(0);" class="delete-branch" aria-label="Delete branch" title="Delete branch" data-i18n-aria="action.delete_branch" data-id="${b._id}"><img src="assets/img/icons/delete.svg" alt=""></a>
         </td>
       </tr>`;
     }).join('') : '<tr><td colspan="8" class="text-center" data-i18n="table.no_branches">No branches found</td></tr>';
@@ -39,7 +39,7 @@ registerRoute('/branches-list', async (app) => {
 <h6 data-i18n="list.branches_sub">Manage your branches</h6>
 </div>
 <div class="page-btn">
-<a href="#/branches-add" class="btn btn-added"><img src="assets/img/icons/plus.svg" alt="img" class="me-1">Add New Branch</a>
+<a href="#/branches-add" class="btn btn-added"><img src="assets/img/icons/plus.svg" alt="" class="me-1">Add New Branch</a>
 </div>
 </div>
 <div class="card">
@@ -48,19 +48,19 @@ registerRoute('/branches-list', async (app) => {
 <div class="search-set">
 <div class="search-path">
 <a class="btn btn-filter" id="filter_search">
-<img src="assets/img/icons/filter.svg" alt="img">
-<span><img src="assets/img/icons/closes.svg" alt="img"></span>
+<img src="assets/img/icons/filter.svg" alt="">
+<span><img src="assets/img/icons/closes.svg" alt=""></span>
 </a>
 </div>
 <div class="search-input">
-<a class="btn btn-searchset"><img src="assets/img/icons/search-white.svg" alt="img"></a>
+<a class="btn btn-searchset"><img src="assets/img/icons/search-white.svg" alt=""></a>
 </div>
 </div>
 <div class="wordset">
 <ul>
-<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="print" onclick="window.print()"><img src="assets/img/icons/printer.svg" alt="img"></a></li>
-<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf" href="/export/branches/pdf"><img src="assets/img/icons/pdf.svg" alt="img"></a></li>
-<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="csv" href="/export/branches/csv"><img src="assets/img/icons/excel.svg" alt="img"></a></li>
+<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="print" onclick="window.print()"><img src="assets/img/icons/printer.svg" alt=""></a></li>
+<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf" href="/export/branches/pdf"><img src="assets/img/icons/pdf.svg" alt=""></a></li>
+<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="csv" href="/export/branches/csv"><img src="assets/img/icons/excel.svg" alt=""></a></li>
 </ul>
 </div>
 </div>

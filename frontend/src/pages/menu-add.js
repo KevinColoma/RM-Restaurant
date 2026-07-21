@@ -21,13 +21,13 @@ registerRoute('/menu-add', async (app) => {
 <div class="row">
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label>Item Name</label>
+<label for="item">Item Name</label>
 <input type="text" name="item" id="item" class="form-control" required>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label>Category</label>
+<label for="category">Category</label>
 <select class="form-control" name="category" id="category" required>
 <option value="">Choose Category</option>
 <option value="Veg">Veg</option>
@@ -37,7 +37,7 @@ registerRoute('/menu-add', async (app) => {
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label>Sub Category</label>
+<label for="subCategory">Sub Category</label>
 <select class="form-control" name="subCategory" id="subCategory" required>
 <option value="">Choose Sub Category</option>
 <option value="Starter">Starter</option>
@@ -56,7 +56,7 @@ registerRoute('/menu-add', async (app) => {
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label>Price</label>
+<label for="price">Price</label>
 <input type="number" name="price" id="price" class="form-control" step="0.01" min="0" required>
 </div>
 </div>

@@ -17,8 +17,8 @@ registerRoute('/customers-list', async (app) => {
         <td>${c.orders ? c.orders.length : 0}</td>
         <td>${date}</td>
         <td>
-          <a class="me-3" href="javascript:void(0);" class="edit-customer" data-id="${c._id}"><img src="assets/img/icons/edit.svg" alt="img"></a>
-          <a href="javascript:void(0);" class="delete-customer" data-id="${c._id}"><img src="assets/img/icons/delete.svg" alt="img"></a>
+          <a class="me-3 edit-customer" href="javascript:void(0);" aria-label="Edit customer" title="Edit customer" data-i18n-aria="action.edit_customer" data-id="${c._id}"><img src="assets/img/icons/edit.svg" alt=""></a>
+          <a href="javascript:void(0);" class="delete-customer" aria-label="Delete customer" title="Delete customer" data-i18n-aria="action.delete_customer" data-id="${c._id}"><img src="assets/img/icons/delete.svg" alt=""></a>
         </td>
       </tr>`;
     }).join('') : '<tr><td colspan="6" class="text-center" data-i18n="table.no_customers">No customers found</td></tr>';
@@ -38,7 +38,7 @@ registerRoute('/customers-list', async (app) => {
 <h6 data-i18n="list.customers_sub">Manage your customers</h6>
 </div>
 <div class="page-btn">
-<a href="javascript:void(0);" class="btn btn-added" id="addCustomerBtn"><img src="assets/img/icons/plus.svg" alt="img" class="me-1">Add New Customer</a>
+<a href="javascript:void(0);" class="btn btn-added" id="addCustomerBtn"><img src="assets/img/icons/plus.svg" alt="" class="me-1">Add New Customer</a>
 </div>
 </div>
 <div class="card">
@@ -47,19 +47,19 @@ registerRoute('/customers-list', async (app) => {
 <div class="search-set">
 <div class="search-path">
 <a class="btn btn-filter" id="filter_search">
-<img src="assets/img/icons/filter.svg" alt="img">
-<span><img src="assets/img/icons/closes.svg" alt="img"></span>
+<img src="assets/img/icons/filter.svg" alt="">
+<span><img src="assets/img/icons/closes.svg" alt=""></span>
 </a>
 </div>
 <div class="search-input">
-<a class="btn btn-searchset"><img src="assets/img/icons/search-white.svg" alt="img"></a>
+<a class="btn btn-searchset"><img src="assets/img/icons/search-white.svg" alt=""></a>
 </div>
 </div>
 <div class="wordset">
 <ul>
-<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="print" onclick="window.print()"><img src="assets/img/icons/printer.svg" alt="img"></a></li>
-<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf" href="/export/customers/pdf"><img src="assets/img/icons/pdf.svg" alt="img"></a></li>
-<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="csv" href="/export/customers/csv"><img src="assets/img/icons/excel.svg" alt="img"></a></li>
+<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="print" onclick="window.print()"><img src="assets/img/icons/printer.svg" alt=""></a></li>
+<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf" href="/export/customers/pdf"><img src="assets/img/icons/pdf.svg" alt=""></a></li>
+<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="csv" href="/export/customers/csv"><img src="assets/img/icons/excel.svg" alt=""></a></li>
 </ul>
 </div>
 </div>

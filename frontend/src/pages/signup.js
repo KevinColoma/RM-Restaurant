@@ -9,7 +9,7 @@ registerRoute('/', (app) => {
 <div class="login-content">
 <div class="login-userset">
 <div class="login-logo">
-  <img src="assets/img/logo.png" alt="img">
+  <img src="assets/img/logo.png" alt="RMS">
 </div>
 <div class="login-userheading">
   <h3>Sign Up</h3>
@@ -19,49 +19,49 @@ registerRoute('/', (app) => {
 <div id="success-message" class="alert alert-success d-none"></div>
 <form id="signup-form">
   <div class="form-login">
-    <label>Email</label>
+    <label for="email">Email</label>
     <div class="form-addons">
       <input type="email" name="email" id="email" placeholder="Enter your email" required>
-      <img src="assets/img/icons/mail.svg" alt="img">
+      <img src="assets/img/icons/mail.svg" alt="">
     </div>
   </div>
   <div class="form-login">
-    <label>Owner Name</label>
+    <label for="ownerName">Owner Name</label>
     <div class="form-addons">
       <input type="text" name="ownerName" id="ownerName" placeholder="Enter owner name" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" required>
-      <img src="assets/img/icons/user.svg" alt="img">
+      <img src="assets/img/icons/user.svg" alt="">
     </div>
   </div>
   <div class="form-login">
-    <label>Restaurant Name</label>
+    <label for="restaurantName">Restaurant Name</label>
     <div class="form-addons">
       <input type="text" name="restaurantName" id="restaurantName" placeholder="Enter restaurant name" required>
-      <img src="assets/img/icons/shop.svg" alt="img">
+      <img src="assets/img/icons/shop.svg" alt="">
     </div>
   </div>
   <div class="form-login">
-    <label>City</label>
+    <label for="city">City</label>
     <div class="form-addons">
       <input type="text" name="city" id="city" placeholder="Enter city" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" required>
-      <img src="assets/img/icons/city.svg" alt="img">
+      <img src="assets/img/icons/city.svg" alt="">
     </div>
   </div>
   <div class="form-login">
-    <label>Address</label>
+    <label for="address">Address</label>
     <div class="form-addons">
       <input type="text" name="address" id="address" placeholder="Enter address" required>
-      <img src="assets/img/icons/address.svg" alt="img">
+      <img src="assets/img/icons/address.svg" alt="">
     </div>
   </div>
   <div class="form-login">
-    <label>Mobile</label>
+    <label for="mobile">Mobile</label>
     <div class="form-addons">
       <input type="tel" name="mobile" id="mobile" placeholder="Enter mobile number" pattern="[0-9+ -]+" title="Only numbers are allowed" required>
-      <img src="assets/img/icons/phone.svg" alt="img">
+      <img src="assets/img/icons/phone.svg" alt="">
     </div>
   </div>
   <div class="form-login">
-    <label>Password</label>
+    <label for="password">Password</label>
     <div class="pass-group">
       <input type="password" name="password" id="password" class="pass-input" placeholder="Enter your password" required minlength="6" maxlength="18">
       <span class="fas toggle-password fa-eye-slash"></span>
@@ -77,7 +77,7 @@ registerRoute('/', (app) => {
 </div>
 </div>
 <div class="login-img">
-  <img src="assets/img/login.jpg" alt="img">
+  <img src="assets/img/login.jpg" alt="">
 </div>
 </div>
 </div>

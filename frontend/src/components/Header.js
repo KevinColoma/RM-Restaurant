@@ -57,7 +57,7 @@ export function renderLayout(app, activePage, contentHtml) {
 
       if (!hasChildren) {
         return `<li${liActive}>
-          <a href="${item.href}"><img src="assets/img/icons/${item.icon}" alt="img"><span data-i18n="${item.label}">${item.label}</span></a>
+          <a href="${item.href}"><img src="assets/img/icons/${item.icon}" alt=""><span data-i18n="${item.label}">${item.label}</span></a>
         </li>`;
       }
 
@@ -75,7 +75,7 @@ export function renderLayout(app, activePage, contentHtml) {
       // performs its default action, navigating to "#", wiping the hash, and
       // dumping the (still authenticated) user on the sign-in screen.
       return `<li${submenuOpen}>
-        <a href="javascript:void(0);" class="submenu-toggle"><img src="assets/img/icons/${item.icon}" alt="img"><span data-i18n="${item.label}">${item.label}</span> <span class="menu-arrow"></span></a>
+        <a href="javascript:void(0);" class="submenu-toggle"><img src="assets/img/icons/${item.icon}" alt=""><span data-i18n="${item.label}">${item.label}</span> <span class="menu-arrow"></span></a>
         <ul${ulStyle}>${childrenHtml}</ul>
       </li>`;
     }).join('');
@@ -112,10 +112,10 @@ export function renderLayout(app, activePage, contentHtml) {
             <div class="searchinputs">
               <input type="text" id="searchInput" data-i18n-placeholder="header.search" placeholder="Search pages...">
               <div class="search-addon">
-                <span><img src="assets/img/icons/closes.svg" alt="img"></span>
+                <span><img src="assets/img/icons/closes.svg" alt=""></span>
               </div>
             </div>
-            <button type="submit" class="btn" id="searchdiv"><img src="assets/img/icons/search.svg" alt="img"></button>
+            <button type="submit" class="btn" id="searchdiv"><img src="assets/img/icons/search.svg" alt=""></button>
           </form>
         </div>
       </li>
@@ -134,7 +134,7 @@ export function renderLayout(app, activePage, contentHtml) {
       </li>
       <li class="nav-item dropdown">
         <a href="javascript:void(0);" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">
-          <img src="assets/img/icons/notification-bing.svg" alt="img"> <span class="badge rounded-pill">4</span>
+          <img src="assets/img/icons/notification-bing.svg" alt=""> <span class="badge rounded-pill">4</span>
         </a>
         <div class="dropdown-menu notifications">
           <div class="topnav-dropdown-header">
@@ -196,7 +196,7 @@ export function renderLayout(app, activePage, contentHtml) {
             <a class="dropdown-item" href="#/settings"><i class="me-2" data-feather="settings"></i><span data-i18n="nav.settings">Settings</span></a>
             <hr class="m-0">
             <a class="dropdown-item logout pb-0" href="javascript:void(0);" id="logout-btn">
-              <img src="assets/img/icons/log-out.svg" class="me-2" alt="img"><span data-i18n="nav.logout">Logout</span>
+              <img src="assets/img/icons/log-out.svg" class="me-2" alt=""><span data-i18n="nav.logout">Logout</span>
             </a>
           </div>
         </div>

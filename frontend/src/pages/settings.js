@@ -29,7 +29,7 @@ registerRoute('/settings', async (app) => {
 <div class="row">
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label>Theme</label>
+<label for="theme">Theme</label>
 <select class="form-control" name="theme" id="theme">
 ${themeOpts}
 </select>
@@ -41,14 +41,14 @@ ${themeOpts}
 <div class="row">
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label>Tax Rate (%)</label>
+<label for="taxRate">Tax Rate (%)</label>
 <input type="number" name="taxRate" id="taxRate" class="form-control" step="0.1" value="${persona.taxRate || 10}" required>
 <small class="text-muted">Applied automatically to all orders (default: 10%)</small>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label>Currency Symbol</label>
+<label for="currencySymbol">Currency Symbol</label>
 <input type="text" name="currencySymbol" id="currencySymbol" class="form-control" maxlength="5" value="${persona.currencySymbol || '$'}" required>
 </div>
 </div>
@@ -58,7 +58,7 @@ ${themeOpts}
 <div class="row">
 <div class="col-lg-6 col-sm-12 col-12">
 <div class="form-group">
-<label>Printer Connection String</label>
+<label for="printerConnection">Printer Connection String</label>
 <input type="text" name="printerConnection" id="printerConnection" class="form-control" placeholder="e.g. USB/Vendor/Product or TCP/192.168.1.100" value="${persona.printerConnection || ''}">
 <small class="text-muted">Leave empty to disable printing. Format depends on your printer type.</small>
 </div>

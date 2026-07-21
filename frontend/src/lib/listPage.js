@@ -104,7 +104,7 @@ ${f.options.map(o => `<option value="${String(o).replace(/"/g, '&quot;')}">${o}<
 ${cols}
 <div class="col-lg-3 col-sm-6 col-12 d-flex align-items-end">
 <div class="form-group mb-0 d-flex">
-<a class="btn btn-added" id="apply-filters" title="Apply filters"><img src="assets/img/icons/search-whites.svg" alt="img"> Apply</a>
+<a class="btn btn-added" id="apply-filters" title="Apply filters"><img src="assets/img/icons/search-whites.svg" alt=""> Apply</a>
 <a class="btn btn-cancel ms-2" id="reset-filters" title="Reset filters">&times; Reset</a>
 </div>
 </div>

@@ -19,8 +19,8 @@ registerRoute('/menu-list', async (app) => {
         <td>${price}</td>
         <td>${badge}</td>
         <td>
-          <a class="me-3" href="#/menu-edit/${m._id}"><img src="assets/img/icons/edit.svg" alt="img"></a>
-          <a href="javascript:void(0);" class="delete-item" data-id="${m._id}"><img src="assets/img/icons/delete.svg" alt="img"></a>
+          <a class="me-3" aria-label="Edit menu item" title="Edit menu item" data-i18n-aria="action.edit_menu" href="#/menu-edit/${m._id}"><img src="assets/img/icons/edit.svg" alt=""></a>
+          <a href="javascript:void(0);" class="delete-item" aria-label="Delete menu item" title="Delete menu item" data-i18n-aria="action.delete_menu" data-id="${m._id}"><img src="assets/img/icons/delete.svg" alt=""></a>
         </td>
       </tr>`;
     }).join('') : '<tr><td colspan="6" class="text-center" data-i18n="table.no_menu_items">No menu items found</td></tr>';
@@ -40,7 +40,7 @@ registerRoute('/menu-list', async (app) => {
 <h6 data-i18n="list.product_sub">Manage your products</h6>
 </div>
 <div class="page-btn">
-<a href="#/menu-add" class="btn btn-added"><img src="assets/img/icons/plus.svg" alt="img" class="me-1">Add New Item</a>
+<a href="#/menu-add" class="btn btn-added"><img src="assets/img/icons/plus.svg" alt="" class="me-1">Add New Item</a>
 </div>
 </div>
 <div class="card">
@@ -49,19 +49,19 @@ registerRoute('/menu-list', async (app) => {
 <div class="search-set">
 <div class="search-path">
 <a class="btn btn-filter" id="filter_search">
-<img src="assets/img/icons/filter.svg" alt="img">
-<span><img src="assets/img/icons/closes.svg" alt="img"></span>
+<img src="assets/img/icons/filter.svg" alt="">
+<span><img src="assets/img/icons/closes.svg" alt=""></span>
 </a>
 </div>
 <div class="search-input">
-<a class="btn btn-searchset"><img src="assets/img/icons/search-white.svg" alt="img"></a>
+<a class="btn btn-searchset"><img src="assets/img/icons/search-white.svg" alt=""></a>
 </div>
 </div>
 <div class="wordset">
 <ul>
-<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="print" onclick="window.print()"><img src="assets/img/icons/printer.svg" alt="img"></a></li>
-<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf" href="/export/menu/pdf"><img src="assets/img/icons/pdf.svg" alt="img"></a></li>
-<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="csv" href="/export/menu/csv"><img src="assets/img/icons/excel.svg" alt="img"></a></li>
+<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="print" onclick="window.print()"><img src="assets/img/icons/printer.svg" alt=""></a></li>
+<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf" href="/export/menu/pdf"><img src="assets/img/icons/pdf.svg" alt=""></a></li>
+<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="csv" href="/export/menu/csv"><img src="assets/img/icons/excel.svg" alt=""></a></li>
 </ul>
 </div>
 </div>

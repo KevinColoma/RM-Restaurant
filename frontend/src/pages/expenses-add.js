@@ -21,7 +21,7 @@ registerRoute('/expenses-add', async (app) => {
 <div class="row">
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label>Expense Category</label>
+<label for="category">Expense Category</label>
 <select class="form-control" id="category" required>
 <option value="" disabled selected> expense category</option>
 <option value="supplies">Supplies</option>
@@ -41,19 +41,19 @@ registerRoute('/expenses-add', async (app) => {
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label>Expense Date</label>
+<label for="expenseDate">Expense Date</label>
 <input type="date" id="expenseDate" class="form-control" required>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label>Amount</label>
+<label for="amount">Amount</label>
 <input type="number" id="amount" class="form-control" step="0.01" min="0.01" required>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label>Payment Method</label>
+<label for="paymentMethod">Payment Method</label>
 <select class="form-control" id="paymentMethod" required>
 <option value="">Select Payment Method</option>
 <option value="cash">Cash</option>
@@ -65,19 +65,19 @@ registerRoute('/expenses-add', async (app) => {
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label>Invoice Number / Reference</label>
+<label for="invoiceNumber">Invoice Number / Reference</label>
 <input type="text" id="invoiceNumber" class="form-control">
 </div>
 </div>
 <div class="col-lg-12">
 <div class="form-group">
-<label>Expense for (vendor/employee)</label>
+<label for="vendor">Expense for (vendor/employee)</label>
 <input type="text" id="vendor" class="form-control">
 </div>
 </div>
 <div class="col-lg-12">
 <div class="form-group">
-<label>Description</label>
+<label for="description">Description</label>
 <textarea class="form-control" id="description"></textarea>
 </div>
 </div>

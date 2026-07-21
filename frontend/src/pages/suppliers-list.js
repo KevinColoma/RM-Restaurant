@@ -13,7 +13,7 @@ registerRoute('/suppliers-list', async (app) => {
         <td>${s.name || '-'}</td>
         <td>${contact}</td>
         <td>
-          <a href="javascript:void(0);" class="delete-supplier" data-id="${s._id}"><img src="assets/img/icons/delete.svg" alt="img"></a>
+          <a href="javascript:void(0);" class="delete-supplier" aria-label="Delete supplier" title="Delete supplier" data-i18n-aria="action.delete_supplier" data-id="${s._id}"><img src="assets/img/icons/delete.svg" alt=""></a>
         </td>
       </tr>`;
     }).join('') : '<tr><td colspan="3" class="text-center" data-i18n="table.no_suppliers">No suppliers found</td></tr>';
@@ -27,8 +27,8 @@ registerRoute('/suppliers-list', async (app) => {
 <h6 data-i18n="list.suppliers_sub">Manage your suppliers</h6>
 </div>
 <div class="page-btn">
-<a href="/export/suppliers/pdf" class="btn btn-added me-2"><img src="assets/img/icons/pdf.svg" alt="img" class="me-1">PDF</a>
-<a href="/export/suppliers/csv" class="btn btn-added"><img src="assets/img/icons/excel.svg" alt="img" class="me-1">CSV</a>
+<a href="/export/suppliers/pdf" class="btn btn-added me-2"><img src="assets/img/icons/pdf.svg" alt="" class="me-1">PDF</a>
+<a href="/export/suppliers/csv" class="btn btn-added"><img src="assets/img/icons/excel.svg" alt="" class="me-1">CSV</a>
 </div>
 </div>
 <div class="card">
@@ -47,7 +47,7 @@ registerRoute('/suppliers-list', async (app) => {
 </div>
 <hr>
 <div class="text-end">
-<button class="btn btn-primary" id="addSupplierBtn"><img src="assets/img/icons/plus.svg" alt="img" class="me-1">Add New Supplier</button>
+<button class="btn btn-primary" id="addSupplierBtn"><img src="assets/img/icons/plus.svg" alt="" class="me-1">Add New Supplier</button>
 </div>
 </div>
 </div>

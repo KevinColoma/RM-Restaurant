@@ -33,8 +33,8 @@ registerRoute('/orders-list', async (app) => {
 <h6 data-i18n="list.orders_sub">Manage your orders</h6>
 </div>
 <div class="page-btn">
-<a href="/export/orders/pdf" class="btn btn-added me-2"><img src="assets/img/icons/pdf.svg" alt="img" class="me-1">PDF</a>
-<a href="/export/orders/csv" class="btn btn-added"><img src="assets/img/icons/excel.svg" alt="img" class="me-1">CSV</a>
+<a href="/export/orders/pdf" class="btn btn-added me-2"><img src="assets/img/icons/pdf.svg" alt="" class="me-1">PDF</a>
+<a href="/export/orders/csv" class="btn btn-added"><img src="assets/img/icons/excel.svg" alt="" class="me-1">CSV</a>
 </div>
 </div>
 <div class="card">

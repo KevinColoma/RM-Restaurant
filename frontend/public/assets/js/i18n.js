@@ -1,5 +1,20 @@
 const translations = {
   en: {
+    'table.contact_info': 'Contact Info',
+    'table.invoice': 'Invoice',
+    'table.orders_count': 'Orders',
+    'action.edit_branch': 'Edit branch',
+    'action.delete_branch': 'Delete branch',
+    'action.edit_customer': 'Edit customer',
+    'action.delete_customer': 'Delete customer',
+    'action.edit_expense': 'Edit expense',
+    'action.delete_expense': 'Delete expense',
+    'action.edit_inventory': 'Edit inventory item',
+    'action.delete_inventory': 'Delete inventory item',
+    'action.edit_menu': 'Edit menu item',
+    'action.delete_menu': 'Delete menu item',
+    'action.delete_purchase': 'Delete purchase',
+    'action.delete_supplier': 'Delete supplier',
     'nav.dashboard': 'Dashboard',
     'nav.food': 'Food',
     'nav.billing': 'Billing',
@@ -222,6 +237,21 @@ const translations = {
     'table.purchase_date': 'Purchase Date',
   },
   es: {
+    'table.contact_info': 'Informacion de contacto',
+    'table.invoice': 'Factura',
+    'table.orders_count': 'Pedidos',
+    'action.edit_branch': 'Editar sucursal',
+    'action.delete_branch': 'Eliminar sucursal',
+    'action.edit_customer': 'Editar cliente',
+    'action.delete_customer': 'Eliminar cliente',
+    'action.edit_expense': 'Editar gasto',
+    'action.delete_expense': 'Eliminar gasto',
+    'action.edit_inventory': 'Editar articulo de inventario',
+    'action.delete_inventory': 'Eliminar articulo de inventario',
+    'action.edit_menu': 'Editar plato',
+    'action.delete_menu': 'Eliminar plato',
+    'action.delete_purchase': 'Eliminar compra',
+    'action.delete_supplier': 'Eliminar proveedor',
     'nav.dashboard': 'Panel',
     'nav.food': 'Comida',
     'nav.billing': 'Facturar',
@@ -465,6 +495,11 @@ function applyTranslations() {
   document.querySelectorAll('[data-i18n-value]').forEach(function(el) {
     const key = el.getAttribute('data-i18n-value');
     el.value = t(key);
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach(function(el) {
+    const key = el.getAttribute('data-i18n-aria');
+    el.setAttribute('aria-label', t(key));
+    if (el.hasAttribute('title')) el.setAttribute('title', t(key));
   });
   document.documentElement.lang = currentLang === 'es' ? 'es' : 'en';
 }

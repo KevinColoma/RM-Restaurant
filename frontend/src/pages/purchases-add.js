@@ -39,7 +39,7 @@ registerRoute('/purchases-add', async (app) => {
 <div class="row">
 <div class="col-lg-6 col-sm-12 col-12">
 <div class="form-group">
-<label>Supplier</label>
+<label for="supplier">Supplier</label>
 <select class="form-control" id="supplier" required>
 <option value="">Choose Supplier</option>
 ${supplierOpts}
@@ -48,13 +48,13 @@ ${supplierOpts}
 </div>
 <div class="col-lg-6 col-sm-12 col-12">
 <div class="form-group">
-<label>Purchase Date</label>
+<label for="purchaseDate">Purchase Date</label>
 <input type="date" id="purchaseDate" class="form-control" value="${today}">
 </div>
 </div>
 <div class="col-lg-12 col-sm-12 col-12">
 <div class="form-group">
-<label>Notes</label>
+<label for="notes">Notes</label>
 <textarea id="notes" class="form-control" rows="2" placeholder="Optional notes"></textarea>
 </div>
 </div>
@@ -91,7 +91,7 @@ ${itemOpts}
 <div class="row mt-3">
 <div class="col-lg-4 offset-lg-8">
 <div class="form-group">
-<label>Total Amount</label>
+<label for="totalAmount">Total Amount</label>
 <input type="text" id="totalAmount" class="form-control" readonly value="0.00">
 </div>
 </div>

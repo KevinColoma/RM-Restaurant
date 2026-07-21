@@ -35,31 +35,31 @@ Change Photo
 <div class="row">
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label>Owner Name</label>
+<label for="ownerName">Owner Name</label>
 <input type="text" name="ownerName" id="ownerName" class="form-control" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" value="${persona.ownerName || ''}" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label>Restaurant Name</label>
+<label for="restaurantName">Restaurant Name</label>
 <input type="text" name="restaurantName" id="restaurantName" class="form-control" value="${persona.restaurantName || ''}" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label>City</label>
+<label for="city">City</label>
 <input type="text" name="city" id="city" class="form-control" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" value="${persona.city || ''}" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label>Address</label>
+<label for="address">Address</label>
 <input type="text" name="address" id="address" class="form-control" value="${persona.address || ''}" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label>Mobile</label>
+<label for="mobile">Mobile</label>
 <input type="tel" name="mobile" id="mobile" class="form-control" pattern="[0-9+ -]+" title="Only numbers are allowed" value="${persona.mobile || ''}" required>
 </div>
 </div>
@@ -77,19 +77,19 @@ Change Photo
 <div class="row">
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label>Current Password</label>
+<label for="currentPassword">Current Password</label>
 <input type="password" name="currentPassword" id="currentPassword" class="form-control" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label>New Password</label>
+<label for="newPassword">New Password</label>
 <input type="password" name="newPassword" id="newPassword" class="form-control" minlength="6" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label>Confirm New Password</label>
+<label for="confirmPassword">Confirm New Password</label>
 <input type="password" id="confirmPassword" class="form-control" minlength="6" required>
 </div>
 </div>

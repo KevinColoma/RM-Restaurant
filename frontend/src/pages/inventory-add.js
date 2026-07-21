@@ -29,25 +29,25 @@ registerRoute('/inventory-add', async (app) => {
 <div class="row">
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label>Item Name</label>
+<label for="name">Item Name</label>
 <input type="text" name="name" id="name" class="form-control" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label>Quantity</label>
+<label for="quantity">Quantity</label>
 <input type="number" name="quantity" id="quantity" class="form-control" min="0" step="1" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label>Price</label>
+<label for="price">Price</label>
 <input type="number" name="price" id="price" step="0.01" min="0" class="form-control" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label>Supplier</label>
+<label for="supplier">Supplier</label>
 <select class="form-control" name="supplier" id="supplier" required>
 <option value="">Choose Supplier</option>
 ${supplierOpts}

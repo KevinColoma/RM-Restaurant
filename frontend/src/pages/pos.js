@@ -173,15 +173,15 @@ registerRoute('/pos', async (app) => {
   <div class="modal-box">
     <h4>Add Customer</h4>
     <div class="form-group">
-      <label>Customer Name</label>
+      <label for="customerName">Customer Name</label>
       <input type="text" id="customerName" placeholder="Enter name">
     </div>
     <div class="form-group">
-      <label>Phone</label>
+      <label for="customerPhone">Phone</label>
       <input type="tel" id="customerPhone" pattern="[0-9+ -]*" placeholder="Enter phone">
     </div>
     <div class="form-group">
-      <label>Address</label>
+      <label for="customerAddress">Address</label>
       <input type="text" id="customerAddress" placeholder="Enter address">
     </div>
     <div class="modal-actions">

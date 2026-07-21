@@ -9,7 +9,7 @@ registerRoute('/signin', (app) => {
 <div class="login-content">
 <div class="login-userset">
 <div class="login-logo">
-  <img src="assets/img/logo.png" alt="img">
+  <img src="assets/img/logo.png" alt="RMS">
 </div>
 <div class="login-userheading">
   <h3>Sign In</h3>
@@ -18,14 +18,14 @@ registerRoute('/signin', (app) => {
 <div id="error-message" class="alert alert-danger d-none"></div>
 <form id="signin-form">
   <div class="form-login">
-    <label>Email</label>
+    <label for="email">Email</label>
     <div class="form-addons">
       <input type="email" name="email" id="email" placeholder="Enter your email address" autocomplete="username" required>
-      <img src="assets/img/icons/mail.svg" alt="img">
+      <img src="assets/img/icons/mail.svg" alt="">
     </div>
   </div>
   <div class="form-login">
-    <label>Password</label>
+    <label for="password">Password</label>
     <div class="pass-group">
       <input type="password" name="password" id="password" class="pass-input" placeholder="Enter your password" autocomplete="current-password" required minlength="3">
       <span class="fas toggle-password fa-eye-slash"></span>
@@ -46,7 +46,7 @@ registerRoute('/signin', (app) => {
 </div>
 </div>
 <div class="login-img">
-  <img src="assets/img/login.jpg" alt="img">
+  <img src="assets/img/login.jpg" alt="">
 </div>
 </div>
 </div>
