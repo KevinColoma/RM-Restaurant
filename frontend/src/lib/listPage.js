@@ -22,10 +22,79 @@ function setupPage(app) {
     const hasPlaceholder = table && table.querySelector('tbody td[colspan]');
     const $dt = $(table);
     if (table && !hasPlaceholder && $dt.length && !$.fn.DataTable.isDataTable($dt[0])) {
-      $dt.DataTable({ pageLength: 10, bFilter: false });
+      // Paging is off because the server now sends one page at a time; leaving
+      // it on would show a second, unrelated pager over those rows. Sorting and
+      // the length menu stay, as they still act on what is on screen.
+      $dt.DataTable({ paging: false, info: false, bFilter: false });
     }
   }
   bindFilterToggle(app);
+  bindPagination(app);
+}
+
+// Which page the current route is asking for. Kept in the URL so a page is
+// shareable and the back button works; the router re-runs the route on every
+// hash change, so switching pages just re-fetches.
+export function currentPage() {
+  const q = window.location.hash.split('?')[1] || '';
+  const n = parseInt(new URLSearchParams(q).get('page'), 10);
+  return Number.isFinite(n) && n > 0 ? n : 1;
+}
+
+// Builds the URL for another page of the route we are already on, preserving
+// any other query parameters that are present.
+function pageHref(page) {
+  const [base, q = ''] = window.location.hash.split('?');
+  const params = new URLSearchParams(q);
+  params.set('page', String(page));
+  return base + '?' + params.toString();
+}
+
+// Renders the pager for a paginated response. Returns nothing when everything
+// fits on one page, so small lists stay visually clean.
+export function renderPagination(meta) {
+  const pages = meta?.pages || 1;
+  const page = meta?.page || 1;
+  const total = meta?.total || 0;
+  if (pages <= 1) return '';
+
+  const from = (page - 1) * (meta.limit || 0) + 1;
+  const to = Math.min(total, page * (meta.limit || 0));
+
+  const boton = (p, etiqueta, disabled, extra = '') =>
+    `<li class="page-item${disabled ? ' disabled' : ''}${extra}">
+      <a class="page-link" href="${disabled ? 'javascript:void(0);' : pageHref(p)}"
+         ${disabled ? 'tabindex="-1" aria-disabled="true"' : ''}>${etiqueta}</a>
+    </li>`;
+
+  // A window around the current page keeps the control usable when a list runs
+  // to hundreds of pages instead of rendering one link per page.
+  const desde = Math.max(1, page - 2);
+  const hasta = Math.min(pages, desde + 4);
+  let numeros = '';
+  for (let p = desde; p <= hasta; p++) {
+    numeros += `<li class="page-item${p === page ? ' active' : ''}">
+      <a class="page-link" href="${pageHref(p)}" ${p === page ? 'aria-current="page"' : ''}>${p}</a>
+    </li>`;
+  }
+
+  return `
+<nav class="d-flex justify-content-between align-items-center flex-wrap mt-3" aria-label="Pagination">
+  <small class="text-muted">Showing ${from}-${to} of ${total}</small>
+  <ul class="pagination mb-0">
+    ${boton(page - 1, '&laquo;', page === 1)}
+    ${numeros}
+    ${boton(page + 1, '&raquo;', page === pages)}
+  </ul>
+</nav>`;
+}
+
+// The pager is plain links, so the router handles navigation on its own. This
+// only guards against a click on a disabled control changing the URL.
+export function bindPagination(app) {
+  app.querySelectorAll('.page-item.disabled .page-link').forEach(a => {
+    a.addEventListener('click', e => e.preventDefault());
+  });
 }
 
 // The base template's script.js (which normally toggles #filter_inputs via

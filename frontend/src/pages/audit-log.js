@@ -1,11 +1,12 @@
 import { registerRoute } from '../router.js';
 import { renderLayout } from '../components/Header.js';
 import { get } from '../lib/api.js';
+import { currentPage, renderPagination } from '../lib/listPage.js';
 
 registerRoute('/audit-log', async (app) => {
   app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
   try {
-    const res = await get('/audit-log');
+    const res = await get('/audit-log?page=' + currentPage());
     const logs = res?.success ? (res.logs || res.data || []) : [];
     const rows = logs.length ? logs.map(log => {
       const date = log.createdAt ? new Date(log.createdAt).toLocaleString() : '-';
@@ -54,6 +55,7 @@ registerRoute('/audit-log', async (app) => {
 <tbody>${rows}</tbody>
 </table>
 </div>
+${renderPagination(res)}
 </div>
 </div>
 </div>

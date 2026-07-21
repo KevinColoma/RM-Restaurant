@@ -1,11 +1,11 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues, currentPage, renderPagination } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
 
 registerRoute('/expenses-list', async (app) => {
   showLoading(app);
   try {
-    const res = await get('/expenses');
+    const res = await get('/expenses?page=' + currentPage());
     const expenses = extractList(res, 'expenses');
 
     const renderRows = (list) => list.length ? list.map(e => {
@@ -82,6 +82,7 @@ ${filterPanel}
 <tbody>${rows}</tbody>
 </table>
 </div>
+${renderPagination(res)}
 </div>
 </div>
 </div>

@@ -3,6 +3,7 @@
 const Expense = require('../models/Expense');
 const { logAudit } = require('../utils/audit');
 const { isValidObjectId } = require('../utils/validate');
+const { getPageParams, paginate } = require('../utils/pagination');
 
 exports. addExpensePage = (req,res)=>{
     
@@ -59,8 +60,17 @@ exports.getExpense = async(req,res)=>{
 // SPA an HTML document where it expected data.
 exports.listExpenses = async (req, res) => {
     try {
-        const expenses = await Expense.find({ personaId: req.personaId }).sort({ expenseDate: -1 });
-        res.json({ success: true, expenses });
+        const result = await paginate(Expense, { personaId: req.personaId }, getPageParams(req), {
+            sort: { expenseDate: -1 }
+        });
+        res.json({
+            success: true,
+            expenses: result.items,
+            total: result.total,
+            page: result.page,
+            pages: result.pages,
+            limit: result.limit
+        });
     } catch (err) {
         res.status(500).json({ success: false, message: 'Server Error' });
     }

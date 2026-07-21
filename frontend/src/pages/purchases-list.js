@@ -1,11 +1,11 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, currentPage, renderPagination } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
 
 registerRoute('/purchases-list', async (app) => {
   showLoading(app);
   try {
-    const res = await get('/purchases');
+    const res = await get('/purchases?page=' + currentPage());
     const purchases = extractList(res, 'purchases');
     const rows = purchases.length ? purchases.map(p => {
       const date = p.purchaseDate ? new Date(p.purchaseDate).toLocaleDateString() : (p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-');
@@ -55,6 +55,7 @@ registerRoute('/purchases-list', async (app) => {
 <tbody>${rows}</tbody>
 </table>
 </div>
+${renderPagination(res)}
 </div>
 </div>
 </div>

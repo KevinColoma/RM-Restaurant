@@ -18,6 +18,7 @@ const Order = require('../models/order');
 const Persona = require('../models/Persona');
 const AuditLog = require('../models/AuditLog');
 const { isValidObjectId } = require('../utils/validate');
+const { getPageParams, paginate } = require('../utils/pagination');
 
 // Wraps a read so every endpoint reports failure the same way, and a thrown
 // error can never leak a stack trace to the client.
@@ -29,20 +30,36 @@ const jsonRead = (handler) => async (req, res) => {
     }
 };
 
+// Sends one page under the key the SPA reads, alongside the totals its
+// pagination controls need. Keeping the list under its original key means an
+// older client still renders - it just sees the first page instead of
+// everything, which is the point.
+const sendPage = (res, key, result) => res.json({
+    success: true,
+    [key]: result.items,
+    total: result.total,
+    page: result.page,
+    pages: result.pages,
+    limit: result.limit
+});
+
 exports.listMenu = jsonRead(async (req, res) => {
-    const menus = await Menu.find({ personaId: req.personaId });
-    res.json({ success: true, menus });
+    const result = await paginate(Menu, { personaId: req.personaId }, getPageParams(req));
+    sendPage(res, 'menus', result);
 });
 
 exports.listCustomers = jsonRead(async (req, res) => {
-    const customers = await Customer.find({ personaId: req.personaId }).sort({ createdAt: -1 });
-    res.json({ success: true, customers });
+    const result = await paginate(Customer, { personaId: req.personaId }, getPageParams(req), {
+        sort: { createdAt: -1 }
+    });
+    sendPage(res, 'customers', result);
 });
 
 exports.listInventory = jsonRead(async (req, res) => {
-    const inventoryItems = await InventoryItem.find({ personaId: req.personaId })
-        .populate('supplier', 'name');
-    res.json({ success: true, inventoryItems });
+    const result = await paginate(InventoryItem, { personaId: req.personaId }, getPageParams(req), {
+        populate: { path: 'supplier', select: 'name' }
+    });
+    sendPage(res, 'inventoryItems', result);
 });
 
 // The edit screen needs the item plus the supplier list to build its dropdown.
@@ -57,22 +74,24 @@ exports.getInventoryItem = jsonRead(async (req, res) => {
 });
 
 exports.listBranches = jsonRead(async (req, res) => {
-    const branches = await Branch.find({ personaId: req.personaId });
-    res.json({ success: true, branches });
+    const result = await paginate(Branch, { personaId: req.personaId }, getPageParams(req));
+    sendPage(res, 'branches', result);
 });
 
 exports.listPurchases = jsonRead(async (req, res) => {
-    const purchases = await Purchase.find({ personaId: req.personaId })
-        .populate('supplier', 'name')
-        .sort({ purchaseDate: -1 });
-    res.json({ success: true, purchases });
+    const result = await paginate(Purchase, { personaId: req.personaId }, getPageParams(req), {
+        sort: { purchaseDate: -1 },
+        populate: { path: 'supplier', select: 'name' }
+    });
+    sendPage(res, 'purchases', result);
 });
 
 exports.listOrders = jsonRead(async (req, res) => {
-    const orders = await Order.find({ personaId: req.personaId })
-        .populate('items.menuItem', 'item price')
-        .sort({ createdAt: -1 });
-    res.json({ success: true, orders });
+    const result = await paginate(Order, { personaId: req.personaId }, getPageParams(req), {
+        sort: { createdAt: -1 },
+        populate: { path: 'items.menuItem', select: 'item price' }
+    });
+    sendPage(res, 'orders', result);
 });
 
 // The point-of-sale screen loads its menu and customer pickers in one call.
@@ -103,8 +122,8 @@ exports.getSettings = jsonRead(async (req, res) => {
 });
 
 exports.listAuditLog = jsonRead(async (req, res) => {
-    const logs = await AuditLog.find({ personaId: req.personaId })
-        .sort({ createdAt: -1 })
-        .limit(500);
-    res.json({ success: true, logs });
+    const result = await paginate(AuditLog, { personaId: req.personaId }, getPageParams(req), {
+        sort: { createdAt: -1 }
+    });
+    sendPage(res, 'logs', result);
 });

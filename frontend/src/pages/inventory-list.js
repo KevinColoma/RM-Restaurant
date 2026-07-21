@@ -1,11 +1,11 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues, currentPage, renderPagination } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
 
 registerRoute('/inventory-list', async (app) => {
   showLoading(app);
   try {
-    const res = await get('/inventory');
+    const res = await get('/inventory?page=' + currentPage());
     const items = extractList(res, 'inventoryItems');
 
     const renderRows = (list) => list.length ? list.map(item => {
@@ -80,6 +80,7 @@ ${filterPanel}
 <tbody>${rows}</tbody>
 </table>
 </div>
+${renderPagination(res)}
 </div>
 </div>
 </div>

@@ -1,11 +1,11 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, currentPage, renderPagination } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
 
 registerRoute('/orders-list', async (app) => {
   showLoading(app);
   try {
-    const res = await get('/orders');
+    const res = await get('/orders?page=' + currentPage());
     const orders = extractList(res, 'orders');
     const rows = orders.length ? orders.map(o => {
       const items = o.items ? o.items.map(i => i.menuItem ? i.menuItem.item : 'Unknown').join(', ') : '-';
@@ -56,6 +56,7 @@ registerRoute('/orders-list', async (app) => {
 <tbody>${rows}</tbody>
 </table>
 </div>
+${renderPagination(res)}
 </div>
 </div>
 </div>

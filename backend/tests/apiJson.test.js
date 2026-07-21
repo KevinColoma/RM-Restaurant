@@ -197,3 +197,59 @@ describe('Creating through the SPA paths', () => {
     expect(list.body.inventoryItems.some(i => i.name === 'Created Item')).toBe(true);
   });
 });
+
+// List endpoints used to return whole collections - /api/orders shipped 754 KB
+// for 8,386 records, and ten concurrent readers took ~21s each because
+// serialising that much JSON blocks the event loop. These lock the page cap in.
+describe('Pagination', () => {
+  beforeAll(async () => {
+    const docs = [];
+    for (let i = 0; i < 12; i++) {
+      docs.push({ personaId, item: 'Paged Dish ' + i, category: 'Veg', subCategory: 'Soup', price: i + 1 });
+    }
+    await Menu.insertMany(docs);
+  });
+
+  it('caps the page and reports the totals the UI needs', async () => {
+    const res = await authGet('/api/menu?page=1&limit=5');
+
+    expect(res.status).toBe(200);
+    expect(res.body.menus).toHaveLength(5);
+    expect(res.body.page).toBe(1);
+    expect(res.body.limit).toBe(5);
+    expect(res.body.total).toBeGreaterThan(5);
+    expect(res.body.pages).toBe(Math.ceil(res.body.total / 5));
+  });
+
+  it('returns different records on the second page', async () => {
+    const p1 = await authGet('/api/menu?page=1&limit=5');
+    const p2 = await authGet('/api/menu?page=2&limit=5');
+
+    const ids1 = p1.body.menus.map(m => m._id);
+    const ids2 = p2.body.menus.map(m => m._id);
+
+    expect(ids2).toHaveLength(5);
+    expect(ids2.some(id => ids1.includes(id))).toBe(false);
+  });
+
+  it('falls back to defaults for missing or nonsense parameters', async () => {
+    for (const qs of ['', '?page=0&limit=0', '?page=-3&limit=abc', '?page=x']) {
+      const res = await authGet('/api/menu' + qs);
+      expect(res.status).toBe(200);
+      expect(res.body.page).toBe(1);
+      expect(res.body.limit).toBe(50);
+    }
+  });
+
+  it('refuses to hand back the whole table when limit is huge', async () => {
+    const res = await authGet('/api/menu?limit=100000');
+    expect(res.body.limit).toBe(200);
+  });
+
+  it('paginates expenses too', async () => {
+    const res = await authGet('/api/expenses?limit=2');
+    expect(res.body.success).toBe(true);
+    expect(res.body.limit).toBe(2);
+    expect(res.body).toHaveProperty('pages');
+  });
+});
