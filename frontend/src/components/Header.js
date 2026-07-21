@@ -280,6 +280,65 @@ export function renderLayout(app, activePage, contentHtml) {
     });
   });
 
+  // Re-init slimScroll on the sidebar (lost when SPA re-renders)
+  if (typeof $ !== 'undefined' && $.fn.slimScroll) {
+    const $slim = $(app.querySelector('.slimscroll'));
+    if ($slim.length) {
+      $slim.slimScroll({ height: 'auto', width: '100%', position: 'right', size: '7px', color: '#ccc', wheelStep: 10, touchScrollStep: 100 });
+      const wHeight = $(window).height() - 60;
+      $slim.height(wHeight);
+      $('.sidebar .slimScrollDiv').height(wHeight);
+    }
+  }
+  // Restore mini-sidebar state
+  if (localStorage.getItem('screenModeNightTokenState') === 'night') {
+    document.body.classList.remove('mini-sidebar');
+  }
+
+  // Mobile sidebar toggle. script.js caches $('.main-wrapper') on load but the
+  // SPA replaces it on every route, so the cached jQuery reference is stale.
+  // Bind fresh handlers that query the live element instead.
+  const mainWrapper = document.querySelector('.main-wrapper');
+  const mobileBtn = app.querySelector('#mobile_btn');
+  if (mobileBtn) {
+    mobileBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const wrapper = document.querySelector('.main-wrapper');
+      if (!wrapper) return;
+      wrapper.classList.toggle('slide-nav');
+      let overlay = document.querySelector('.sidebar-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'sidebar-overlay';
+        document.body.appendChild(overlay);
+      }
+      overlay.classList.toggle('opened');
+      document.documentElement.classList.add('menu-opened');
+    });
+  }
+  // Close sidebar when clicking the overlay
+  document.querySelectorAll('.sidebar-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function() {
+      document.documentElement.classList.remove('menu-opened');
+      document.querySelector('.sidebar-overlay')?.classList.remove('opened');
+      document.querySelector('.main-wrapper')?.classList.remove('slide-nav');
+    });
+  });
+  // Desktop sidebar collapse toggle (matches script.js logic)
+  const toggleBtn = app.querySelector('#toggle_btn');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (document.body.classList.contains('mini-sidebar')) {
+        document.body.classList.remove('mini-sidebar');
+        localStorage.setItem('screenModeNightTokenState', 'night');
+      } else {
+        document.body.classList.add('mini-sidebar');
+        localStorage.removeItem('screenModeNightTokenState', 'night');
+      }
+    });
+  }
+
   // Language selector
   const langItems = app.querySelectorAll('[data-lang]');
   langItems.forEach(item => {
