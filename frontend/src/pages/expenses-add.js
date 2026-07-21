@@ -1,6 +1,7 @@
 import { registerRoute } from '../router.js';
 import { renderLayout } from '../components/Header.js';
 import { post } from '../lib/api.js';
+import { navigateTo } from '../lib/listPage.js';
 
 registerRoute('/expenses-add', async (app) => {
   app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
@@ -114,7 +115,7 @@ registerRoute('/expenses-add', async (app) => {
     try {
       await post('/expenses', data);
       Swal.fire('Success!', 'Expense added successfully.', 'success')
-        .then(() => window.location.hash = '#/expenses-list');
+        .then(() => navigateTo('#/expenses-list'));
     } catch (err) {
       Swal.fire('Error!', err.message || 'Failed to add expense.', 'error');
     }

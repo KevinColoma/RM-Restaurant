@@ -1,6 +1,7 @@
 import { registerRoute } from '../router.js';
 import { renderLayout } from '../components/Header.js';
 import { post } from '../lib/api.js';
+import { navigateTo } from '../lib/listPage.js';
 
 registerRoute('/branches-add', async (app) => {
   app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
@@ -20,8 +21,20 @@ registerRoute('/branches-add', async (app) => {
 <div class="row">
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label>Branch Name</label>
-<input type="text" name="branch_name" id="branch_name" class="form-control" required>
+<label>Parent Restaurant</label>
+<input type="text" name="Parent_Rest" id="Parent_Rest" class="form-control" required>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label>Owner Name</label>
+<input type="text" name="ownerName" id="ownerName" class="form-control" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" required>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label>Restaurant Name</label>
+<input type="text" name="restaurantName" id="restaurantName" class="form-control" required>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
@@ -64,7 +77,9 @@ registerRoute('/branches-add', async (app) => {
   document.getElementById('add-branch-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = {
-      branch_name: document.getElementById('branch_name').value,
+      restaurantName: document.getElementById('restaurantName').value,
+      Parent_Rest: document.getElementById('Parent_Rest').value,
+      ownerName: document.getElementById('ownerName').value,
       city: document.getElementById('city').value,
       address: document.getElementById('address').value,
       email: document.getElementById('email').value,
@@ -73,7 +88,7 @@ registerRoute('/branches-add', async (app) => {
     try {
       await post('/branches', data);
       Swal.fire('Success!', 'Branch added successfully.', 'success')
-        .then(() => window.location.hash = '#/branches-list');
+        .then(() => navigateTo('#/branches-list'));
     } catch (err) {
       Swal.fire('Error!', err.message || 'Failed to add branch.', 'error');
     }

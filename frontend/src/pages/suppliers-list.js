@@ -1,5 +1,5 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, navigateTo } from '../lib/listPage.js';
 import { get, del, post } from '../lib/api.js';
 
 registerRoute('/suppliers-list', async (app) => {
@@ -87,7 +87,7 @@ registerRoute('/suppliers-list', async (app) => {
             }).then(res => {
               if (res && !res.error) {
                 Swal.fire('Added!', 'Supplier has been added.', 'success')
-                  .then(() => window.location.hash = '#/suppliers-list');
+                  .then(() => navigateTo('#/suppliers-list'));
               } else {
                 Swal.fire('Error!', res?.message || 'Failed to add supplier.', 'error');
               }

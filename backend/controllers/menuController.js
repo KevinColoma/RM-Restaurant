@@ -11,19 +11,16 @@ const { isValidObjectId } = require('../utils/validate');
 // };
 
 const AddMenu = async (req,res)=>{
-    const {  item, category, subCategory, price } = req.body;
+    const {  item, category, subCategory, price, available } = req.body;
    const  personaId= req.personaId
-//  console.log(personaId,item, category, subCategory, price);
     try {
-        // const code = await getNextCode(personaId);
-
         const newItem = new Menu({
             personaId,
             item,
             category,
             subCategory,
             price,
-            // code
+            availability: available !== undefined ? available : true
         });
 
         const savedItem = await newItem.save();
@@ -58,14 +55,14 @@ const GetPos = async(req,res)=>{
 }
 
 const UpdateMenu = async (req, res) => {
-    const { item, category, subCategory, price } = req.body;
+    const { item, category, subCategory, price, available } = req.body;
     const personaId = req.personaId;
 
     try {
         if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
         const updatedItem = await Menu.findOneAndUpdate(
             { _id: req.params.id, personaId },
-            { item, category, subCategory, price },
+            { item, category, subCategory, price, availability: available !== undefined ? available : true },
             { new: true, runValidators: true }
         );
 

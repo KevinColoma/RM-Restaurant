@@ -1,6 +1,6 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues } from '../lib/listPage.js';
-import { get, del } from '../lib/api.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues, navigateTo } from '../lib/listPage.js';
+import { get, put, del } from '../lib/api.js';
 
 registerRoute('/branches-list', async (app) => {
   showLoading(app);
@@ -9,19 +9,23 @@ registerRoute('/branches-list', async (app) => {
     const branches = extractList(res, 'branches');
 
     const renderRows = (list) => list.length ? list.map(b => {
-      return `<tr>
-        <td>${b.restaurantName || b.name || '-'}</td>
-        <td>${b.city || '-'}</td>
-        <td>${b.address || '-'}</td>
-        <td>${b.email || '-'}</td>
-        <td>${b.mobile || '-'}</td>
+      return `<tr data-branch-id="${b._id}">
+        <td class="br-restaurantName">${b.restaurantName || b.name || '-'}</td>
+        <td class="br-Parent_Rest">${b.Parent_Rest || '-'}</td>
+        <td class="br-ownerName">${b.ownerName || '-'}</td>
+        <td class="br-city">${b.city || '-'}</td>
+        <td class="br-address">${b.address || '-'}</td>
+        <td class="br-email">${b.email || '-'}</td>
+        <td class="br-mobile">${b.mobile || '-'}</td>
         <td>
+          <a class="me-3" href="javascript:void(0);" class="edit-branch" data-id="${b._id}"><img src="assets/img/icons/edit.svg" alt="img"></a>
           <a href="javascript:void(0);" class="delete-branch" data-id="${b._id}"><img src="assets/img/icons/delete.svg" alt="img"></a>
         </td>
       </tr>`;
-    }).join('') : '<tr><td colspan="6" class="text-center">No branches found</td></tr>';
+    }).join('') : '<tr><td colspan="8" class="text-center">No branches found</td></tr>';
 
     const filterPanel = renderFilterPanel([
+      { key: 'Parent_Rest', label: 'Parent Restaurant', options: uniqueValues(branches, 'Parent_Rest') },
       { key: 'city', label: 'Choose City', options: uniqueValues(branches, 'city') }
     ]);
     const rows = renderRows(branches);
@@ -54,6 +58,7 @@ registerRoute('/branches-list', async (app) => {
 </div>
 <div class="wordset">
 <ul>
+<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="print" onclick="window.print()"><img src="assets/img/icons/printer.svg" alt="img"></a></li>
 <li><a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf" href="/export/branches/pdf"><img src="assets/img/icons/pdf.svg" alt="img"></a></li>
 <li><a data-bs-toggle="tooltip" data-bs-placement="top" title="csv" href="/export/branches/csv"><img src="assets/img/icons/excel.svg" alt="img"></a></li>
 </ul>
@@ -65,6 +70,8 @@ ${filterPanel}
 <thead>
 <tr>
 <th data-i18n="table.name">Branch Name</th>
+<th>Parent Restaurant</th>
+<th>Owner Name</th>
 <th data-i18n="form.city">City</th>
 <th data-i18n="table.address">Address</th>
 <th data-i18n="table.email">Email</th>
@@ -80,10 +87,57 @@ ${filterPanel}
 </div>
 </div>`;
 
-    const bindBranchDelete = () => bindDelete(app, '.delete-branch', { del, endpoint: '/branches/', successMsg: 'Branch has been deleted.', listRoute: '#/branches-list' });
+    const bindBranchActions = () => {
+      bindDelete(app, '.delete-branch', { del, endpoint: '/branches/', successMsg: 'Branch has been deleted.', listRoute: '#/branches-list' });
+      app.querySelectorAll('.edit-branch').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const id = this.getAttribute('data-id');
+          const row = app.querySelector(`[data-branch-id="${id}"]`);
+          const restaurantName = row ? row.querySelector('.br-restaurantName').textContent : '';
+          const Parent_Rest = row ? row.querySelector('.br-Parent_Rest').textContent : '';
+          const ownerName = row ? row.querySelector('.br-ownerName').textContent : '';
+          const city = row ? row.querySelector('.br-city').textContent : '';
+          const address = row ? row.querySelector('.br-address').textContent : '';
+          const email = row ? row.querySelector('.br-email').textContent : '';
+          const mobile = row ? row.querySelector('.br-mobile').textContent : '';
+          Swal.fire({
+            title: 'Edit Branch',
+            html: `
+              <input id="swal-restaurantName" class="swal2-input" value="${restaurantName}" placeholder="Restaurant Name">
+              <input id="swal-Parent_Rest" class="swal2-input" value="${Parent_Rest}" placeholder="Parent Restaurant">
+              <input id="swal-ownerName" class="swal2-input" value="${ownerName}" placeholder="Owner Name">
+              <input id="swal-city" class="swal2-input" value="${city}" placeholder="City">
+              <input id="swal-address" class="swal2-input" value="${address}" placeholder="Address">
+              <input id="swal-email" class="swal2-input" value="${email}" placeholder="Email">
+              <input id="swal-mobile" class="swal2-input" value="${mobile}" placeholder="Mobile">
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Update',
+            preConfirm: () => {
+              return put('/branches/' + id, {
+                restaurantName: document.getElementById('swal-restaurantName').value.trim(),
+                Parent_Rest: document.getElementById('swal-Parent_Rest').value.trim(),
+                ownerName: document.getElementById('swal-ownerName').value.trim(),
+                city: document.getElementById('swal-city').value.trim(),
+                address: document.getElementById('swal-address').value.trim(),
+                email: document.getElementById('swal-email').value.trim(),
+                mobile: document.getElementById('swal-mobile').value.trim()
+              }).then(res => {
+                if (res && !res.error) {
+                  Swal.fire('Updated!', '', 'success').then(() => navigateTo('#/branches-list'));
+                } else {
+                  Swal.fire('Error!', 'Failed to update.', 'error');
+                }
+              }).catch(() => Swal.fire('Error!', 'Failed to update.', 'error'));
+            }
+          });
+        });
+      });
+    };
 
     renderPage(app, 'branches-list', html);
-    bindBranchDelete();
-    setTimeout(() => bindFilterPanel(app, { data: branches, renderRows, onRendered: bindBranchDelete }), 100);
+    bindBranchActions();
+    setTimeout(() => bindFilterPanel(app, { data: branches, renderRows, onRendered: bindBranchActions }), 100);
   } catch (err) { showError(app, err); }
 });

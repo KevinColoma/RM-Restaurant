@@ -3,16 +3,25 @@ const Usuario = require('../models/Usuario');
 const { LAST_SEEN_THROTTLE_MS } = require('../config/session');
 
 const requireAuth = async (req, res, next) => {
-    const token = req.cookies.jwt;
+    const token = req.cookies.jwt ||
+      (req.headers.authorization?.startsWith('Bearer ')
+        ? req.headers.authorization.split(' ')[1]
+        : null);
 
     try {
         const decoded = await jwtUtils.verifyToken(token);
         if (!decoded) {
+            if (req.path.startsWith('/api/')) {
+                return res.status(401).json({ success: false, message: 'Authentication required' });
+            }
             return res.redirect('/signin');
         }
 
         const usuario = await Usuario.findById(decoded.usuarioId).populate('personaId');
         if (!usuario) {
+            if (req.path.startsWith('/api/')) {
+                return res.status(401).json({ success: false, message: 'User not found' });
+            }
             return res.redirect('/signin');
         }
 
@@ -61,7 +70,10 @@ const requireAuth = async (req, res, next) => {
         next();
     } catch (error) {
         console.error(error);
-        res.status(401).send('Token is blacklisted');
+        if (req.path.startsWith('/api/')) {
+            return res.status(401).json({ success: false, message: 'Invalid or expired token' });
+        }
+        res.status(401).send('Invalid or expired token');
     }
 };
 

@@ -64,7 +64,7 @@ export function bindDelete(app, selector, { del, endpoint, successMsg, listRoute
         if (result.isConfirmed) {
           del(endpoint + id).then(() => {
             Swal.fire('Deleted!', successMsg, 'success')
-              .then(() => window.location.hash = listRoute);
+              .then(() => navigateTo(listRoute));
           }).catch(err => {
             Swal.fire('Error!', 'Failed to delete: ' + err.message, 'error');
           });
@@ -146,4 +146,10 @@ export function bindFilterPanel(app, { data, renderRows, tbodySelector = '.datan
 
 export function uniqueValues(items, key) {
   return [...new Set(items.map(i => i[key]).filter(v => v !== undefined && v !== null && v !== ''))];
+}
+
+// Forces a hashchange event even when navigating to the same route by appending
+// a unique query parameter, ensuring the router re-renders with fresh data.
+export function navigateTo(hash) {
+  window.location.hash = hash + '?t=' + Date.now();
 }

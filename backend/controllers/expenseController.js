@@ -105,9 +105,11 @@ exports.updateExpense = async (req, res) => {
             }
         }
 
+        const updateData = { expenseType: category, expenseDate, amount, description, paymentMethod, invoiceNumber, vendor, category, updatedAt: new Date() };
+        if (receiptURL !== undefined) updateData.receiptURL = receiptURL;
         const expense = await Expense.findOneAndUpdate(
             { _id: req.params.id, personaId },
-            { expenseType: category, expenseDate, amount, description, paymentMethod, invoiceNumber, vendor, category, receiptURL, updatedAt: new Date() },
+            updateData,
             { new: true, runValidators: true }
         );
         if (!expense) return res.status(404).json({ error: 'Expense not found' });

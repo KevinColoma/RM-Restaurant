@@ -1,6 +1,7 @@
 import { registerRoute } from '../router.js';
 import { renderLayout } from '../components/Header.js';
 import { get, put } from '../lib/api.js';
+import { navigateTo } from '../lib/listPage.js';
 
 registerRoute('/menu-edit/', async (app) => {
   app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
@@ -21,7 +22,7 @@ registerRoute('/menu-edit/', async (app) => {
       return;
     }
 
-    const available = menu.available !== undefined ? menu.available : (menu.status !== 'inactive');
+    const available = menu.availability !== undefined ? menu.availability : true;
     const catOptions = ['Veg', 'Non-Veg'].map(c =>
       `<option value="${c}"${menu.category === c ? ' selected' : ''}>${c}</option>`
     ).join('');
@@ -99,7 +100,7 @@ Available
       try {
         await put('/menu/' + id, data);
         Swal.fire('Updated!', 'Menu item has been updated.', 'success')
-          .then(() => window.location.hash = '#/menu-list');
+          .then(() => navigateTo('#/menu-list'));
       } catch (err) {
         Swal.fire('Error!', err.message || 'Failed to update.', 'error');
       }

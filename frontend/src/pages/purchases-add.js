@@ -1,6 +1,7 @@
 import { registerRoute } from '../router.js';
 import { renderLayout } from '../components/Header.js';
 import { get, post } from '../lib/api.js';
+import { navigateTo } from '../lib/listPage.js';
 
 registerRoute('/purchases-add', async (app) => {
   app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
@@ -10,7 +11,7 @@ registerRoute('/purchases-add', async (app) => {
       get('/suppliers'),
       get('/inventory')
     ]);
-    const suppliers = supplierRes?.success ? (supplierRes.suppliers || supplierRes.data || []) : [];
+    const suppliers = Array.isArray(supplierRes) ? supplierRes : (supplierRes?.suppliers || supplierRes?.data || []);
     const inventoryItems = inventoryRes?.success ? (inventoryRes.inventoryItems || inventoryRes.data || []) : [];
 
     const supplierOpts = suppliers.length
@@ -182,7 +183,7 @@ ${itemOpts}
       try {
         await post('/purchases', payload);
         Swal.fire('Success!', 'Purchase recorded successfully.', 'success')
-          .then(() => window.location.hash = '#/purchases-list');
+          .then(() => navigateTo('#/purchases-list'));
       } catch (err) {
         Swal.fire('Error!', err.message || 'Failed to record purchase.', 'error');
       }

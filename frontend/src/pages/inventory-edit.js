@@ -1,6 +1,7 @@
 import { registerRoute } from '../router.js';
 import { renderLayout } from '../components/Header.js';
 import { get, put } from '../lib/api.js';
+import { navigateTo } from '../lib/listPage.js';
 
 registerRoute('/inventory-edit/', async (app) => {
   app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
@@ -88,7 +89,7 @@ ${supplierOpts}
       try {
         await put('/inventory/' + id, data);
         Swal.fire('Updated!', 'Inventory item has been updated.', 'success')
-          .then(() => window.location.hash = '#/inventory-list');
+          .then(() => navigateTo('#/inventory-list'));
       } catch (err) {
         Swal.fire('Error!', err.message || 'Failed to update.', 'error');
       }

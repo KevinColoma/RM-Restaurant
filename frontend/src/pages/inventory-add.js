@@ -1,13 +1,14 @@
 import { registerRoute } from '../router.js';
 import { renderLayout } from '../components/Header.js';
 import { get, post } from '../lib/api.js';
+import { navigateTo } from '../lib/listPage.js';
 
 registerRoute('/inventory-add', async (app) => {
   app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
 
   try {
     const supplierRes = await get('/suppliers');
-    const suppliers = supplierRes?.success ? (supplierRes.suppliers || supplierRes.data || []) : [];
+    const suppliers = Array.isArray(supplierRes) ? supplierRes : (supplierRes?.suppliers || supplierRes?.data || []);
 
     const supplierOpts = suppliers.length
       ? suppliers.map(s => `<option value="${s._id}">${s.name}</option>`).join('')
@@ -77,7 +78,7 @@ ${supplierOpts}
       try {
         await post('/inventory', data);
         Swal.fire('Success!', 'Inventory item added successfully.', 'success')
-          .then(() => window.location.hash = '#/inventory-list');
+          .then(() => navigateTo('#/inventory-list'));
       } catch (err) {
         Swal.fire('Error!', err.message || 'Failed to add item.', 'error');
       }

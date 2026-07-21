@@ -5,7 +5,8 @@ const { isValidObjectId } = require('../utils/validate');
 exports.createSupplier = async (req, res) => {
     try {
       const personaId = req.personaId;
-      const { name, contactInfo } = req.body;
+      const { name, email, phone, address } = req.body;
+      const contactInfo = [email, phone, address].filter(Boolean).join(', ') || 'N/A';
 
         const newSupplier = new Supplier({
             name, contactInfo, personaId
@@ -46,7 +47,8 @@ exports.updateSupplier = async (req, res) => {
   try {
     const personaId = req.personaId;
     if (!isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid ID' });
-    const { name, contactInfo } = req.body;
+    const { name, email, phone, address } = req.body;
+    const contactInfo = [email, phone, address].filter(Boolean).join(', ') || 'N/A';
     const supplier = await Supplier.findOneAndUpdate(
       { _id: req.params.id, personaId },
       { name, contactInfo },

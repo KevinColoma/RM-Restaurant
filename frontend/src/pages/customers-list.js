@@ -1,6 +1,6 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel } from '../lib/listPage.js';
-import { get, put, del } from '../lib/api.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, navigateTo } from '../lib/listPage.js';
+import { get, post, put, del } from '../lib/api.js';
 
 registerRoute('/customers-list', async (app) => {
   showLoading(app);
@@ -37,6 +37,9 @@ registerRoute('/customers-list', async (app) => {
 <h4 data-i18n="list.customers_title">Customers List</h4>
 <h6 data-i18n="list.customers_sub">Manage your customers</h6>
 </div>
+<div class="page-btn">
+<a href="javascript:void(0);" class="btn btn-added" id="addCustomerBtn"><img src="assets/img/icons/plus.svg" alt="img" class="me-1">Add New Customer</a>
+</div>
 </div>
 <div class="card">
 <div class="card-body">
@@ -54,6 +57,7 @@ registerRoute('/customers-list', async (app) => {
 </div>
 <div class="wordset">
 <ul>
+<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="print" onclick="window.print()"><img src="assets/img/icons/printer.svg" alt="img"></a></li>
 <li><a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf" href="/export/customers/pdf"><img src="assets/img/icons/pdf.svg" alt="img"></a></li>
 <li><a data-bs-toggle="tooltip" data-bs-placement="top" title="csv" href="/export/customers/csv"><img src="assets/img/icons/excel.svg" alt="img"></a></li>
 </ul>
@@ -115,7 +119,7 @@ ${filterPanel}
                 address: document.getElementById('swal-address').value
               }).then(res => {
                 if (res && !res.error) {
-                  Swal.fire('Updated!', '', 'success').then(() => window.location.hash = '#/customers-list');
+                  Swal.fire('Updated!', '', 'success').then(() => navigateTo('#/customers-list'));
                 } else {
                   Swal.fire('Error!', 'Failed to update.', 'error');
                 }
@@ -129,6 +133,37 @@ ${filterPanel}
 
     renderPage(app, 'customers-list', html);
     setTimeout(() => {
+      app.querySelector('#addCustomerBtn').addEventListener('click', function() {
+        Swal.fire({
+          title: 'Add New Customer',
+          html: `
+            <input id="swal-name" class="swal2-input" placeholder="Customer Name">
+            <input id="swal-phone" class="swal2-input" placeholder="Phone">
+            <input id="swal-address" class="swal2-input" placeholder="Address">
+          `,
+          showCancelButton: true,
+          confirmButtonText: 'Save',
+          preConfirm: () => {
+            const nameVal = document.getElementById('swal-name').value.trim();
+            if (!nameVal) {
+              Swal.showValidationMessage('Name is required');
+              return false;
+            }
+            return post('/customers', {
+              name: nameVal,
+              phone: document.getElementById('swal-phone').value.trim(),
+              address: document.getElementById('swal-address').value.trim()
+            }).then(res => {
+              if (res && !res.error) {
+                Swal.fire('Added!', 'Customer has been added.', 'success')
+                  .then(() => navigateTo('#/customers-list'));
+              } else {
+                Swal.fire('Error!', res?.message || 'Failed to add customer.', 'error');
+              }
+            }).catch(() => Swal.fire('Error!', 'Failed to add customer.', 'error'));
+          }
+        });
+      });
       bindCustomerActions();
       bindFilterPanel(app, { data: filterableCustomers, renderRows, onRendered: bindCustomerActions });
     }, 100);

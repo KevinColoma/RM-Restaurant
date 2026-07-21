@@ -10,13 +10,13 @@ registerRoute('/purchases-list', async (app) => {
     const rows = purchases.length ? purchases.map(p => {
       const date = p.purchaseDate ? new Date(p.purchaseDate).toLocaleDateString() : (p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-');
       const total = typeof p.totalAmount === 'number' ? p.totalAmount.toFixed(2) : (p.totalAmount || '0.00');
-      const itemsCount = p.items ? p.items.length : 0;
+      const itemsDetail = p.items ? p.items.map(i => i.itemName + ' x' + i.quantity).join(', ') : '-';
       const supplierName = p.supplier?.name || 'N/A';
       return `<tr>
-        <td>${supplierName}</td>
-        <td>${itemsCount}</td>
-        <td>${total}</td>
         <td>${date}</td>
+        <td>${supplierName}</td>
+        <td>${itemsDetail}</td>
+        <td>${total}</td>
         <td>${p.notes || ''}</td>
         <td>
           <a href="javascript:void(0);" class="delete-purchase" data-id="${p._id}"><img src="assets/img/icons/delete.svg" alt="img"></a>
@@ -44,10 +44,10 @@ registerRoute('/purchases-list', async (app) => {
 <table class="table datanew">
 <thead>
 <tr>
-<th data-i18n="table.supplier">Supplier</th>
-<th data-i18n="table.items_count">Items</th>
-<th data-i18n="table.total">Total Amount</th>
 <th data-i18n="table.date">Date</th>
+<th data-i18n="table.supplier">Supplier</th>
+<th data-i18n="table.items">Items</th>
+<th data-i18n="table.total">Total Amount</th>
 <th data-i18n="table.notes">Notes</th>
 <th data-i18n="table.action">Actions</th>
 </tr>
