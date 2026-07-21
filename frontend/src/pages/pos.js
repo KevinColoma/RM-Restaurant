@@ -14,6 +14,8 @@ registerRoute('/pos', async (app) => {
     const categories = [...new Set(menus.map(m => m.category).filter(Boolean))];
 
     const html = `
+<div class="page-wrapper">
+<div class="content">
 <style>
 .pos-container { display: flex; gap: 20px; }
 .pos-menu-panel { flex: 1; min-width: 0; }
@@ -187,6 +189,8 @@ registerRoute('/pos', async (app) => {
       <button class="btn-submit" id="modal-submit">Submit</button>
     </div>
   </div>
+</div>
+</div>
 </div>
     `;
 

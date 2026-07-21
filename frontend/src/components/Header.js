@@ -220,11 +220,7 @@ export function renderLayout(app, activePage, contentHtml) {
       </div>
     </div>
   </div>
-  <div class="page-wrapper">
-    <div class="content container-fluid" id="main-content">
-      ${contentHtml}
-    </div>
-  </div>
+  ${contentHtml}
 </div>
   `;
 
