@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   setBusy, showFieldError, clearFieldError, clearAllErrors, validate, clearErrorsOnInput
 } from '../lib/formFeedback.js';

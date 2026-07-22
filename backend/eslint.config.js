@@ -38,11 +38,24 @@ module.exports = [
   },
   {
     files: ['**/*.js'],
-    ignores: ['public/**'],
+    ignores: ['public/**', 'tests/formUtils.test.js'],
     languageOptions: {
       globals: {
         ...globals.node,
         ...globals.jest,
+      },
+    },
+  },
+  {
+    // Runs under @jest-environment jsdom (see the docblock in the file) to
+    // exercise the real DOM API in public/assets/js/form-utils.js, so it
+    // needs `document` etc. on top of the usual node/jest globals.
+    files: ['tests/formUtils.test.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.jest,
+        ...globals.browser,
       },
     },
   },

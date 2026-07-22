@@ -45,6 +45,12 @@ function clearAllErrors(form) {
     });
 }
 
+// This file is loaded as a plain <script> in the browser, where `module` does
+// not exist - the typeof guard is exactly what makes that safe. ESLint lints
+// this file with browser-only globals, so it doesn't know `module` either;
+// disabling no-undef here is correct, not a workaround.
+// eslint-disable-next-line no-undef
 if (typeof module !== 'undefined' && module.exports) {
+    // eslint-disable-next-line no-undef
     module.exports = { disableSubmit, enableSubmit, showFieldError, clearFieldError, clearAllErrors };
 }

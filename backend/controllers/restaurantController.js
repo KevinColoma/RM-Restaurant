@@ -1,5 +1,7 @@
 const bcrypt = require("bcrypt");
-const crypto = require('crypto');
+// crypto.randomUUID() is used below via Node's global Web Crypto API (global
+// since Node 19+); requiring the 'crypto' module too just shadows that global
+// and ESLint's no-redeclare rightly flags it.
 const { logAudit } = require('../utils/audit');
 require('dotenv').config();
 const jwtUtils = require('../jwt');
