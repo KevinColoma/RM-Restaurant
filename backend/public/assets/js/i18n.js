@@ -1,5 +1,7 @@
 const translations = {
   en: {
+    'signin.tagline': 'Restaurant management, in one place: menu, orders, inventory, expenses and reports.',
+    'signin.sub': 'Sign in with the account your restaurant registered.',
     'table.contact_info': 'Contact Info',
     'table.invoice': 'Invoice',
     'table.orders_count': 'Orders',
@@ -238,6 +240,8 @@ const translations = {
     'table.purchase_date': 'Purchase Date',
   },
   es: {
+    'signin.tagline': 'Gestion de tu restaurante en un solo lugar: menu, pedidos, inventario, gastos y reportes.',
+    'signin.sub': 'Inicia sesion con la cuenta registrada de tu restaurante.',
     'table.contact_info': 'Informacion de contacto',
     'table.invoice': 'Factura',
     'table.orders_count': 'Pedidos',
