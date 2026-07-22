@@ -12,6 +12,13 @@ on:
   release:
     types: [published]           # Cuando se publica un release
 
+# ── Shell ────────────────────────────────────────────────────────────────────
+# Activa pipefail: sin esto, "npm test | tee log" devuelve el exit code de tee
+# y un test fallando no detendria la release.
+defaults:
+  run:
+    shell: bash
+
 # ── Variables de entorno globales ────────────────────────────────────────────
 env:
   TELEGRAM_PREFIX: |

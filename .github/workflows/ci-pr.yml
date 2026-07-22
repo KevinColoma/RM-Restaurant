@@ -15,6 +15,16 @@ on:
     branches: [dev, test]
   workflow_dispatch:          # Permite ejecución manual desde GitHub
 
+# ── Shell ────────────────────────────────────────────────────────────────────
+# Sin esto los pasos usan "bash -e", que NO activa pipefail: en
+# "npm test | tee log" el exit code es el de tee (siempre 0), asi que un test
+# fallando daba el paso por bueno y el pipeline seguia hasta desplegar.
+# Declarar shell: bash hace que GitHub use "bash --noprofile --norc -eo pipefail",
+# de modo que el fallo real del comando sea el que corta el pipeline.
+defaults:
+  run:
+    shell: bash
+
 # ── Variables de entorno globales ────────────────────────────────────────────
 env:
   TELEGRAM_PREFIX: |          # Prefijo reutilizado en todas las notificaciones
