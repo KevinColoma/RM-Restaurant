@@ -1,6 +1,7 @@
 import { registerRoute } from '../router.js';
 import { renderLayout } from '../components/Header.js';
 import { get, put } from '../lib/api.js';
+import { setBusy } from '../lib/formFeedback.js';
 
 registerRoute('/settings', async (app) => {
   app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
@@ -84,10 +85,13 @@ ${themeOpts}
         currencySymbol: document.getElementById('currencySymbol').value,
         printerConnection: document.getElementById('printerConnection').value
       };
+      // Unlike the create forms, saving settings keeps you on the page, so the
+      // button has to be restored either way - hence the finally.
+      const done = setBusy(e.submitter || e.target.querySelector('[type="submit"]'), 'Saving settings...');
       try {
         const res = await put('/settings', data);
         if (res.success) {
-          Swal.fire('Success!', 'Settings saved successfully.', 'success');
+          Swal.fire('Settings saved', 'Your preferences have been updated.', 'success');
           const theme = data.theme;
           if (theme === 'dark') {
             document.body.classList.add('dark-mode');
@@ -97,10 +101,12 @@ ${themeOpts}
             localStorage.setItem('rms-theme', 'light');
           }
         } else {
-          Swal.fire('Error!', res.error || 'Failed to save settings.', 'error');
+          Swal.fire('Could not save', res.error || 'Failed to save settings.', 'error');
         }
       } catch (err) {
-        Swal.fire('Error!', err.message || 'Failed to save settings.', 'error');
+        Swal.fire('Could not save', err.message || 'Failed to save settings.', 'error');
+      } finally {
+        done();
       }
     });
   } catch (err) {
