@@ -1,5 +1,5 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues, navigateTo, currentPage, renderPagination } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues, navigateTo, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
 import { get, put, del } from '../lib/api.js';
 
 registerRoute('/branches-list', async (app) => {
@@ -22,7 +22,7 @@ registerRoute('/branches-list', async (app) => {
           <a href="javascript:void(0);" class="delete-branch" aria-label="Delete branch" title="Delete branch" data-i18n-aria="action.delete_branch" data-id="${b._id}"><img src="assets/img/icons/delete.svg" alt=""></a>
         </td>
       </tr>`;
-    }).join('') : '<tr><td colspan="8" class="text-center" data-i18n="table.no_branches">No branches found</td></tr>';
+    }).join('') : emptyState({ colspan: 8, title: 'No branches registered', hint: 'Add the locations this restaurant operates from.', actionHref: '#/branches-add', actionLabel: 'Add the first branch' });
 
     const filterPanel = renderFilterPanel([
       { key: 'Parent_Rest', label: 'Parent Restaurant', options: uniqueValues(branches, 'Parent_Rest') },
@@ -89,7 +89,7 @@ ${renderPagination(res)}
 </div>`;
 
     const bindBranchActions = () => {
-      bindDelete(app, '.delete-branch', { del, endpoint: '/branches/', successMsg: 'Branch has been deleted.', listRoute: '#/branches-list' });
+      bindDelete(app, '.delete-branch', { itemName: 'branch', del, endpoint: '/branches/', successMsg: 'Branch has been deleted.', listRoute: '#/branches-list' });
       app.querySelectorAll('.edit-branch').forEach(btn => {
         btn.addEventListener('click', function(e) {
           e.preventDefault();

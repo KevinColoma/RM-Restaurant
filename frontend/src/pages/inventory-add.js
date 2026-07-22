@@ -2,6 +2,7 @@ import { registerRoute } from '../router.js';
 import { renderLayout } from '../components/Header.js';
 import { get, post } from '../lib/api.js';
 import { navigateTo } from '../lib/listPage.js';
+import { setBusy } from '../lib/formFeedback.js';
 
 registerRoute('/inventory-add', async (app) => {
   app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
@@ -75,11 +76,13 @@ ${supplierOpts}
         price: document.getElementById('price').value,
         supplier: document.getElementById('supplier').value
       };
+      const done = setBusy(e.submitter || e.target.querySelector('[type="submit"]'), 'Saving item...');
       try {
         await post('/inventory', data);
         Swal.fire('Success!', 'Inventory item added successfully.', 'success')
           .then(() => navigateTo('#/inventory-list'));
       } catch (err) {
+        done();
         Swal.fire('Error!', err.message || 'Failed to add item.', 'error');
       }
     });

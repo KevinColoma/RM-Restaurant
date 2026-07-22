@@ -2,6 +2,8 @@ import { registerRoute } from '../router.js';
 import { renderLayout } from '../components/Header.js';
 import { post } from '../lib/api.js';
 import { navigateTo } from '../lib/listPage.js';
+import { setBusy, validate, clearErrorsOnInput } from '../lib/formFeedback.js';
+import { notifySuccess, notifyError } from '../lib/notify.js';
 
 registerRoute('/expenses-add', async (app) => {
   app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
@@ -94,30 +96,43 @@ registerRoute('/expenses-add', async (app) => {
 
   renderLayout(app, 'expenses-add', html);
 
-  document.getElementById('add-expense-form').addEventListener('submit', async (e) => {
+  const form = document.getElementById('add-expense-form');
+  clearErrorsOnInput(form);
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const amountValue = Number(document.getElementById('amount').value);
-    if (isNaN(amountValue) || amountValue <= 0) {
-      Swal.fire('Error!', 'Amount must be a valid number greater than zero.', 'error');
-      return;
-    }
+    const category = document.getElementById('category').value;
+    const expenseDate = document.getElementById('expenseDate').value;
+    const description = document.getElementById('description').value.trim();
+
+    const ok = validate(form, [
+      { field: 'category', valid: !!category, message: 'Choose an expense category.' },
+      { field: 'expenseDate', valid: !!expenseDate, message: 'Pick the date of the expense.' },
+      { field: 'amount', valid: !isNaN(amountValue) && amountValue > 0, message: 'Enter an amount greater than zero.' },
+      { field: 'description', valid: !!description, message: 'Describe what this expense was for.' }
+    ]);
+    if (!ok) return;
 
     const data = {
-      category: document.getElementById('category').value,
-      expenseDate: document.getElementById('expenseDate').value,
+      category,
+      expenseDate,
       amount: amountValue,
       paymentMethod: document.getElementById('paymentMethod').value,
       invoiceNumber: document.getElementById('invoiceNumber').value,
       vendor: document.getElementById('vendor').value,
-      description: document.getElementById('description').value
+      description
     };
+
+    const done = setBusy(e.submitter || form.querySelector('[type="submit"]'), 'Saving expense...');
     try {
       await post('/expenses', data);
-      Swal.fire('Success!', 'Expense added successfully.', 'success')
-        .then(() => navigateTo('#/expenses-list'));
+      await notifySuccess('Expense of ' + amountValue.toFixed(2) + ' saved.', 'Expense added');
+      navigateTo('#/expenses-list');
     } catch (err) {
-      Swal.fire('Error!', err.message || 'Failed to add expense.', 'error');
+      done();
+      notifyError(err.message || 'Failed to add expense.');
     }
   });
 });

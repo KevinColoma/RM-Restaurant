@@ -1,5 +1,5 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, currentPage, renderPagination } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
 
 registerRoute('/purchases-list', async (app) => {
@@ -22,7 +22,7 @@ registerRoute('/purchases-list', async (app) => {
           <a href="javascript:void(0);" class="delete-purchase" aria-label="Delete purchase" title="Delete purchase" data-i18n-aria="action.delete_purchase" data-id="${p._id}"><img src="assets/img/icons/delete.svg" alt=""></a>
         </td>
       </tr>`;
-    }).join('') : '<tr><td colspan="6" class="text-center" data-i18n="table.no_purchases">No purchases found</td></tr>';
+    }).join('') : emptyState({ colspan: 6, title: 'No purchases recorded', hint: 'Record what you buy from suppliers to keep stock and costs up to date.', actionHref: '#/purchases-add', actionLabel: 'Record the first purchase' });
 
     const html = `
 <div class="page-wrapper">

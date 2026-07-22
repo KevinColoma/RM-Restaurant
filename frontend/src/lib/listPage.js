@@ -116,31 +116,71 @@ export function bindFilterToggle(app) {
   });
 }
 
+// Reads the label of the row a button sits in, so a delete prompt can name the
+// record instead of asking about an anonymous "it". Falls back to nothing when
+// the row has no obvious label, and the generic wording is used instead.
+function rowLabel(btn) {
+  const row = btn.closest('tr');
+  if (!row || !row.cells.length) return '';
+  const first = row.cells[0].textContent.trim();
+  return first.length > 60 ? first.slice(0, 57) + '...' : first;
+}
+
 export function bindDelete(app, selector, { del, endpoint, successMsg, listRoute,
-    confirmTitle, confirmText, confirmBtn }) {
+    confirmTitle, confirmText, confirmBtn, itemName = 'record' }) {
   app.querySelectorAll(selector).forEach(btn => {
     btn.addEventListener('click', function () {
       const id = this.getAttribute('data-id');
+      const label = rowLabel(this);
+
+      // Naming the record is what makes this prompt worth reading - a generic
+      // "Are you sure?" gets clicked through without being looked at.
+      const title = confirmTitle || (label ? `Delete "${label}"?` : `Delete this ${itemName}?`);
+      const text = confirmText ||
+        `This ${itemName} will be permanently removed. This cannot be undone.`;
+
       Swal.fire({
-        title: confirmTitle || 'Are you sure?',
-        text: confirmText || "You won't be able to revert this!",
+        title,
+        text,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: confirmBtn || 'Yes, delete it!'
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: confirmBtn || `Yes, delete ${itemName}`,
+        cancelButtonText: 'Cancel',
+        focusCancel: true
       }).then(result => {
-        if (result.isConfirmed) {
-          del(endpoint + id).then(() => {
-            Swal.fire('Deleted!', successMsg, 'success')
-              .then(() => navigateTo(listRoute));
-          }).catch(err => {
-            Swal.fire('Error!', 'Failed to delete: ' + err.message, 'error');
-          });
-        }
+        if (!result.isConfirmed) return;
+
+        Swal.fire({
+          title: 'Deleting...',
+          text: label ? `Removing "${label}"` : '',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        del(endpoint + id).then(() => {
+          Swal.fire('Deleted', successMsg, 'success')
+            .then(() => navigateTo(listRoute));
+        }).catch(err => {
+          Swal.fire('Could not delete', err.message || 'Please try again.', 'error');
+        });
       });
     });
   });
+}
+
+// An empty table is a dead end unless it says what to do next, so this pairs
+// the explanation with the action that resolves it.
+export function emptyState({ colspan, title, hint, actionHref, actionLabel }) {
+  const boton = actionHref
+    ? `<a href="${actionHref}" class="btn btn-added mt-2">${actionLabel || 'Add the first one'}</a>`
+    : '';
+  return `<tr><td colspan="${colspan}" class="text-center py-4">
+    <p class="mb-1 fw-bold">${title}</p>
+    ${hint ? `<p class="text-muted mb-2">${hint}</p>` : ''}
+    ${boton}
+  </td></tr>`;
 }
 
 export function extractList(res, key, fallback) {

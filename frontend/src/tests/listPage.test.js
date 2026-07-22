@@ -186,7 +186,30 @@ describe('listPage', () => {
     bindDelete(app, '.del-btn', { del, endpoint: '/api/items/', successMsg: 'Deleted', listRoute: '#/list' });
 
     app.querySelector('.del-btn').click();
-    expect(mockFire).toHaveBeenCalledWith(expect.objectContaining({ title: 'Are you sure?' }));
+    // Outside a table there is no row label to quote, so the prompt names the
+    // kind of record instead of asking about an anonymous "it".
+    expect(mockFire).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Delete this record?',
+      focusCancel: true
+    }));
+  });
+
+  it('bindDelete names the record being deleted when the row has a label', async () => {
+    const mockFire = vi.fn().mockResolvedValue({ isConfirmed: false });
+    global.Swal = { fire: mockFire };
+    const { bindDelete } = await import('../lib/listPage.js');
+
+    app.innerHTML = `<table><tbody><tr>
+      <td>Chicken Curry</td>
+      <td><button class="del-btn" data-id="abc">Delete</button></td>
+    </tr></tbody></table>`;
+    const del = vi.fn().mockResolvedValue();
+    bindDelete(app, '.del-btn', { del, endpoint: '/api/items/', successMsg: 'Deleted', listRoute: '#/list', itemName: 'menu item' });
+
+    app.querySelector('.del-btn').click();
+    expect(mockFire).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Delete "Chicken Curry"?'
+    }));
   });
 
   it('bindDelete calls delete when confirmed', async () => {
@@ -214,7 +237,23 @@ describe('listPage', () => {
 
     app.querySelector('.del-btn').click();
     await vi.waitFor(() => {
-      expect(mockFire).toHaveBeenLastCalledWith('Error!', 'Failed to delete: Network error', 'error');
+      expect(mockFire).toHaveBeenLastCalledWith('Could not delete', 'Network error', 'error');
+    });
+  });
+
+  it('bindDelete shows progress while the delete is in flight', async () => {
+    const mockFire = vi.fn().mockResolvedValue({ isConfirmed: true });
+    global.Swal = { fire: mockFire, showLoading: vi.fn() };
+    const { bindDelete } = await import('../lib/listPage.js');
+
+    app.innerHTML = '<button class="del-btn" data-id="slow">Delete</button>';
+    // Never settles, so the progress dialog is what is on screen when we look.
+    const del = vi.fn().mockReturnValue(new Promise(() => {}));
+    bindDelete(app, '.del-btn', { del, endpoint: '/api/items/', successMsg: 'Deleted!', listRoute: '#/list' });
+
+    app.querySelector('.del-btn').click();
+    await vi.waitFor(() => {
+      expect(mockFire).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'Deleting...' }));
     });
   });
 });

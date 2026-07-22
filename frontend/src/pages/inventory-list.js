@@ -1,5 +1,5 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues, currentPage, renderPagination } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
 
 registerRoute('/inventory-list', async (app) => {
@@ -22,7 +22,7 @@ registerRoute('/inventory-list', async (app) => {
           <a href="javascript:void(0);" class="delete-item" aria-label="Delete inventory item" title="Delete inventory item" data-i18n-aria="action.delete_inventory" data-id="${item._id}"><img src="assets/img/icons/delete.svg" alt=""></a>
         </td>
       </tr>`;
-    }).join('') : '<tr><td colspan="6" class="text-center" data-i18n="table.no_inventory">No inventory items found</td></tr>';
+    }).join('') : emptyState({ colspan: 6, title: 'No inventory items yet', hint: 'Add stock to keep track of what you have on hand.', actionHref: '#/inventory-add', actionLabel: 'Add the first item' });
 
     const filterableItems = items.map(item => ({ ...item, supplierName: item.supplier?.name || '' }));
     const filterPanel = renderFilterPanel([
@@ -86,7 +86,7 @@ ${renderPagination(res)}
 </div>
 </div>`;
 
-    const bindItemDelete = () => bindDelete(app, '.delete-item', { del, endpoint: '/inventory/', successMsg: 'Inventory item has been deleted.', listRoute: '#/inventory-list' });
+    const bindItemDelete = () => bindDelete(app, '.delete-item', { itemName: 'inventory item', del, endpoint: '/inventory/', successMsg: 'Inventory item has been deleted.', listRoute: '#/inventory-list' });
 
     renderPage(app, 'inventory-list', html);
     bindItemDelete();

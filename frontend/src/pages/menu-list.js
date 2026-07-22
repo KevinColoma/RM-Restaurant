@@ -1,5 +1,5 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues, currentPage, renderPagination } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
 
 registerRoute('/menu-list', async (app) => {
@@ -23,7 +23,7 @@ registerRoute('/menu-list', async (app) => {
           <a href="javascript:void(0);" class="delete-item" aria-label="Delete menu item" title="Delete menu item" data-i18n-aria="action.delete_menu" data-id="${m._id}"><img src="assets/img/icons/delete.svg" alt=""></a>
         </td>
       </tr>`;
-    }).join('') : '<tr><td colspan="6" class="text-center" data-i18n="table.no_menu_items">No menu items found</td></tr>';
+    }).join('') : emptyState({ colspan: 6, title: 'Your menu is empty', hint: 'Add dishes so they can be sold from the billing screen.', actionHref: '#/menu-add', actionLabel: 'Add the first dish' });
 
     const filterPanel = renderFilterPanel([
       { key: 'category', label: 'Choose Category', options: uniqueValues(menus, 'category') },
@@ -87,7 +87,7 @@ ${renderPagination(res)}
 </div>
 </div>`;
 
-    const bindItemDelete = () => bindDelete(app, '.delete-item', { del, endpoint: '/menu/', successMsg: 'Menu item has been deleted.', listRoute: '#/menu-list' });
+    const bindItemDelete = () => bindDelete(app, '.delete-item', { itemName: 'menu item', del, endpoint: '/menu/', successMsg: 'Menu item has been deleted.', listRoute: '#/menu-list' });
 
     renderPage(app, 'menu-list', html);
     bindItemDelete();

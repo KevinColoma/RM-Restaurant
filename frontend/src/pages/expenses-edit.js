@@ -2,6 +2,7 @@ import { registerRoute } from '../router.js';
 import { renderLayout } from '../components/Header.js';
 import { get, put } from '../lib/api.js';
 import { navigateTo } from '../lib/listPage.js';
+import { setBusy } from '../lib/formFeedback.js';
 
 registerRoute('/expenses-edit/', async (app) => {
   app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
@@ -120,11 +121,13 @@ ${pmOptions}
         vendor: document.getElementById('vendor').value,
         description: document.getElementById('description').value
       };
+      const done = setBusy(e.submitter || e.target.querySelector('[type="submit"]'), 'Saving changes...');
       try {
         await put('/expenses/' + id, data);
         Swal.fire('Updated!', 'Expense has been updated.', 'success')
           .then(() => navigateTo('#/expenses-list'));
       } catch (err) {
+        done();
         Swal.fire('Error!', err.message || 'Failed to update.', 'error');
       }
     });

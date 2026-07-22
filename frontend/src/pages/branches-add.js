@@ -2,6 +2,7 @@ import { registerRoute } from '../router.js';
 import { renderLayout } from '../components/Header.js';
 import { post } from '../lib/api.js';
 import { navigateTo } from '../lib/listPage.js';
+import { setBusy } from '../lib/formFeedback.js';
 
 registerRoute('/branches-add', async (app) => {
   app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
@@ -85,11 +86,13 @@ registerRoute('/branches-add', async (app) => {
       email: document.getElementById('email').value,
       mobile: document.getElementById('mobile').value
     };
+    const done = setBusy(e.submitter || e.target.querySelector('[type="submit"]'), 'Saving branch...');
     try {
       await post('/branches', data);
       Swal.fire('Success!', 'Branch added successfully.', 'success')
         .then(() => navigateTo('#/branches-list'));
     } catch (err) {
+      done();
       Swal.fire('Error!', err.message || 'Failed to add branch.', 'error');
     }
   });

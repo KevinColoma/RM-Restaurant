@@ -1,5 +1,5 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, navigateTo } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, navigateTo, emptyState } from '../lib/listPage.js';
 import { get, del, post } from '../lib/api.js';
 
 registerRoute('/suppliers-list', async (app) => {
@@ -16,7 +16,7 @@ registerRoute('/suppliers-list', async (app) => {
           <a href="javascript:void(0);" class="delete-supplier" aria-label="Delete supplier" title="Delete supplier" data-i18n-aria="action.delete_supplier" data-id="${s._id}"><img src="assets/img/icons/delete.svg" alt=""></a>
         </td>
       </tr>`;
-    }).join('') : '<tr><td colspan="3" class="text-center" data-i18n="table.no_suppliers">No suppliers found</td></tr>';
+    }).join('') : emptyState({ colspan: 3, title: 'No suppliers yet', hint: 'Add suppliers so you can assign them to inventory and purchases.' });
 
     const html = `
 <div class="page-wrapper">
@@ -95,7 +95,7 @@ registerRoute('/suppliers-list', async (app) => {
           }
         });
       });
-      bindDelete(app, '.delete-supplier', { del, endpoint: '/suppliers/', successMsg: 'Supplier has been deleted.', listRoute: '#/suppliers-list' });
+      bindDelete(app, '.delete-supplier', { itemName: 'supplier', del, endpoint: '/suppliers/', successMsg: 'Supplier has been deleted.', listRoute: '#/suppliers-list' });
     }, 100);
   } catch (err) { showError(app, err); }
 });

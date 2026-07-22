@@ -1,5 +1,5 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, navigateTo, currentPage, renderPagination } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, navigateTo, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
 import { get, post, put, del } from '../lib/api.js';
 
 registerRoute('/customers-list', async (app) => {
@@ -21,7 +21,7 @@ registerRoute('/customers-list', async (app) => {
           <a href="javascript:void(0);" class="delete-customer" aria-label="Delete customer" title="Delete customer" data-i18n-aria="action.delete_customer" data-id="${c._id}"><img src="assets/img/icons/delete.svg" alt=""></a>
         </td>
       </tr>`;
-    }).join('') : '<tr><td colspan="6" class="text-center" data-i18n="table.no_customers">No customers found</td></tr>';
+    }).join('') : emptyState({ colspan: 6, title: 'No customers yet', hint: 'Customers are added automatically when you take an order in billing.', actionHref: '#/pos', actionLabel: 'Go to billing' });
 
     const filterableCustomers = customers.map(c => ({ ...c, ordersStatus: c.orders && c.orders.length ? 'Has Orders' : 'No Orders' }));
     const filterPanel = renderFilterPanel([
@@ -129,7 +129,7 @@ ${renderPagination(res)}
           });
         });
       });
-      bindDelete(app, '.delete-customer', { del, endpoint: '/customers/', successMsg: 'Customer has been deleted.', listRoute: '#/customers-list' });
+      bindDelete(app, '.delete-customer', { itemName: 'customer', del, endpoint: '/customers/', successMsg: 'Customer has been deleted.', listRoute: '#/customers-list' });
     };
 
     renderPage(app, 'customers-list', html);

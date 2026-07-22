@@ -1,5 +1,5 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, currentPage, renderPagination } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
 
 registerRoute('/orders-list', async (app) => {
@@ -22,7 +22,7 @@ registerRoute('/orders-list', async (app) => {
           <a href="javascript:void(0);" class="btn btn-sm btn-danger cancel-order" data-id="${o._id}">Cancel</a>
         </td>
       </tr>`;
-    }).join('') : '<tr><td colspan="8" class="text-center" data-i18n="table.no_orders">No orders found</td></tr>';
+    }).join('') : emptyState({ colspan: 8, title: 'No orders yet', hint: 'Orders appear here once you start billing.', actionHref: '#/pos', actionLabel: 'Go to billing' });
 
     const html = `
 <div class="page-wrapper">
@@ -63,7 +63,7 @@ ${renderPagination(res)}
 </div>`;
 
     renderPage(app, 'orders-list', html);
-    bindDelete(app, '.cancel-order', {
+    bindDelete(app, '.cancel-order', { itemName: 'order',
       del, endpoint: '/orders/', successMsg: 'Order has been cancelled.', listRoute: '#/orders-list',
       confirmTitle: 'Cancel Order?', confirmText: 'This action cannot be undone!', confirmBtn: 'Yes, cancel it!'
     });

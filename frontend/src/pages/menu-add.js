@@ -2,6 +2,7 @@ import { registerRoute } from '../router.js';
 import { renderLayout } from '../components/Header.js';
 import { post } from '../lib/api.js';
 import { navigateTo } from '../lib/listPage.js';
+import { setBusy } from '../lib/formFeedback.js';
 
 registerRoute('/menu-add', async (app) => {
   app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
@@ -90,11 +91,13 @@ Available
       price: document.getElementById('price').value,
       available: document.getElementById('available').checked
     };
+    const done = setBusy(e.submitter || e.target.querySelector('[type="submit"]'), 'Saving item...');
     try {
       await post('/menu', data);
       Swal.fire('Success!', 'Menu item added successfully.', 'success')
         .then(() => navigateTo('#/menu-list'));
     } catch (err) {
+      done();
       Swal.fire('Error!', err.message || 'Failed to add item.', 'error');
     }
   });

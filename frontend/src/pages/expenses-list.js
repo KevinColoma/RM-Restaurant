@@ -1,5 +1,5 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues, currentPage, renderPagination } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
 
 registerRoute('/expenses-list', async (app) => {
@@ -23,7 +23,7 @@ registerRoute('/expenses-list', async (app) => {
           <a href="javascript:void(0);" class="delete-expense" aria-label="Delete expense" title="Delete expense" data-i18n-aria="action.delete_expense" data-id="${e._id}"><img src="assets/img/icons/delete.svg" alt=""></a>
         </td>
       </tr>`;
-    }).join('') : '<tr><td colspan="7" class="text-center" data-i18n="table.no_expenses">No expenses found</td></tr>';
+    }).join('') : emptyState({ colspan: 7, title: 'No expenses recorded yet', hint: 'Track what the restaurant spends to see it reflected in your reports.', actionHref: '#/expenses-add', actionLabel: 'Record the first expense' });
 
     const filterPanel = renderFilterPanel([
       { key: 'category', label: 'Choose Category', options: uniqueValues(expenses, 'category') },
@@ -88,7 +88,7 @@ ${renderPagination(res)}
 </div>
 </div>`;
 
-    const bindExpenseDelete = () => bindDelete(app, '.delete-expense', { del, endpoint: '/expense/', successMsg: 'Expense has been deleted.', listRoute: '#/expenses-list' });
+    const bindExpenseDelete = () => bindDelete(app, '.delete-expense', { itemName: 'expense', del, endpoint: '/expense/', successMsg: 'Expense has been deleted.', listRoute: '#/expenses-list' });
 
     renderPage(app, 'expenses-list', html);
     bindExpenseDelete();
