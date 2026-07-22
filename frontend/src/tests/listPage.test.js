@@ -257,3 +257,110 @@ describe('listPage', () => {
     });
   });
 });
+
+// The pager and the empty state are what a user sees when a list is long or
+// has nothing in it, so both deserve to be pinned down.
+describe('renderPagination', () => {
+  beforeEach(() => { window.location.hash = '#/orders-list'; });
+
+  it('renders nothing when everything fits on one page', async () => {
+    const { renderPagination } = await import('../lib/listPage.js');
+    expect(renderPagination({ pages: 1, page: 1, total: 8, limit: 50 })).toBe('');
+    expect(renderPagination(null)).toBe('');
+  });
+
+  it('reports the range and total being shown', async () => {
+    const { renderPagination } = await import('../lib/listPage.js');
+    const html = renderPagination({ pages: 25, page: 2, total: 1206, limit: 50 });
+    expect(html).toContain('Showing 51-100 of 1206');
+  });
+
+  it('does not run past the total on the last page', async () => {
+    const { renderPagination } = await import('../lib/listPage.js');
+    const html = renderPagination({ pages: 3, page: 3, total: 120, limit: 50 });
+    expect(html).toContain('Showing 101-120 of 120');
+  });
+
+  it('disables previous on the first page and next on the last', async () => {
+    const { renderPagination } = await import('../lib/listPage.js');
+    const first = renderPagination({ pages: 5, page: 1, total: 250, limit: 50 });
+    const last = renderPagination({ pages: 5, page: 5, total: 250, limit: 50 });
+
+    expect(first).toContain('aria-disabled="true"');
+    expect(last).toContain('aria-disabled="true"');
+  });
+
+  it('marks the current page for assistive tech', async () => {
+    const { renderPagination } = await import('../lib/listPage.js');
+    const html = renderPagination({ pages: 5, page: 3, total: 250, limit: 50 });
+    expect(html).toContain('aria-current="page"');
+  });
+
+  it('shows a window of pages rather than one link per page', async () => {
+    const { renderPagination } = await import('../lib/listPage.js');
+    const html = renderPagination({ pages: 400, page: 200, total: 20000, limit: 50 });
+    const numbered = html.match(/>\d+<\/a>/g) || [];
+    expect(numbered.length).toBeLessThanOrEqual(5);
+  });
+
+  it('keeps other query parameters when linking to another page', async () => {
+    window.location.hash = '#/orders-list?filter=today';
+    const { renderPagination } = await import('../lib/listPage.js');
+    const html = renderPagination({ pages: 3, page: 1, total: 150, limit: 50 });
+    expect(html).toContain('filter=today');
+  });
+});
+
+describe('currentPage', () => {
+  it('defaults to the first page', async () => {
+    const { currentPage } = await import('../lib/listPage.js');
+    window.location.hash = '#/orders-list';
+    expect(currentPage()).toBe(1);
+  });
+
+  it('reads the page from the URL', async () => {
+    const { currentPage } = await import('../lib/listPage.js');
+    window.location.hash = '#/orders-list?page=7';
+    expect(currentPage()).toBe(7);
+  });
+
+  it('ignores a nonsense page rather than asking the API for it', async () => {
+    const { currentPage } = await import('../lib/listPage.js');
+    for (const bad of ['abc', '0', '-4', '']) {
+      window.location.hash = '#/orders-list?page=' + bad;
+      expect(currentPage()).toBe(1);
+    }
+  });
+});
+
+describe('emptyState', () => {
+  it('explains the situation and offers the way out', async () => {
+    const { emptyState } = await import('../lib/listPage.js');
+    const html = emptyState({
+      colspan: 6,
+      title: 'Your menu is empty',
+      hint: 'Add dishes so they can be sold from the billing screen.',
+      actionHref: '#/menu-add',
+      actionLabel: 'Add the first dish'
+    });
+
+    expect(html).toContain('colspan="6"');
+    expect(html).toContain('Your menu is empty');
+    expect(html).toContain('Add dishes so they can be sold');
+    expect(html).toContain('href="#/menu-add"');
+    expect(html).toContain('Add the first dish');
+  });
+
+  it('omits the button when there is no action to offer', async () => {
+    const { emptyState } = await import('../lib/listPage.js');
+    const html = emptyState({ colspan: 3, title: 'Nothing here', hint: 'Some hint' });
+    expect(html).not.toContain('<a ');
+  });
+
+  it('works with only a title', async () => {
+    const { emptyState } = await import('../lib/listPage.js');
+    const html = emptyState({ colspan: 2, title: 'Nothing here' });
+    expect(html).toContain('Nothing here');
+    expect(html).not.toContain('text-muted');
+  });
+});

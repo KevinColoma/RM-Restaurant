@@ -84,3 +84,37 @@ describe('idle timeout', () => {
     expect(window.location.hash).toBe('#/dashboard');
   });
 });
+
+describe('expiry notice', () => {
+  it('tells the user why they were signed out', async () => {
+    const fire = vi.fn();
+    global.Swal = { fire };
+    localStorage.setItem('token', 'active-token');
+
+    initIdleTimeout();
+    vi.advanceTimersByTime(IDLE_LIMIT_MS);
+    await vi.runOnlyPendingTimersAsync();
+
+    // Landing back on the login screen with no explanation looks like a bug,
+    // so the reason is stated rather than left to be guessed.
+    expect(fire).toHaveBeenCalledWith(expect.objectContaining({
+      icon: 'info',
+      title: 'Session expired'
+    }));
+    expect(fire.mock.calls[0][0].text).toMatch(/10 minutes of inactivity/);
+  });
+
+  it('still signs the user out when SweetAlert is unavailable', async () => {
+    // The dialog comes from a CDN; losing it must not cost the user the
+    // sign-out itself.
+    delete global.Swal;
+    localStorage.setItem('token', 'active-token');
+
+    initIdleTimeout();
+    vi.advanceTimersByTime(IDLE_LIMIT_MS);
+    await vi.runOnlyPendingTimersAsync();
+
+    expect(localStorage.getItem('token')).toBeNull();
+    expect(window.location.hash).toBe('#/signin');
+  });
+});

@@ -297,7 +297,12 @@ chart.render();
 <% } %>
 
 <% if (expensesByCategory.length > 0) { %>
-  var expLabels = [<% expensesByCategory.forEach(function(e,i){ %><%= i>0 ? ',' : '' %>'<%= e._id || t('dash.category') %>'<% }); %>];
+  <%# The fallback below must not call t(): that helper only exists in the
+      browser, so reaching it while rendering on the server throws and the
+      whole dashboard 500s. It is only reached for an expense saved without a
+      category, which is allowed by the model - so the crash was one
+      uncategorised expense away. %>
+  var expLabels = [<% expensesByCategory.forEach(function(e,i){ %><%= i>0 ? ',' : '' %>'<%= e._id || 'Uncategorized' %>'<% }); %>];
   var expAmounts = [<% expensesByCategory.forEach(function(e,i){ %><%= i>0 ? ',' : '' %><%= e.total %><% }); %>];
   new ApexCharts(document.querySelector('#expenses_chart'), {
     chart: { type: 'bar', height: 280 },
