@@ -1,6 +1,7 @@
 const Supplier = require('../models/Supplier');
 const { logAudit } = require('../utils/audit');
 const { isValidObjectId } = require('../utils/validate');
+const { getPageParams, paginate } = require('../utils/pagination');
 
 exports.createSupplier = async (req, res) => {
     try {
@@ -19,13 +20,25 @@ exports.createSupplier = async (req, res) => {
     }
 };
 
+// This was the one list endpoint replying with a bare array while every other
+// one uses { success, <key> }. Callers had to special-case it with
+// Array.isArray, and a caller that forgot read it as empty rather than failing.
+// Now paginated and shaped like the rest.
 exports.getSuppliers = async (req, res) => {
   try {
-    const personaId = req.personaId;
-    const suppliers = await Supplier.find({ personaId });
-    res.status(200).json(suppliers);
+    const result = await paginate(Supplier, { personaId: req.personaId }, getPageParams(req), {
+      sort: { name: 1 }
+    });
+    res.status(200).json({
+      success: true,
+      suppliers: result.items,
+      total: result.total,
+      page: result.page,
+      pages: result.pages,
+      limit: result.limit
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
 

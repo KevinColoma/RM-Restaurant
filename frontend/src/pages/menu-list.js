@@ -48,7 +48,7 @@ registerRoute('/menu-list', async (app) => {
 <div class="table-top">
 <div class="search-set">
 <div class="search-path">
-<a class="btn btn-filter" id="filter_search">
+<a class="btn btn-filter" id="filter_search" title="Filter what this list shows" aria-label="Filter what this list shows">
 <img src="assets/img/icons/filter.svg" alt="">
 <span><img src="assets/img/icons/closes.svg" alt=""></span>
 </a>
@@ -59,9 +59,9 @@ registerRoute('/menu-list', async (app) => {
 </div>
 <div class="wordset">
 <ul>
-<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="print" onclick="window.print()"><img src="assets/img/icons/printer.svg" alt=""></a></li>
-<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf" href="/export/menu/pdf"><img src="assets/img/icons/pdf.svg" alt=""></a></li>
-<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="csv" href="/export/menu/csv"><img src="assets/img/icons/excel.svg" alt=""></a></li>
+<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="Print this list" onclick="window.print()"><img src="assets/img/icons/printer.svg" alt=""></a></li>
+<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="Download this list as a PDF" href="/export/menu/pdf"><img src="assets/img/icons/pdf.svg" alt=""></a></li>
+<li><a data-bs-toggle="tooltip" data-bs-placement="top" title="Download this list as a spreadsheet (CSV)" href="/export/menu/csv"><img src="assets/img/icons/excel.svg" alt=""></a></li>
 </ul>
 </div>
 </div>

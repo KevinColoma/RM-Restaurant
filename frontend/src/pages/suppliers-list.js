@@ -1,11 +1,11 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, navigateTo, emptyState } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, navigateTo, emptyState, currentPage, renderPagination } from '../lib/listPage.js';
 import { get, del, post } from '../lib/api.js';
 
 registerRoute('/suppliers-list', async (app) => {
   showLoading(app);
   try {
-    const suppliers = await get('/suppliers');
+    const suppliers = await get('/suppliers?page=' + currentPage());
     const list = Array.isArray(suppliers) ? suppliers : extractList(suppliers, 'suppliers');
     const rows = list.length ? list.map(s => {
       const contact = [s.email, s.phone, s.address].filter(Boolean).join(', ') || '-';
@@ -45,6 +45,7 @@ registerRoute('/suppliers-list', async (app) => {
 <tbody>${rows}</tbody>
 </table>
 </div>
+${renderPagination(suppliers)}
 <hr>
 <div class="text-end">
 <button class="btn btn-primary" id="addSupplierBtn"><img src="assets/img/icons/plus.svg" alt="" class="me-1">Add New Supplier</button>
