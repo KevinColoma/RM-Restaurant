@@ -1,5 +1,4 @@
-import { registerRoute, navigate } from '../router.js';
-import { post } from '../lib/api.js';
+import { registerRoute } from '../router.js';
 
 registerRoute('/forgot-password', (app) => {
   app.innerHTML = `
@@ -12,25 +11,11 @@ registerRoute('/forgot-password', (app) => {
   <img src="assets/img/logo.png" alt="RMS">
 </div>
 <div class="login-userheading">
-  <h3>Forgot Password?</h3>
-  <h4>Enter your email to reset your password</h4>
+  <h3 data-i18n="forgot.title">Forgot Password?</h3>
+  <h4 data-i18n="forgot.coming_soon">This feature will be available soon. Please contact the system administrator.</h4>
 </div>
-<div id="error-message" class="alert alert-danger d-none"></div>
-<div id="success-message" class="alert alert-success d-none"></div>
-<form id="forgot-form">
-  <div class="form-login">
-    <label for="email">Email</label>
-    <div class="form-addons">
-      <input type="email" name="email" id="email" placeholder="Enter your registered email" required>
-      <img src="assets/img/icons/mail.svg" alt="">
-    </div>
-  </div>
-  <div class="form-login">
-    <button type="submit" class="btn btn-login" id="submit-button">Send Reset Link</button>
-  </div>
-</form>
 <div class="signinform text-center">
-  <h4><a href="#/signin" class="hover-a">Back to Sign In</a></h4>
+  <h4><a href="#/signin" class="hover-a" data-i18n="forgot.back_to_signin">Back to Sign In</a></h4>
 </div>
 </div>
 </div>
@@ -41,29 +26,4 @@ registerRoute('/forgot-password', (app) => {
 </div>
 </div>
   `;
-
-  app.querySelector('#forgot-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = app.querySelector('#email').value.trim();
-    const errorEl = app.querySelector('#error-message');
-    const successEl = app.querySelector('#success-message');
-    const btn = app.querySelector('#submit-button');
-
-    errorEl.classList.add('d-none');
-    successEl.classList.add('d-none');
-
-    btn.disabled = true;
-    btn.textContent = 'Sending...';
-
-    const data = await post('/forgot-password', { email });
-    if (data?.success) {
-      successEl.textContent = 'Password reset link sent! Check your email.';
-      successEl.classList.remove('d-none');
-    } else {
-      errorEl.textContent = data?.message || 'Email not found.';
-      errorEl.classList.remove('d-none');
-    }
-    btn.disabled = false;
-    btn.textContent = 'Send Reset Link';
-  });
 });

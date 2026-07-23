@@ -88,6 +88,9 @@ const translations = {
     'table.no_purchases': 'No purchases found',
     'table.no_suppliers': 'No suppliers found',
     'table.no_activity': 'No activity recorded yet.',
+    'forgot.title': 'Forgot Password?',
+    'forgot.coming_soon': 'This feature will be available soon. Please contact the system administrator.',
+    'forgot.back_to_signin': 'Back to Sign In',
     'pos.customer': 'Customer',
     'pos.walk_in': 'Walk-in Customer',
     'pos.add_customer': 'Add Customer',
@@ -328,6 +331,9 @@ const translations = {
     'table.no_purchases': 'No se encontraron compras',
     'table.no_suppliers': 'No se encontraron proveedores',
     'table.no_activity': 'Sin actividad registrada aún.',
+    'forgot.title': '¿Olvidaste tu Contraseña?',
+    'forgot.coming_soon': 'Esta función estará disponible próximamente. Por favor contacta al administrador del sistema.',
+    'forgot.back_to_signin': 'Volver a Iniciar Sesión',
     'pos.customer': 'Cliente',
     'pos.walk_in': 'Cliente sin registro',
     'pos.add_customer': 'Agregar Cliente',
@@ -481,7 +487,7 @@ const translations = {
   }
 };
 
-let currentLang = localStorage.getItem('rms-lang') || 'en';
+let currentLang = localStorage.getItem('rms-lang') || 'es';
 
 function t(key) {
   return translations[currentLang] && translations[currentLang][key] !== undefined
