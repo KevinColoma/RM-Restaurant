@@ -6,6 +6,7 @@ vi.mock('../components/Header.js', () => ({
 
 global.$ = undefined;
 global.Swal = undefined;
+window.t = (key) => ({ 'common.showing': 'Showing', 'common.of': 'of' })[key] || key;
 
 describe('listPage', () => {
   let app;
