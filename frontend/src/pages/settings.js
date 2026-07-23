@@ -10,8 +10,9 @@ registerRoute('/settings', async (app) => {
     const res = await get('/settings');
     const persona = res?.persona || res;
 
-    const themeOpts = ['light', 'dark'].map(t =>
-      `<option value="${t}"${persona.theme === t ? ' selected' : ''}>${t.charAt(0).toUpperCase() + t.slice(1)}</option>`
+    const _t = (typeof window !== 'undefined' && window.t) || (x => x);
+    const themeOpts = ['light', 'dark'].map(v =>
+      `<option value="${v}" data-i18n="settings.${v}"${persona.theme === v ? ' selected' : ''}>${_t('settings.' + v)}</option>`
     ).join('');
 
     const html = `
@@ -19,18 +20,18 @@ registerRoute('/settings', async (app) => {
 <div class="content">
 <div class="page-header">
 <div class="page-title">
-<h4>System Settings</h4>
-<h6>Configure your restaurant system</h6>
+<h4 data-i18n="settings.title">System Settings</h4>
+<h6 data-i18n="settings.sub">Configure your restaurant system</h6>
 </div>
 </div>
 <div class="card">
 <div class="card-body">
-<h4 class="card-title">Appearance</h4>
+<h4 class="card-title" data-i18n="settings.appearance">Appearance</h4>
 <form id="settings-form">
 <div class="row">
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label for="theme">Theme</label>
+<label for="theme" data-i18n="settings.theme">Theme</label>
 <select class="form-control" name="theme" id="theme">
 ${themeOpts}
 </select>
@@ -38,35 +39,35 @@ ${themeOpts}
 </div>
 </div>
 <hr>
-<h4 class="card-title mt-3">Billing</h4>
+<h4 class="card-title mt-3" data-i18n="settings.billing">Billing</h4>
 <div class="row">
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label for="taxRate">Tax Rate (%)</label>
+<label for="taxRate" data-i18n="settings.tax_rate">Tax Rate (%)</label>
 <input type="number" name="taxRate" id="taxRate" class="form-control" step="0.1" value="${persona.taxRate || 10}" required>
-<small class="text-muted">Applied automatically to all orders (default: 10%)</small>
+<small class="text-muted" data-i18n="settings.tax_rate_small">Applied automatically to all orders (default: 10%)</small>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label for="currencySymbol">Currency Symbol</label>
+<label for="currencySymbol" data-i18n="settings.currency">Currency Symbol</label>
 <input type="text" name="currencySymbol" id="currencySymbol" class="form-control" maxlength="5" value="${persona.currencySymbol || '$'}" required>
 </div>
 </div>
 </div>
 <hr>
-<h4 class="card-title mt-3">Printer</h4>
+<h4 class="card-title mt-3" data-i18n="settings.printer_section">Printer</h4>
 <div class="row">
 <div class="col-lg-6 col-sm-12 col-12">
 <div class="form-group">
-<label for="printerConnection">Printer Connection String</label>
-<input type="text" name="printerConnection" id="printerConnection" class="form-control" placeholder="e.g. USB/Vendor/Product or TCP/192.168.1.100" value="${persona.printerConnection || ''}">
-<small class="text-muted">Leave empty to disable printing. Format depends on your printer type.</small>
+<label for="printerConnection" data-i18n="settings.printer">Printer Connection String</label>
+<input type="text" name="printerConnection" id="printerConnection" class="form-control" data-i18n-placeholder="settings.printer_placeholder" placeholder="e.g. USB/Vendor/Product or TCP/192.168.1.100" value="${persona.printerConnection || ''}">
+<small class="text-muted" data-i18n="settings.printer_empty">Leave empty to disable printing. Format depends on your printer type.</small>
 </div>
 </div>
 </div>
 <div class="col-lg-12 mt-3">
-<button type="submit" class="btn btn-submit me-2">Save Settings</button>
+<button type="submit" class="btn btn-submit me-2" data-i18n="settings.save">Save Settings</button>
 </div>
 </div>
 </form>
