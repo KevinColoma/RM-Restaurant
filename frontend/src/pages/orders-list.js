@@ -8,7 +8,7 @@ registerRoute('/orders-list', async (app) => {
     const res = await get('/orders?page=' + currentPage());
     const orders = extractList(res, 'orders');
     const rows = orders.length ? orders.map(o => {
-      const items = o.items ? o.items.map(i => i.menuItem ? i.menuItem.item : 'Unknown').join(', ') : '-';
+      const items = o.items ? o.items.map(i => i.menuItem ? i.menuItem.item : (window.t ? window.t('orders.unknown_item') : 'Unknown')).join(', ') : '-';
       const date = o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '-';
       return `<tr>
         <td>${o._id || '-'}</td>
@@ -19,10 +19,10 @@ registerRoute('/orders-list', async (app) => {
         <td>${o.comment || '-'}</td>
         <td>${date}</td>
         <td>
-          <a href="javascript:void(0);" class="btn btn-sm btn-danger cancel-order" data-id="${o._id}">Cancel</a>
+          <a href="javascript:void(0);" class="btn btn-sm btn-danger cancel-order" data-id="${o._id}" data-i18n="orders.cancel">Cancel</a>
         </td>
       </tr>`;
-    }).join('') : emptyState({ colspan: 8, title: 'No orders yet', hint: 'Orders appear here once you start billing.', actionHref: '#/pos', actionLabel: 'Go to billing' });
+    }).join('') : emptyState({ colspan: 8, title: 'No orders yet', i18nTitle: 'empty.no_orders', hint: 'Orders appear here once you start billing.', i18nHint: 'empty.orders_hint', actionHref: '#/pos', actionLabel: 'Go to billing', i18nAction: 'empty.orders_action' });
 
     const html = `
 <div class="page-wrapper">
@@ -46,9 +46,9 @@ registerRoute('/orders-list', async (app) => {
 <th data-i18n="table.order_id">Order ID</th>
 <th data-i18n="table.items">Items</th>
 <th data-i18n="table.total">Total</th>
-<th>Tax</th>
+            <th data-i18n="table.tax">Tax</th>
 <th data-i18n="table.order_type">Type</th>
-<th>Comment</th>
+            <th data-i18n="table.comment">Comment</th>
 <th data-i18n="table.date">Date</th>
 <th data-i18n="table.action">Actions</th>
 </tr>

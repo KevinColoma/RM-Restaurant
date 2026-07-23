@@ -23,10 +23,10 @@ registerRoute('/expenses-list', async (app) => {
           <a href="javascript:void(0);" class="delete-expense" aria-label="Delete expense" title="Delete expense" data-i18n-aria="action.delete_expense" data-id="${e._id}"><img src="assets/img/icons/delete.svg" alt=""></a>
         </td>
       </tr>`;
-    }).join('') : emptyState({ colspan: 7, title: 'No expenses recorded yet', hint: 'Track what the restaurant spends to see it reflected in your reports.', actionHref: '#/expenses-add', actionLabel: 'Record the first expense' });
+    }).join('') : emptyState({ colspan: 7, title: 'No expenses recorded yet', i18nTitle: 'empty.no_expenses', hint: 'Track what the restaurant spends to see it reflected in your reports.', i18nHint: 'empty.expense_hint', actionHref: '#/expenses-add', actionLabel: 'Record the first expense', i18nAction: 'empty.expense_action' });
 
     const filterPanel = renderFilterPanel([
-      { key: 'category', label: 'Choose Category', options: uniqueValues(expenses, 'category') },
+      { key: 'category', label: 'Category', options: uniqueValues(expenses, 'category') },
       { key: 'paymentMethod', label: 'Payment Method', options: uniqueValues(expenses, 'paymentMethod') }
     ]);
     const rows = renderRows(expenses);
@@ -40,7 +40,7 @@ registerRoute('/expenses-list', async (app) => {
 <h6 data-i18n="list.expense_sub">Manage your expenses</h6>
 </div>
 <div class="page-btn">
-<a href="#/expenses-add" class="btn btn-added"><img src="assets/img/icons/plus.svg" alt="" class="me-1">Add New Expense</a>
+<a href="#/expenses-add" class="btn btn-added" data-i18n="list.add_new_expense"><img src="assets/img/icons/plus.svg" alt="" class="me-1">Add New Expense</a>
 </div>
 </div>
 <div class="card">

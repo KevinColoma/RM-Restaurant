@@ -78,9 +78,10 @@ export function renderPagination(meta) {
     </li>`;
   }
 
+  const _t = (typeof window !== 'undefined' && window.t) || (x => x);
   return `
 <nav class="d-flex justify-content-between align-items-center flex-wrap mt-3" aria-label="Pagination">
-  <small class="text-muted">Showing ${from}-${to} of ${total}</small>
+  <small class="text-muted">${_t('common.showing')} ${from}-${to} ${_t('common.of')} ${total}</small>
   <ul class="pagination mb-0">
     ${boton(page - 1, '&laquo;', page === 1)}
     ${numeros}
@@ -172,13 +173,13 @@ export function bindDelete(app, selector, { del, endpoint, successMsg, listRoute
 
 // An empty table is a dead end unless it says what to do next, so this pairs
 // the explanation with the action that resolves it.
-export function emptyState({ colspan, title, hint, actionHref, actionLabel }) {
+export function emptyState({ colspan, title, hint, actionHref, actionLabel, i18nTitle, i18nHint, i18nAction }) {
   const boton = actionHref
-    ? `<a href="${actionHref}" class="btn btn-added mt-2">${actionLabel || 'Add the first one'}</a>`
+    ? `<a href="${actionHref}" class="btn btn-added mt-2"${i18nAction ? ` data-i18n="${i18nAction}"` : ''}>${actionLabel || 'Add the first one'}</a>`
     : '';
   return `<tr><td colspan="${colspan}" class="text-center py-4">
-    <p class="mb-1 fw-bold">${title}</p>
-    ${hint ? `<p class="text-muted mb-2">${hint}</p>` : ''}
+    <p class="mb-1 fw-bold"${i18nTitle ? ` data-i18n="${i18nTitle}"` : ''}>${title}</p>
+    ${hint ? `<p class="text-muted mb-2"${i18nHint ? ` data-i18n="${i18nHint}"` : ''}>${hint}</p>` : ''}
     ${boton}
   </td></tr>`;
 }
@@ -198,7 +199,7 @@ export function renderFilterPanel(fields) {
   const cols = fields.map(f => `
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label>${f.label}</label>
+<label data-i18n="filter.label">${f.label}</label>
 <select class="form-control filter-field" data-field="${f.key}">
 <option value="">${f.label}</option>
 ${f.options.map(o => `<option value="${String(o).replace(/"/g, '&quot;')}">${o}</option>`).join('')}
@@ -213,8 +214,8 @@ ${f.options.map(o => `<option value="${String(o).replace(/"/g, '&quot;')}">${o}<
 ${cols}
 <div class="col-lg-3 col-sm-6 col-12 d-flex align-items-end">
 <div class="form-group mb-0 d-flex">
-<a class="btn btn-added" id="apply-filters" title="Apply filters"><img src="assets/img/icons/search-whites.svg" alt=""> Apply</a>
-<a class="btn btn-cancel ms-2" id="reset-filters" title="Reset filters">&times; Reset</a>
+<a class="btn btn-added" id="apply-filters" title="Apply filters" data-i18n-aria="common.filter"><img src="assets/img/icons/search-whites.svg" alt=""><span data-i18n="common.apply"> Apply</span></a>
+<a class="btn btn-cancel ms-2" id="reset-filters" title="Reset filters" data-i18n-aria="common.filter">&times; <span data-i18n="common.reset">Reset</span></a>
 </div>
 </div>
 </div>

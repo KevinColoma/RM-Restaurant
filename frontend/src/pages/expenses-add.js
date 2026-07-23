@@ -13,8 +13,8 @@ registerRoute('/expenses-add', async (app) => {
 <div class="content">
 <div class="page-header">
 <div class="page-title">
-<h4>Expense Add</h4>
-<h6>Add/Update Expenses</h6>
+<h4 data-i18n="expense.add_title">Expense Add</h4>
+<h6 data-i18n="expense.add_sub">Add/Update Expenses</h6>
 </div>
 </div>
 <div class="card">
@@ -23,9 +23,9 @@ registerRoute('/expenses-add', async (app) => {
 <div class="row">
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label for="category">Expense Category</label>
+<label for="category" data-i18n="expense.choose_category">Expense Category</label>
 <select class="form-control" id="category" required>
-<option value="" disabled selected> expense category</option>
+<option value="" disabled selected data-i18n-value="expense.choose_category">Choose category</option>
 <option value="supplies">Supplies</option>
 <option value="salaries">Salaries</option>
 <option value="utilities">Utilities</option>
@@ -43,21 +43,21 @@ registerRoute('/expenses-add', async (app) => {
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label for="expenseDate">Expense Date</label>
+<label for="expenseDate" data-i18n="form.expense_date">Expense Date</label>
 <input type="date" id="expenseDate" class="form-control" required>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label for="amount">Amount</label>
+<label for="amount" data-i18n="form.amount">Amount</label>
 <input type="number" id="amount" class="form-control" step="0.01" min="0.01" required>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label for="paymentMethod">Payment Method</label>
+<label for="paymentMethod" data-i18n="expense.payment_method">Payment Method</label>
 <select class="form-control" id="paymentMethod" required>
-<option value="">Select Payment Method</option>
+<option value="" data-i18n-value="expense.select_payment">Select Payment Method</option>
 <option value="cash">Cash</option>
 <option value="credit card">Credit Card</option>
 <option value="bank transfer">Bank Transfer</option>
@@ -67,25 +67,25 @@ registerRoute('/expenses-add', async (app) => {
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label for="invoiceNumber">Invoice Number / Reference</label>
+<label for="invoiceNumber" data-i18n="expense.invoice_number">Invoice Number / Reference</label>
 <input type="text" id="invoiceNumber" class="form-control">
 </div>
 </div>
 <div class="col-lg-12">
 <div class="form-group">
-<label for="vendor">Expense for (vendor/employee)</label>
+<label for="vendor" data-i18n="expense.vendor_label">Expense for (vendor/employee)</label>
 <input type="text" id="vendor" class="form-control">
 </div>
 </div>
 <div class="col-lg-12">
 <div class="form-group">
-<label for="description">Description</label>
+<label for="description" data-i18n="form.description">Description</label>
 <textarea class="form-control" id="description"></textarea>
 </div>
 </div>
 <div class="col-lg-12">
-<button type="submit" class="btn btn-submit me-2">Submit</button>
-<a href="#/expenses-list" class="btn btn-cancel">Cancel</a>
+<button type="submit" class="btn btn-submit me-2" data-i18n="form.submit">Submit</button>
+<a href="#/expenses-list" class="btn btn-cancel" data-i18n="form.cancel">Cancel</a>
 </div>
 </div>
 </form>
@@ -108,10 +108,10 @@ registerRoute('/expenses-add', async (app) => {
     const description = document.getElementById('description').value.trim();
 
     const ok = validate(form, [
-      { field: 'category', valid: !!category, message: 'Choose an expense category.' },
-      { field: 'expenseDate', valid: !!expenseDate, message: 'Pick the date of the expense.' },
-      { field: 'amount', valid: !isNaN(amountValue) && amountValue > 0, message: 'Enter an amount greater than zero.' },
-      { field: 'description', valid: !!description, message: 'Describe what this expense was for.' }
+      { field: 'category', valid: !!category, message: window.t('expense.choose_cat_error') },
+      { field: 'expenseDate', valid: !!expenseDate, message: window.t('expense.pick_date_error') },
+      { field: 'amount', valid: !isNaN(amountValue) && amountValue > 0, message: window.t('expense.amount_error') },
+      { field: 'description', valid: !!description, message: window.t('expense.desc_error') }
     ]);
     if (!ok) return;
 
@@ -125,14 +125,14 @@ registerRoute('/expenses-add', async (app) => {
       description
     };
 
-    const done = setBusy(e.submitter || form.querySelector('[type="submit"]'), 'Saving expense...');
+    const done = setBusy(e.submitter || form.querySelector('[type="submit"]'), window.t('expense.saving'));
     try {
       await post('/expenses', data);
-      await notifySuccess('Expense of ' + amountValue.toFixed(2) + ' saved.', 'Expense added');
+      await notifySuccess(window.t('expense.added') + ' ' + amountValue.toFixed(2) + ' ' + window.t('expense.saved'), window.t('expense.saved_title'));
       navigateTo('#/expenses-list');
     } catch (err) {
       done();
-      notifyError(err.message || 'Failed to add expense.');
+      notifyError(err.message || window.t('expense.failed_add'));
     }
   });
 });

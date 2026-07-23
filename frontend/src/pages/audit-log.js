@@ -35,8 +35,8 @@ registerRoute('/audit-log', async (app) => {
 <div class="content">
 <div class="page-header">
 <div class="page-title">
-<h4>Audit Log</h4>
-<h6>Complete activity history</h6>
+<h4 data-i18n="audit.title">Audit Log</h4>
+<h6 data-i18n="audit.sub">Complete activity history</h6>
 </div>
 </div>
 <div class="card">
@@ -45,11 +45,11 @@ registerRoute('/audit-log', async (app) => {
 <table class="table datatable">
 <thead>
 <tr>
-<th>Action</th>
-<th>Collection</th>
-<th>Document ID</th>
-<th>Details</th>
-<th>Date / Time</th>
+<th data-i18n="audit.action">Action</th>
+<th data-i18n="audit.collection">Collection</th>
+<th data-i18n="audit.document_id">Document ID</th>
+<th data-i18n="audit.details">Details</th>
+<th data-i18n="audit.datetime">Date / Time</th>
 </tr>
 </thead>
 <tbody>${rows}</tbody>

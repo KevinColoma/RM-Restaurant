@@ -84,7 +84,7 @@ registerRoute('/pos', async (app) => {
     <div class="card">
       <div class="card-body">
         <div class="pos-search">
-          <input type="text" id="menu-search" placeholder="Search menu items..." autocomplete="off">
+          <input type="text" id="menu-search" placeholder="Search menu items..." data-i18n-placeholder="pos.search" autocomplete="off">
         </div>
         <div id="menu-items-container">
           ${categories.map(cat => {
@@ -105,7 +105,7 @@ registerRoute('/pos', async (app) => {
           }).join('')}
           ${menus.filter(m => !m.category).length ? `
             <div class="category-section" data-category="Uncategorized">
-              <div class="category-title">Uncategorized</div>
+              <div class="category-title" data-i18n="pos.uncategorized">Uncategorized</div>
               <div class="menu-card-grid">
                 ${menus.filter(m => !m.category).map(m => `
                   <div class="menu-card" data-id="${m._id}" data-item="${m.item}" data-price="${m.price}" data-category="">
@@ -126,42 +126,42 @@ registerRoute('/pos', async (app) => {
       <div class="card-body">
         <div class="customer-row">
           <select id="customer-select">
-            <option value="">Walk-in Customer</option>
+            <option value="" data-i18n-value="pos.walk_in">Walk-in Customer</option>
             ${customers.map(c => `<option value="${c._id}">${c.name}${c.phone ? ' - ' + c.phone : ''}</option>`).join('')}
           </select>
-          <button class="btn-add-customer" id="btn-add-customer">+ Add</button>
+          <button class="btn-add-customer" id="btn-add-customer" data-i18n="pos.add">+ Add</button>
         </div>
 
         <div class="order-type-group">
-          <button class="ordermethod" data-type="dine in">Dine In</button>
-          <button class="ordermethod" data-type="take away">Take Away</button>
-          <button class="ordermethod" data-type="online">Online</button>
+          <button class="ordermethod" data-type="dine in" data-i18n="pos.dine_in">Dine In</button>
+          <button class="ordermethod" data-type="take away" data-i18n="pos.take_away">Take Away</button>
+          <button class="ordermethod" data-type="online" data-i18n="pos.online">Online</button>
         </div>
 
         <div class="cart-header">
-          <h5>Order Items</h5>
-          <a id="clear-all">Clear all</a>
+          <h5 data-i18n="pos.order_items">Order Items</h5>
+          <a id="clear-all" data-i18n="pos.clear_all">Clear all</a>
         </div>
 
         <table class="cart-table">
-          <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th></th></tr></thead>
+          <thead><tr><th data-i18n="pos.item_name">Item</th><th data-i18n="pos.qty">Qty</th><th data-i18n="pos.price">Price</th><th></th></tr></thead>
           <tbody id="cart-body">
-            <tr><td colspan="4" class="no-items-msg">No items in cart</td></tr>
+            <tr><td colspan="4" class="no-items-msg" data-i18n="pos.no_items">No items in cart</td></tr>
           </tbody>
         </table>
 
         <div class="cart-summary">
           <ul>
-            <li><span>Subtotal</span><span id="subtotal">0.00</span></li>
-            <li><span>Tax (10%)</span><span id="tax">0.00</span></li>
-            <li class="total-value"><span>Total</span><span id="total">0.00</span></li>
+            <li><span data-i18n="pos.subtotal">Subtotal</span><span id="subtotal">0.00</span></li>
+            <li><span data-i18n="pos.tax_label">Tax (10%)</span><span id="tax">0.00</span></li>
+            <li class="total-value"><span data-i18n="pos.total">Total</span><span id="total">0.00</span></li>
           </ul>
         </div>
 
-        <textarea id="order-comment" rows="3" placeholder="Enter comment / Address..."></textarea>
+        <textarea id="order-comment" rows="3" data-i18n-placeholder="pos.comment" placeholder="Enter comment / Address..."></textarea>
 
         <div class="checkout-row">
-          <button id="checkout-button">Place Order</button>
+          <button id="checkout-button" data-i18n="pos.place_order">Place Order</button>
           <span id="checkout-total">0.00</span>
         </div>
       </div>
@@ -171,22 +171,22 @@ registerRoute('/pos', async (app) => {
 
 <div class="modal-overlay" id="customer-modal">
   <div class="modal-box">
-    <h4>Add Customer</h4>
+    <h4 data-i18n="pos.modal_title">Add Customer</h4>
     <div class="form-group">
-      <label for="customerName">Customer Name</label>
-      <input type="text" id="customerName" placeholder="Enter name">
+      <label for="customerName" data-i18n="pos.customer_name_label">Customer Name</label>
+      <input type="text" id="customerName" data-i18n-placeholder="pos.customer_name_placeholder" placeholder="Enter name">
     </div>
     <div class="form-group">
-      <label for="customerPhone">Phone</label>
-      <input type="tel" id="customerPhone" pattern="[0-9+ -]*" placeholder="Enter phone">
+      <label for="customerPhone" data-i18n="pos.customer_phone_label">Phone</label>
+      <input type="tel" id="customerPhone" pattern="[0-9+ -]*" data-i18n-placeholder="pos.customer_phone_placeholder" placeholder="Enter phone">
     </div>
     <div class="form-group">
-      <label for="customerAddress">Address</label>
-      <input type="text" id="customerAddress" placeholder="Enter address">
+      <label for="customerAddress" data-i18n="pos.customer_address_label">Address</label>
+      <input type="text" id="customerAddress" data-i18n-placeholder="pos.customer_address_placeholder" placeholder="Enter address">
     </div>
     <div class="modal-actions">
-      <button class="btn-cancel" id="modal-cancel">Cancel</button>
-      <button class="btn-submit" id="modal-submit">Submit</button>
+      <button class="btn-cancel" id="modal-cancel" data-i18n="common.cancel">Cancel</button>
+      <button class="btn-submit" id="modal-submit" data-i18n="form.submit">Submit</button>
     </div>
   </div>
 </div>
@@ -317,12 +317,12 @@ registerRoute('/pos', async (app) => {
 
     checkoutButton.addEventListener('click', async () => {
       if (!selectedOrderType) {
-        notifyWarning('Please select an order type (Dine In, Take Away, or Online).');
+        notifyWarning(window.t('pos.select_order_type'));
         return;
       }
       const entries = Object.entries(cart);
       if (entries.length === 0) {
-        notifyWarning('Please add at least one item to the order.');
+        notifyWarning(window.t('pos.add_items'));
         return;
       }
 
@@ -340,7 +340,7 @@ registerRoute('/pos', async (app) => {
 
       try {
         const result = await post('/placeorder', payload);
-        notifySuccess('Order placed successfully!');
+        notifySuccess(window.t('pos.order_placed'));
         Object.keys(cart).forEach(k => delete cart[k]);
         orderComment.value = '';
         customerSelect.value = '';
@@ -348,7 +348,7 @@ registerRoute('/pos', async (app) => {
         orderTypeBtns.forEach(b => b.classList.remove('selected'));
         updateCartDisplay();
       } catch (err) {
-        notifyError('Failed to place order: ' + err.message);
+        notifyError(window.t('pos.order_failed') + err.message);
       }
     });
 
@@ -384,19 +384,19 @@ registerRoute('/pos', async (app) => {
     document.getElementById('modal-submit').addEventListener('click', async () => {
       const name = document.getElementById('customerName').value.trim();
       if (!name) {
-        notifyWarning('Customer name is required.');
+        notifyWarning(window.t('pos.name_required'));
         return;
       }
       const phone = document.getElementById('customerPhone').value.trim();
       if (phone && !/^[0-9+\-\s]+$/.test(phone)) {
-        notifyWarning('Phone number can only contain digits.');
+        notifyWarning(window.t('pos.phone_invalid'));
         return;
       }
       const address = document.getElementById('customerAddress').value.trim();
 
       try {
         const customer = await post('/customers', { name, phone, address });
-        notifySuccess('Customer "' + customer.name + '" created successfully!');
+        notifySuccess(window.t('pos.customer_created'));
         const opt = document.createElement('option');
         opt.value = customer._id;
         opt.textContent = customer.name + (customer.phone ? ' - ' + customer.phone : '');
@@ -407,7 +407,7 @@ registerRoute('/pos', async (app) => {
         document.getElementById('customerPhone').value = '';
         document.getElementById('customerAddress').value = '';
       } catch (err) {
-        notifyError('Failed to create customer: ' + err.message);
+        notifyError(window.t('pos.customer_failed') + err.message);
       }
     });
   } catch (err) {

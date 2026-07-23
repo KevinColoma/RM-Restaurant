@@ -88,11 +88,11 @@ ${themeOpts}
       };
       // Unlike the create forms, saving settings keeps you on the page, so the
       // button has to be restored either way - hence the finally.
-      const done = setBusy(e.submitter || e.target.querySelector('[type="submit"]'), 'Saving settings...');
+      const done = setBusy(e.submitter || e.target.querySelector('[type="submit"]'), window.t('settings.saving'));
       try {
         const res = await put('/settings', data);
         if (res.success) {
-          Swal.fire('Settings saved', 'Your preferences have been updated.', 'success');
+          Swal.fire(window.t('settings.saved_title'), window.t('settings.saved_text'), 'success');
           const theme = data.theme;
           if (theme === 'dark') {
             document.body.classList.add('dark-mode');
@@ -102,10 +102,10 @@ ${themeOpts}
             localStorage.setItem('rms-theme', 'light');
           }
         } else {
-          Swal.fire('Could not save', res.error || 'Failed to save settings.', 'error');
+          Swal.fire(window.t('settings.save_error'), res.error || window.t('settings.save_failed'), 'error');
         }
       } catch (err) {
-        Swal.fire('Could not save', err.message || 'Failed to save settings.', 'error');
+        Swal.fire(window.t('settings.save_error'), err.message || window.t('settings.save_failed'), 'error');
       } finally {
         done();
       }

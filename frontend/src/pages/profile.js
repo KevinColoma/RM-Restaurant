@@ -16,8 +16,8 @@ registerRoute('/profile', async (app) => {
 <div class="content">
 <div class="page-header">
 <div class="page-title">
-<h4>My Profile</h4>
-<h6>Manage your restaurant profile</h6>
+<h4 data-i18n="profile.title_display">My Profile</h4>
+<h6 data-i18n="profile.sub">Manage your restaurant profile</h6>
 </div>
 </div>
 <div class="card">
@@ -25,7 +25,7 @@ registerRoute('/profile', async (app) => {
 <div class="text-center mb-4">
 <img src="${avatarUrl}" id="profile-avatar" class="rounded-circle" width="120" height="120" style="object-fit:cover;border:3px solid #ff9f43;" onerror="this.src='assets/img/profiles/avator1.jpg'">
 <div class="mt-2">
-<label class="btn btn-outline-primary btn-sm">
+<label class="btn btn-outline-primary btn-sm" data-i18n="profile.change_photo">
 Change Photo
 <input type="file" id="avatar-input" accept="image/*" style="display:none">
 </label>
@@ -35,36 +35,36 @@ Change Photo
 <div class="row">
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label for="ownerName">Owner Name</label>
+<label for="ownerName" data-i18n="profile.name">Owner Name</label>
 <input type="text" name="ownerName" id="ownerName" class="form-control" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" value="${persona.ownerName || ''}" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label for="restaurantName">Restaurant Name</label>
+<label for="restaurantName" data-i18n="profile.restaurant_name">Restaurant Name</label>
 <input type="text" name="restaurantName" id="restaurantName" class="form-control" value="${persona.restaurantName || ''}" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label for="city">City</label>
+<label for="city" data-i18n="profile.city">City</label>
 <input type="text" name="city" id="city" class="form-control" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" value="${persona.city || ''}" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label for="address">Address</label>
+<label for="address" data-i18n="profile.address">Address</label>
 <input type="text" name="address" id="address" class="form-control" value="${persona.address || ''}" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label for="mobile">Mobile</label>
+<label for="mobile" data-i18n="profile.phone">Mobile</label>
 <input type="tel" name="mobile" id="mobile" class="form-control" pattern="[0-9+ -]+" title="Only numbers are allowed" value="${persona.mobile || ''}" required>
 </div>
 </div>
 <div class="col-lg-12">
-<button type="submit" class="btn btn-submit me-2">Update Profile</button>
+<button type="submit" class="btn btn-submit me-2" data-i18n="profile.save">Update Profile</button>
 </div>
 </div>
 </form>
@@ -72,29 +72,29 @@ Change Photo
 </div>
 <div class="card mt-4">
 <div class="card-body">
-<h4 class="card-title">Change Password</h4>
+<h4 class="card-title" data-i18n="profile.change_password">Change Password</h4>
 <form id="password-form">
 <div class="row">
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label for="currentPassword">Current Password</label>
+<label for="currentPassword" data-i18n="profile.current_pw">Current Password</label>
 <input type="password" name="currentPassword" id="currentPassword" class="form-control" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label for="newPassword">New Password</label>
+<label for="newPassword" data-i18n="profile.new_pw">New Password</label>
 <input type="password" name="newPassword" id="newPassword" class="form-control" minlength="6" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label for="confirmPassword">Confirm New Password</label>
+<label for="confirmPassword" data-i18n="profile.confirm_pw">Confirm New Password</label>
 <input type="password" id="confirmPassword" class="form-control" minlength="6" required>
 </div>
 </div>
 <div class="col-lg-12">
-<button type="submit" class="btn btn-submit me-2">Change Password</button>
+<button type="submit" class="btn btn-submit me-2" data-i18n="profile.update_pw">Change Password</button>
 </div>
 </div>
 </form>
@@ -114,13 +114,13 @@ Change Photo
         const data = await upload('/profile/avatar', formData);
         if (data.success) {
           document.getElementById('profile-avatar').src = data.avatarUrl + '?t=' + Date.now();
-          Swal.fire('Success!', 'Photo updated. Reloading...', 'success')
+          Swal.fire(window.t('common.success'), window.t('profile.photo_updated'), 'success')
             .then(() => location.reload());
         } else {
-          Swal.fire('Error!', data.error || 'Upload failed.', 'error');
+          Swal.fire(window.t('common.error'), data.error || window.t('profile.upload_failed'), 'error');
         }
       } catch (err) {
-        Swal.fire('Error!', err.message || 'Upload failed.', 'error');
+        Swal.fire(window.t('common.error'), err.message || window.t('profile.upload_failed'), 'error');
       }
     });
 
@@ -136,13 +136,13 @@ Change Photo
       try {
         const res = await put('/profile', data);
         if (res.success) {
-          Swal.fire('Success!', 'Profile updated successfully.', 'success')
+          Swal.fire(window.t('common.success'), window.t('profile.updated'), 'success')
             .then(() => location.reload());
         } else {
-          Swal.fire('Error!', res.error || 'Update failed.', 'error');
+          Swal.fire(window.t('common.error'), res.error || window.t('profile.update_failed'), 'error');
         }
       } catch (err) {
-        Swal.fire('Error!', err.message || 'Update failed.', 'error');
+        Swal.fire(window.t('common.error'), err.message || window.t('profile.update_failed'), 'error');
       }
     });
 
@@ -152,19 +152,19 @@ Change Photo
       const newPassword = document.getElementById('newPassword').value;
       const confirmPassword = document.getElementById('confirmPassword').value;
       if (newPassword !== confirmPassword) {
-        Swal.fire('Error!', 'Passwords do not match.', 'error');
+        Swal.fire(window.t('common.error'), window.t('profile.pw_mismatch'), 'error');
         return;
       }
       try {
         const res = await put('/profile/password', { currentPassword, newPassword });
         if (res.success) {
-          Swal.fire('Success!', 'Password changed successfully.', 'success');
+          Swal.fire(window.t('common.success'), window.t('profile.pw_changed'), 'success');
           document.getElementById('password-form').reset();
         } else {
-          Swal.fire('Error!', res.error || 'Failed to change password.', 'error');
+          Swal.fire(window.t('common.error'), res.error || window.t('profile.pw_change_failed'), 'error');
         }
       } catch (err) {
-        Swal.fire('Error!', err.message || 'Failed to change password.', 'error');
+        Swal.fire(window.t('common.error'), err.message || window.t('profile.pw_change_failed'), 'error');
       }
     });
   } catch (err) {

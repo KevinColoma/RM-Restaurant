@@ -11,7 +11,7 @@ registerRoute('/menu-list', async (app) => {
     const renderRows = (list) => list.length ? list.map(m => {
       const price = typeof m.price === 'number' ? m.price.toFixed(2) : (m.price || '0.00');
       const available = m.available !== undefined ? m.available : (m.status !== 'inactive');
-      const badge = available ? '<span class="badge bg-success">Available</span>' : '<span class="badge bg-danger">Unavailable</span>';
+      const badge = available ? '<span class="badge bg-success">' + (window.t ? window.t('menu.available') : 'Available') + '</span>' : '<span class="badge bg-danger">' + (window.t ? window.t('dash.unavailable') : 'Unavailable') + '</span>';
       return `<tr>
         <td class="productimgname"><a href="javascript:void(0);">${m.item || ''}</a></td>
         <td>${m.category || '-'}</td>
@@ -23,10 +23,10 @@ registerRoute('/menu-list', async (app) => {
           <a href="javascript:void(0);" class="delete-item" aria-label="Delete menu item" title="Delete menu item" data-i18n-aria="action.delete_menu" data-id="${m._id}"><img src="assets/img/icons/delete.svg" alt=""></a>
         </td>
       </tr>`;
-    }).join('') : emptyState({ colspan: 6, title: 'Your menu is empty', hint: 'Add dishes so they can be sold from the billing screen.', actionHref: '#/menu-add', actionLabel: 'Add the first dish' });
+    }).join('') : emptyState({ colspan: 6, title: 'Your menu is empty', i18nTitle: 'empty.your_menu_empty', hint: 'Add dishes so they can be sold from the billing screen.', i18nHint: 'empty.menu_hint', actionHref: '#/menu-add', actionLabel: 'Add the first dish', i18nAction: 'empty.menu_action' });
 
     const filterPanel = renderFilterPanel([
-      { key: 'category', label: 'Choose Category', options: uniqueValues(menus, 'category') },
+      { key: 'category', label: 'Category', options: uniqueValues(menus, 'category') },
       { key: 'subCategory', label: 'Choose Sub Category', options: uniqueValues(menus, 'subCategory') }
     ]);
     const rows = renderRows(menus);
@@ -40,7 +40,7 @@ registerRoute('/menu-list', async (app) => {
 <h6 data-i18n="list.product_sub">Manage your products</h6>
 </div>
 <div class="page-btn">
-<a href="#/menu-add" class="btn btn-added"><img src="assets/img/icons/plus.svg" alt="" class="me-1">Add New Item</a>
+<a href="#/menu-add" class="btn btn-added" data-i18n="list.add_new_item"><img src="assets/img/icons/plus.svg" alt="" class="me-1">Add New Item</a>
 </div>
 </div>
 <div class="card">

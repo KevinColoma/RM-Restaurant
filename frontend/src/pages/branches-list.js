@@ -22,7 +22,7 @@ registerRoute('/branches-list', async (app) => {
           <a href="javascript:void(0);" class="delete-branch" aria-label="Delete branch" title="Delete branch" data-i18n-aria="action.delete_branch" data-id="${b._id}"><img src="assets/img/icons/delete.svg" alt=""></a>
         </td>
       </tr>`;
-    }).join('') : emptyState({ colspan: 8, title: 'No branches registered', hint: 'Add the locations this restaurant operates from.', actionHref: '#/branches-add', actionLabel: 'Add the first branch' });
+    }).join('') : emptyState({ colspan: 8, title: 'No branches registered', i18nTitle: 'empty.no_branches', hint: 'Add the locations this restaurant operates from.', i18nHint: 'empty.branches_hint', actionHref: '#/branches-add', actionLabel: 'Add the first branch', i18nAction: 'empty.branches_action' });
 
     const filterPanel = renderFilterPanel([
       { key: 'Parent_Rest', label: 'Parent Restaurant', options: uniqueValues(branches, 'Parent_Rest') },
@@ -39,7 +39,7 @@ registerRoute('/branches-list', async (app) => {
 <h6 data-i18n="list.branches_sub">Manage your branches</h6>
 </div>
 <div class="page-btn">
-<a href="#/branches-add" class="btn btn-added"><img src="assets/img/icons/plus.svg" alt="" class="me-1">Add New Branch</a>
+<a href="#/branches-add" class="btn btn-added" data-i18n="branch.add_new"><img src="assets/img/icons/plus.svg" alt="" class="me-1">Add New Branch</a>
 </div>
 </div>
 <div class="card">
@@ -70,8 +70,8 @@ ${filterPanel}
 <thead>
 <tr>
 <th data-i18n="table.name">Branch Name</th>
-<th>Parent Restaurant</th>
-<th>Owner Name</th>
+<th data-i18n="branch.choose_parent">Parent Restaurant</th>
+<th data-i18n="table.owner">Owner Name</th>
 <th data-i18n="form.city">City</th>
 <th data-i18n="table.address">Address</th>
 <th data-i18n="table.email">Email</th>
@@ -103,18 +103,18 @@ ${renderPagination(res)}
           const email = row ? row.querySelector('.br-email').textContent : '';
           const mobile = row ? row.querySelector('.br-mobile').textContent : '';
           Swal.fire({
-            title: 'Edit Branch',
+            title: window.t('branch.edit_branch'),
             html: `
-              <input id="swal-restaurantName" class="swal2-input" value="${restaurantName}" placeholder="Restaurant Name">
-              <input id="swal-Parent_Rest" class="swal2-input" value="${Parent_Rest}" placeholder="Parent Restaurant">
-              <input id="swal-ownerName" class="swal2-input" value="${ownerName}" placeholder="Owner Name">
-              <input id="swal-city" class="swal2-input" value="${city}" placeholder="City">
-              <input id="swal-address" class="swal2-input" value="${address}" placeholder="Address">
-              <input id="swal-email" class="swal2-input" value="${email}" placeholder="Email">
-              <input id="swal-mobile" class="swal2-input" value="${mobile}" placeholder="Mobile">
+              <input id="swal-restaurantName" class="swal2-input" value="${restaurantName}" placeholder="Restaurant Name" data-i18n-placeholder="form.restaurant_name">
+              <input id="swal-Parent_Rest" class="swal2-input" value="${Parent_Rest}" placeholder="Parent Restaurant" data-i18n-placeholder="branch.choose_parent">
+              <input id="swal-ownerName" class="swal2-input" value="${ownerName}" placeholder="Owner Name" data-i18n-placeholder="form.owner_name">
+              <input id="swal-city" class="swal2-input" value="${city}" placeholder="City" data-i18n-placeholder="form.city">
+              <input id="swal-address" class="swal2-input" value="${address}" placeholder="Address" data-i18n-placeholder="form.address">
+              <input id="swal-email" class="swal2-input" value="${email}" placeholder="Email" data-i18n-placeholder="form.email">
+              <input id="swal-mobile" class="swal2-input" value="${mobile}" placeholder="Mobile" data-i18n-placeholder="form.mobile">
             `,
             showCancelButton: true,
-            confirmButtonText: 'Update',
+            confirmButtonText: window.t('common.update'),
             preConfirm: () => {
               return put('/branches/' + id, {
                 restaurantName: document.getElementById('swal-restaurantName').value.trim(),
@@ -126,11 +126,11 @@ ${renderPagination(res)}
                 mobile: document.getElementById('swal-mobile').value.trim()
               }).then(res => {
                 if (res && !res.error) {
-                  Swal.fire('Updated!', '', 'success').then(() => navigateTo('#/branches-list'));
+                  Swal.fire(window.t('common.success'), '', 'success').then(() => navigateTo('#/branches-list'));
                 } else {
-                  Swal.fire('Error!', 'Failed to update.', 'error');
+                  Swal.fire(window.t('common.error'), window.t('branch.updated_failed'), 'error');
                 }
-              }).catch(() => Swal.fire('Error!', 'Failed to update.', 'error'));
+              }).catch(() => Swal.fire(window.t('common.error'), window.t('branch.updated_failed'), 'error'));
             }
           });
         });

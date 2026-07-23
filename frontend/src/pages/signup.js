@@ -12,67 +12,67 @@ registerRoute('/signup', (app) => {
   <img src="assets/img/logo.png" alt="RMS">
 </div>
 <div class="login-userheading">
-  <h3>Sign Up</h3>
-  <h4>Create your account</h4>
+  <h3 data-i18n="signup.title">Sign Up</h3>
+  <h4 data-i18n="signup.create_account">Create your account</h4>
 </div>
 <div id="error-message" class="alert alert-danger d-none"></div>
 <div id="success-message" class="alert alert-success d-none"></div>
 <form id="signup-form">
   <div class="form-login">
-    <label for="email">Email</label>
+    <label for="email" data-i18n="form.email">Email</label>
     <div class="form-addons">
-      <input type="email" name="email" id="email" placeholder="Enter your email" required>
+      <input type="email" name="email" id="email" placeholder="Enter your email" required data-i18n-placeholder="signup.email_placeholder">
       <img src="assets/img/icons/mail.svg" alt="">
     </div>
   </div>
   <div class="form-login">
-    <label for="ownerName">Owner Name</label>
+    <label for="ownerName" data-i18n="form.owner_name">Owner Name</label>
     <div class="form-addons">
-      <input type="text" name="ownerName" id="ownerName" placeholder="Enter owner name" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" required>
+      <input type="text" name="ownerName" id="ownerName" placeholder="Enter owner name" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" required data-i18n-placeholder="signup.owner_placeholder">
       <img src="assets/img/icons/user.svg" alt="">
     </div>
   </div>
   <div class="form-login">
-    <label for="restaurantName">Restaurant Name</label>
+    <label for="restaurantName" data-i18n="form.restaurant_name">Restaurant Name</label>
     <div class="form-addons">
-      <input type="text" name="restaurantName" id="restaurantName" placeholder="Enter restaurant name" required>
+      <input type="text" name="restaurantName" id="restaurantName" placeholder="Enter restaurant name" required data-i18n-placeholder="signup.restaurant_placeholder">
       <img src="assets/img/icons/shop.svg" alt="">
     </div>
   </div>
   <div class="form-login">
-    <label for="city">City</label>
+    <label for="city" data-i18n="form.city">City</label>
     <div class="form-addons">
-      <input type="text" name="city" id="city" placeholder="Enter city" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" required>
+      <input type="text" name="city" id="city" placeholder="Enter city" pattern="[A-Za-zÀ-ÿ ]+" title="Only letters are allowed" required data-i18n-placeholder="signup.city_placeholder">
       <img src="assets/img/icons/city.svg" alt="">
     </div>
   </div>
   <div class="form-login">
-    <label for="address">Address</label>
+    <label for="address" data-i18n="form.address">Address</label>
     <div class="form-addons">
-      <input type="text" name="address" id="address" placeholder="Enter address" required>
+      <input type="text" name="address" id="address" placeholder="Enter address" required data-i18n-placeholder="signup.address_placeholder">
       <img src="assets/img/icons/address.svg" alt="">
     </div>
   </div>
   <div class="form-login">
-    <label for="mobile">Mobile</label>
+    <label for="mobile" data-i18n="form.mobile">Mobile</label>
     <div class="form-addons">
-      <input type="tel" name="mobile" id="mobile" placeholder="Enter mobile number" pattern="[0-9+ -]+" title="Only numbers are allowed" required>
+      <input type="tel" name="mobile" id="mobile" placeholder="Enter mobile number" pattern="[0-9+ -]+" title="Only numbers are allowed" required data-i18n-placeholder="signup.mobile_placeholder">
       <img src="assets/img/icons/phone.svg" alt="">
     </div>
   </div>
   <div class="form-login">
-    <label for="password">Password</label>
+    <label for="password" data-i18n="form.password">Password</label>
     <div class="pass-group">
-      <input type="password" name="password" id="password" class="pass-input" placeholder="Enter your password" required minlength="6" maxlength="18">
+      <input type="password" name="password" id="password" class="pass-input" placeholder="Enter your password" required minlength="6" maxlength="18" data-i18n-placeholder="signup.password_placeholder">
       <span class="fas toggle-password fa-eye-slash"></span>
     </div>
   </div>
   <div class="form-login">
-    <button type="submit" class="btn btn-login" id="submit-button">Sign Up</button>
+    <button type="submit" class="btn btn-login" id="submit-button" data-i18n="signup.submit">Sign Up</button>
   </div>
 </form>
 <div class="signinform text-center">
-  <h4>Already a user? <a href="#/signin" class="hover-a">Sign In</a></h4>
+  <h4 data-i18n="signup.already_user">Already a user? <a href="#/signin" class="hover-a">Sign In</a></h4>
 </div>
 </div>
 </div>
@@ -101,11 +101,11 @@ registerRoute('/signup', (app) => {
     successEl.classList.add('d-none');
 
     btn.disabled = true;
-    btn.textContent = 'Creating account...';
+    btn.textContent = window.t('signup.creating_account');
 
     const data = await post('/signup', { email, ownerName, restaurantName, city, address, mobile, password });
     if (data?.success) {
-      successEl.textContent = 'Account created! Redirecting to sign in...';
+      successEl.textContent = window.t('signup.created');
       successEl.classList.remove('d-none');
       setTimeout(() => navigate('/signin'), 1500);
     } else {
@@ -113,7 +113,7 @@ registerRoute('/signup', (app) => {
       errorEl.classList.remove('d-none');
     }
     btn.disabled = false;
-    btn.textContent = 'Sign Up';
+    btn.textContent = window.t('signup.submit');
   });
 
   const toggleBtn = app.querySelector('.toggle-password');

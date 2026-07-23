@@ -25,7 +25,7 @@
 <img src="assets/img/logo.png" alt="img">
 </div>
 <div class="login-userheading">
-<h3>Sign In</h3>
+            <h3 data-i18n="signin.title">Sign In</h3>
 <h4 data-i18n="signin.tagline">Restaurant management, in one place: menu, orders, inventory, expenses and reports.</h4>
 <p class="text-muted mb-0" data-i18n="signin.sub">Sign in with the account your restaurant registered.</p>
 </div>
@@ -33,30 +33,30 @@
 <div id="success-message" class="alert alert-success d-none"></div>
 <form id="signin-form">
 <div class="form-login">
-<label>Email</label>
-<div class="form-addons">
-<input type="email" name="email" id="email" placeholder="Enter your email address" required>
+            <label data-i18n="form.email">Email</label>
+            <div class="form-addons">
+            <input type="email" name="email" id="email" data-i18n-placeholder="signin.email_placeholder" placeholder="Enter your email address" required>
 <img src="assets/img/icons/mail.svg" alt="img">
 </div>
 </div>
 <div class="form-login">
-<label>Password</label>
-<div class="pass-group">
-<input type="password" name="password" id="password" class="pass-input" placeholder="Enter your password" required minlength="3">
+            <label data-i18n="form.password">Password</label>
+            <div class="pass-group">
+            <input type="password" name="password" id="password" class="pass-input" data-i18n-placeholder="signin.password_placeholder" placeholder="Enter your password" required minlength="3">
 <span class="fas toggle-password fa-eye-slash"></span>
 </div>
 </div>
 <div class="form-login">
 <div class="alreadyuser">
-<h4><a href="/forgot-password" class="hover-a">Forgot Password?</a></h4>
+            <h4><a href="/forgot-password" class="hover-a" data-i18n="signin.forgot">Forgot Password?</a></h4>
 </div>
 </div>
 <div class="form-login">
-<button type="submit" class="btn btn-login" id="submit-button">Sign In</button>
+        <button type="submit" class="btn btn-login" id="submit-button" data-i18n="signin.submit">Sign In</button>
 </div>
 </form>
 <div class="signinform text-center">
-<h4>Don't have an account? <a href="/signup" class="hover-a">Sign Up</a></h4>
+        <h4 data-i18n="signin.no_account">Don't have an account? <a href="/signup" class="hover-a">Sign Up</a></h4>
 </div>
 </div>
 </div>
@@ -83,13 +83,13 @@ document.getElementById('signin-form').addEventListener('submit', async function
     successEl.classList.add('d-none');
 
     if (!email || !password) {
-        errorEl.textContent = 'Please enter both email and password.';
+        errorEl.textContent = window.t ? window.t('signin.empty_fields') : 'Please enter both email and password.';
         errorEl.classList.remove('d-none');
         return;
     }
 
     btn.disabled = true;
-    btn.textContent = 'Signing in...';
+    btn.textContent = window.t ? window.t('signin.signing_in') : 'Signing in...';
 
     try {
         const res = await fetch('/api/signin', {
@@ -107,15 +107,15 @@ document.getElementById('signin-form').addEventListener('submit', async function
         if (data.success) {
             window.location.href = '/index';
         } else {
-            errorEl.textContent = data.message || 'Invalid credentials.';
+            errorEl.textContent = data.message || (window.t ? window.t('signin.invalid_credentials') : 'Invalid credentials.');
             errorEl.classList.remove('d-none');
         }
     } catch (err) {
-        errorEl.textContent = 'Connection error. Please try again.';
+        errorEl.textContent = window.t ? window.t('signin.server_error') : 'Connection error. Please try again.';
         errorEl.classList.remove('d-none');
     } finally {
         btn.disabled = false;
-        btn.textContent = 'Sign In';
+        btn.textContent = window.t ? window.t('signin.submit') : 'Sign In';
     }
 });
 </script>

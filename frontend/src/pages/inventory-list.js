@@ -22,11 +22,11 @@ registerRoute('/inventory-list', async (app) => {
           <a href="javascript:void(0);" class="delete-item" aria-label="Delete inventory item" title="Delete inventory item" data-i18n-aria="action.delete_inventory" data-id="${item._id}"><img src="assets/img/icons/delete.svg" alt=""></a>
         </td>
       </tr>`;
-    }).join('') : emptyState({ colspan: 6, title: 'No inventory items yet', hint: 'Add stock to keep track of what you have on hand.', actionHref: '#/inventory-add', actionLabel: 'Add the first item' });
+    }).join('') : emptyState({ colspan: 6, title: 'No inventory items yet', i18nTitle: 'empty.no_inventory', hint: 'Add stock to keep track of what you have on hand.', i18nHint: 'empty.inventory_hint', actionHref: '#/inventory-add', actionLabel: 'Add the first item', i18nAction: 'empty.inventory_action' });
 
     const filterableItems = items.map(item => ({ ...item, supplierName: item.supplier?.name || '' }));
     const filterPanel = renderFilterPanel([
-      { key: 'supplierName', label: 'Choose Supplier', options: uniqueValues(filterableItems, 'supplierName') }
+      { key: 'supplierName', label: 'Supplier', options: uniqueValues(filterableItems, 'supplierName') }
     ]);
     const rows = renderRows(items);
 
@@ -39,7 +39,7 @@ registerRoute('/inventory-list', async (app) => {
 <h6 data-i18n="list.inventory_sub">Manage your inventory</h6>
 </div>
 <div class="page-btn">
-<a href="#/inventory-add" class="btn btn-added"><img src="assets/img/icons/plus.svg" alt="" class="me-1">Add New Item</a>
+<a href="#/inventory-add" class="btn btn-added" data-i18n="list.add_new_inventory"><img src="assets/img/icons/plus.svg" alt="" class="me-1">Add New Item</a>
 </div>
 </div>
 <div class="card">

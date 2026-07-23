@@ -21,7 +21,7 @@ registerRoute('/customers-list', async (app) => {
           <a href="javascript:void(0);" class="delete-customer" aria-label="Delete customer" title="Delete customer" data-i18n-aria="action.delete_customer" data-id="${c._id}"><img src="assets/img/icons/delete.svg" alt=""></a>
         </td>
       </tr>`;
-    }).join('') : emptyState({ colspan: 6, title: 'No customers yet', hint: 'Customers are added automatically when you take an order in billing.', actionHref: '#/pos', actionLabel: 'Go to billing' });
+    }).join('') : emptyState({ colspan: 6, title: 'No customers yet', i18nTitle: 'empty.no_customers', hint: 'Customers are added automatically when you take an order in billing.', i18nHint: 'empty.customers_hint', actionHref: '#/pos', actionLabel: 'Go to billing', i18nAction: 'empty.customers_action' });
 
     const filterableCustomers = customers.map(c => ({ ...c, ordersStatus: c.orders && c.orders.length ? 'Has Orders' : 'No Orders' }));
     const filterPanel = renderFilterPanel([
@@ -38,7 +38,7 @@ registerRoute('/customers-list', async (app) => {
 <h6 data-i18n="list.customers_sub">Manage your customers</h6>
 </div>
 <div class="page-btn">
-<a href="javascript:void(0);" class="btn btn-added" id="addCustomerBtn"><img src="assets/img/icons/plus.svg" alt="" class="me-1">Add New Customer</a>
+<a href="javascript:void(0);" class="btn btn-added" id="addCustomerBtn" data-i18n="list.add_new_customer"><img src="assets/img/icons/plus.svg" alt="" class="me-1">Add New Customer</a>
 </div>
 </div>
 <div class="card">
@@ -95,23 +95,23 @@ ${renderPagination(res)}
           const phone = row ? row.querySelector('.cust-phone').textContent : '';
           const address = row ? row.querySelector('.cust-address').textContent : '';
           Swal.fire({
-            title: 'Edit Customer',
+            title: window.t('customer.edit_title'),
             html: `
-              <input id="swal-name" class="swal2-input" value="${name}" placeholder="Name">
-              <input id="swal-phone" class="swal2-input" value="${phone}" placeholder="Phone">
-              <input id="swal-address" class="swal2-input" value="${address}" placeholder="Address">
+              <input id="swal-name" class="swal2-input" value="${name}" placeholder="Name" data-i18n-placeholder="form.customer_name">
+              <input id="swal-phone" class="swal2-input" value="${phone}" placeholder="Phone" data-i18n-placeholder="form.phone">
+              <input id="swal-address" class="swal2-input" value="${address}" placeholder="Address" data-i18n-placeholder="form.address">
             `,
             showCancelButton: true,
-            confirmButtonText: 'Update',
+            confirmButtonText: window.t('common.update'),
             preConfirm: () => {
               const nameVal = document.getElementById('swal-name').value.trim();
               const phoneVal = document.getElementById('swal-phone').value.trim();
               if (!/^[A-Za-zÀ-ÿ\s]+$/.test(nameVal)) {
-                Swal.showValidationMessage('Name can only contain letters');
+                Swal.showValidationMessage(window.t('customer.name_letters'));
                 return false;
               }
               if (phoneVal && !/^[0-9+\-\s]+$/.test(phoneVal)) {
-                Swal.showValidationMessage('Phone can only contain numbers');
+                Swal.showValidationMessage(window.t('customer.phone_digits'));
                 return false;
               }
               return put('/customers/' + id, {
@@ -120,11 +120,11 @@ ${renderPagination(res)}
                 address: document.getElementById('swal-address').value
               }).then(res => {
                 if (res && !res.error) {
-                  Swal.fire('Updated!', '', 'success').then(() => navigateTo('#/customers-list'));
+                  Swal.fire(window.t('common.success'), '', 'success').then(() => navigateTo('#/customers-list'));
                 } else {
-                  Swal.fire('Error!', 'Failed to update.', 'error');
+                  Swal.fire(window.t('common.error'), window.t('customer.updated_failed'), 'error');
                 }
-              }).catch(() => Swal.fire('Error!', 'Failed to update.', 'error'));
+              }).catch(() => Swal.fire(window.t('common.error'), window.t('customer.updated_failed'), 'error'));
             }
           });
         });
@@ -136,18 +136,18 @@ ${renderPagination(res)}
     setTimeout(() => {
       app.querySelector('#addCustomerBtn').addEventListener('click', function() {
         Swal.fire({
-          title: 'Add New Customer',
+          title: window.t('customer.add_title'),
           html: `
-            <input id="swal-name" class="swal2-input" placeholder="Customer Name">
-            <input id="swal-phone" class="swal2-input" placeholder="Phone">
-            <input id="swal-address" class="swal2-input" placeholder="Address">
+            <input id="swal-name" class="swal2-input" placeholder="Customer Name" data-i18n-placeholder="form.customer_name">
+            <input id="swal-phone" class="swal2-input" placeholder="Phone" data-i18n-placeholder="form.phone">
+            <input id="swal-address" class="swal2-input" placeholder="Address" data-i18n-placeholder="form.address">
           `,
           showCancelButton: true,
-          confirmButtonText: 'Save',
+          confirmButtonText: window.t('customer.save_button'),
           preConfirm: () => {
             const nameVal = document.getElementById('swal-name').value.trim();
             if (!nameVal) {
-              Swal.showValidationMessage('Name is required');
+              Swal.showValidationMessage(window.t('customer.name_required'));
               return false;
             }
             return post('/customers', {
@@ -156,12 +156,12 @@ ${renderPagination(res)}
               address: document.getElementById('swal-address').value.trim()
             }).then(res => {
               if (res && !res.error) {
-                Swal.fire('Added!', 'Customer has been added.', 'success')
+                Swal.fire(window.t('common.success'), window.t('customer.added'), 'success')
                   .then(() => navigateTo('#/customers-list'));
               } else {
-                Swal.fire('Error!', res?.message || 'Failed to add customer.', 'error');
+                Swal.fire(window.t('common.error'), res?.message || window.t('customer.failed_add'), 'error');
               }
-            }).catch(() => Swal.fire('Error!', 'Failed to add customer.', 'error'));
+            }).catch(() => Swal.fire(window.t('common.error'), window.t('customer.failed_add'), 'error'));
           }
         });
       });

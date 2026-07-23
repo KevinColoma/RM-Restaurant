@@ -30,8 +30,8 @@ registerRoute('/purchases-add', async (app) => {
 <div class="content">
 <div class="page-header">
 <div class="page-title">
-<h4>Add Purchase</h4>
-<h6>Record a new purchase from supplier</h6>
+<h4 data-i18n="purchase.add_title">Add Purchase</h4>
+<h6 data-i18n="purchase.add_sub">Record a new purchase from supplier</h6>
 </div>
 </div>
 <div class="card">
@@ -40,66 +40,66 @@ registerRoute('/purchases-add', async (app) => {
 <div class="row">
 <div class="col-lg-6 col-sm-12 col-12">
 <div class="form-group">
-<label for="supplier">Supplier</label>
+<label for="supplier" data-i18n="form.supplier">Supplier</label>
 <select class="form-control" id="supplier" required>
-<option value="">Choose Supplier</option>
+<option value="" data-i18n-value="purchase.choose_supplier">Choose Supplier</option>
 ${supplierOpts}
 </select>
 </div>
 </div>
 <div class="col-lg-6 col-sm-12 col-12">
 <div class="form-group">
-<label for="purchaseDate">Purchase Date</label>
+<label for="purchaseDate" data-i18n="form.purchase_date">Purchase Date</label>
 <input type="date" id="purchaseDate" class="form-control" value="${today}">
 </div>
 </div>
 <div class="col-lg-12 col-sm-12 col-12">
 <div class="form-group">
-<label for="notes">Notes</label>
-<textarea id="notes" class="form-control" rows="2" placeholder="Optional notes"></textarea>
+<label for="notes" data-i18n="form.notes">Notes</label>
+<textarea id="notes" class="form-control" rows="2" data-i18n-placeholder="purchase.optional_notes" placeholder="Optional notes"></textarea>
 </div>
 </div>
 </div>
 <div class="row mt-3">
 <div class="col-lg-12">
-<h5>Purchase Items</h5>
+<h5 data-i18n="purchase.items_heading">Purchase Items</h5>
 <hr>
 <div id="items-container">
 <div class="row mb-2 item-row">
 <div class="col-lg-4">
 <select class="form-control item-select" required>
-<option value="">Select item</option>
+<option value="" data-i18n-value="form.select_item">Select item</option>
 ${itemOpts}
 </select>
 </div>
 <div class="col-lg-2">
-<input type="number" class="form-control item-qty" placeholder="Qty" min="1" required>
+<input type="number" class="form-control item-qty" placeholder="Qty" data-i18n-placeholder="purchase.qty_placeholder" min="1" required>
 </div>
 <div class="col-lg-2">
-<input type="number" step="0.01" class="form-control item-price" placeholder="Unit Price" min="0" required>
+<input type="number" step="0.01" class="form-control item-price" placeholder="Unit Price" data-i18n-placeholder="purchase.price_placeholder" min="0" required>
 </div>
 <div class="col-lg-2">
-<input type="text" class="form-control item-total" placeholder="Total" readonly>
+<input type="text" class="form-control item-total" placeholder="Total" data-i18n-placeholder="purchase.total_placeholder" readonly>
 </div>
 <div class="col-lg-2">
-<button type="button" class="btn btn-danger remove-item">Remove</button>
+<button type="button" class="btn btn-danger remove-item" data-i18n="form.remove">Remove</button>
 </div>
 </div>
 </div>
-<button type="button" class="btn btn-success mt-2" id="add-item-btn">+ Add Item</button>
+<button type="button" class="btn btn-success mt-2" id="add-item-btn" data-i18n="form.add_item_btn">+ Add Item</button>
 </div>
 </div>
 <div class="row mt-3">
 <div class="col-lg-4 offset-lg-8">
 <div class="form-group">
-<label for="totalAmount">Total Amount</label>
+<label for="totalAmount" data-i18n="form.total_amount">Total Amount</label>
 <input type="text" id="totalAmount" class="form-control" readonly value="0.00">
 </div>
 </div>
 </div>
 <div class="col-lg-12 mt-3">
-<button type="submit" class="btn btn-submit me-2">Submit Purchase</button>
-<a href="#/purchases-list" class="btn btn-cancel">Cancel</a>
+<button type="submit" class="btn btn-submit me-2" data-i18n="form.submit_purchase">Submit Purchase</button>
+<a href="#/purchases-list" class="btn btn-cancel" data-i18n="form.cancel">Cancel</a>
 </div>
 </form>
 </div>
@@ -129,7 +129,7 @@ ${itemOpts}
           row.remove();
           recalcTotal();
         } else {
-          Swal.fire('Info', 'At least one item is required.', 'info');
+          Swal.fire('Info', window.t('purchase.item_required'), 'info');
         }
       });
     }
@@ -152,7 +152,7 @@ ${itemOpts}
       e.preventDefault();
       const supplier = document.getElementById('supplier').value;
       if (!supplier) {
-        Swal.fire('Error!', 'Please select a supplier.', 'error');
+        Swal.fire(window.t('common.error'), window.t('purchase.select_supplier_error'), 'error');
         return;
       }
 
@@ -170,7 +170,7 @@ ${itemOpts}
       });
 
       if (!valid || items.length === 0) {
-        Swal.fire('Error!', 'Please fill all item fields correctly.', 'error');
+        Swal.fire(window.t('common.error'), window.t('purchase.fill_items_error'), 'error');
         return;
       }
 
@@ -181,14 +181,14 @@ ${itemOpts}
         notes: document.getElementById('notes').value
       };
 
-      const done = setBusy(e.submitter || e.target.querySelector('[type="submit"]'), 'Saving purchase...');
+      const done = setBusy(e.submitter || e.target.querySelector('[type="submit"]'), window.t('purchase.saving'));
       try {
         await post('/purchases', payload);
-        Swal.fire('Success!', 'Purchase recorded successfully.', 'success')
+        Swal.fire(window.t('common.success'), window.t('purchase.saved'), 'success')
           .then(() => navigateTo('#/purchases-list'));
       } catch (err) {
         done();
-        Swal.fire('Error!', err.message || 'Failed to record purchase.', 'error');
+        Swal.fire(window.t('common.error'), err.message || window.t('purchase.failed_save'), 'error');
       }
     });
   } catch (err) {

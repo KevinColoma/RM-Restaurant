@@ -22,7 +22,7 @@ registerRoute('/purchases-list', async (app) => {
           <a href="javascript:void(0);" class="delete-purchase" aria-label="Delete purchase" title="Delete purchase" data-i18n-aria="action.delete_purchase" data-id="${p._id}"><img src="assets/img/icons/delete.svg" alt=""></a>
         </td>
       </tr>`;
-    }).join('') : emptyState({ colspan: 6, title: 'No purchases recorded', hint: 'Record what you buy from suppliers to keep stock and costs up to date.', actionHref: '#/purchases-add', actionLabel: 'Record the first purchase' });
+    }).join('') : emptyState({ colspan: 6, title: 'No purchases recorded', i18nTitle: 'empty.no_purchases', hint: 'Record what you buy from suppliers to keep stock and costs up to date.', i18nHint: 'empty.purchases_hint', actionHref: '#/purchases-add', actionLabel: 'Record the first purchase', i18nAction: 'empty.purchases_action' });
 
     const html = `
 <div class="page-wrapper">
@@ -33,7 +33,7 @@ registerRoute('/purchases-list', async (app) => {
 <h6 data-i18n="list.purchases_sub">View all purchases from suppliers</h6>
 </div>
 <div class="page-btn">
-<a href="#/purchases-add" class="btn btn-added me-2"><img src="assets/img/icons/plus.svg" alt="" class="me-1">Add Purchase</a>
+<a href="#/purchases-add" class="btn btn-added me-2" data-i18n="list.add_purchase"><img src="assets/img/icons/plus.svg" alt="" class="me-1">Add Purchase</a>
 <a href="/export/purchases/pdf" class="btn btn-added me-2"><img src="assets/img/icons/pdf.svg" alt="" class="me-1">PDF</a>
 <a href="/export/purchases/csv" class="btn btn-added"><img src="assets/img/icons/excel.svg" alt="" class="me-1">CSV</a>
 </div>

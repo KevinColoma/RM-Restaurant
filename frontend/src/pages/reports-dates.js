@@ -11,10 +11,10 @@ registerRoute('/reports-dates', async (app) => {
 <div class="page-header">
 <div class="row">
 <div class="col-sm-12">
-<h3 class="page-title">Sales Reports - By Date</h3>
+<h3 class="page-title" data-i18n="report.sales_date_title">Sales Reports - By Date</h3>
 <ul class="breadcrumb">
-<li class="breadcrumb-item"><a href="#/dashboard">Dashboard</a></li>
-<li class="breadcrumb-item active">Reports</li>
+<li class="breadcrumb-item"><a href="#/dashboard" data-i18n="report.breadcrumb_dashboard">Dashboard</a></li>
+<li class="breadcrumb-item active" data-i18n="report.breadcrumb_reports">Reports</li>
 </ul>
 </div>
 </div>
@@ -23,19 +23,19 @@ registerRoute('/reports-dates', async (app) => {
 <div class="col-md-12">
 <form id="dateRangeForm" class="row mb-4">
 <div class="form-group col-md-3">
-<label for="startDate">Start Date:</label>
+<label for="startDate" data-i18n="report.start_date">Start Date:</label>
 <input type="date" class="form-control" id="startDate" name="startDate">
 </div>
 <div class="form-group col-md-3">
-<label for="endDate">End Date:</label>
+<label for="endDate" data-i18n="report.end_date">End Date:</label>
 <input type="date" class="form-control" id="endDate" name="endDate">
 </div>
 <div class="form-group col-md-3 d-flex align-items-end">
-<button type="submit" class="btn btn-primary w-100">Get Report</button>
+<button type="submit" class="btn btn-primary w-100" data-i18n="report.get_report">Get Report</button>
 </div>
 <div class="form-group col-md-3 d-flex align-items-end">
-<a href="/api/export/sales/pdf" class="btn btn-sm btn-primary me-2">PDF</a>
-<a href="/api/export/sales/csv" class="btn btn-sm btn-success">CSV</a>
+<a href="/api/export/sales/pdf" class="btn btn-sm btn-primary me-2" data-i18n="common.pdf">PDF</a>
+<a href="/api/export/sales/csv" class="btn btn-sm btn-success" data-i18n="common.csv">CSV</a>
 </div>
 </form>
 </div>
@@ -43,49 +43,49 @@ registerRoute('/reports-dates', async (app) => {
 <div class="row" id="charts-row">
 <div class="col-lg-6 col-sm-12">
 <div class="card">
-<div class="card-header"><div class="card-title">Sales by Category (Veg/Non-Veg)</div></div>
+<div class="card-header"><div class="card-title" data-i18n="report.sales_by_category">Sales by Category (Veg/Non-Veg)</div></div>
 <div class="card-body"><div id="chartDonut" class="h-300"></div></div>
 </div>
 </div>
 <div class="col-lg-6 col-sm-12">
 <div class="card">
-<div class="card-header"><div class="card-title">Sales by Sub Category</div></div>
+<div class="card-header"><div class="card-title" data-i18n="report.sales_by_subcategory">Sales by Sub Category</div></div>
 <div class="card-body"><div id="chartPie" class="h-300"></div></div>
 </div>
 </div>
 <div class="col-lg-6 col-sm-12">
 <div class="card">
-<div class="card-header"><div class="card-title">Most Popular Items</div></div>
+<div class="card-header"><div class="card-title" data-i18n="report.popular_items">Most Popular Items</div></div>
 <div class="card-body"><div id="chartBar" class="h-300"></div></div>
 </div>
 </div>
 <div class="col-lg-6 col-sm-12">
 <div class="card">
-<div class="card-header"><div class="card-title">Average Order Value</div></div>
+<div class="card-header"><div class="card-title" data-i18n="report.avg_order_value">Average Order Value</div></div>
 <div class="card-body"><div id="chartLine" class="h-300"></div></div>
 </div>
 </div>
 <div class="col-lg-6 col-sm-12">
 <div class="card">
-<div class="card-header"><h5 class="card-title">Order Volume by Hour</h5></div>
+<div class="card-header"><h5 class="card-title" data-i18n="report.volume_by_hour">Order Volume by Hour</h5></div>
 <div class="card-body"><div id="order-volume-chart" class="h-300"></div></div>
 </div>
 </div>
 <div class="col-lg-6 col-sm-12">
 <div class="card">
-<div class="card-header"><h5 class="card-title">Sales Over Time</h5></div>
+<div class="card-header"><h5 class="card-title" data-i18n="report.sales_over_time">Sales Over Time</h5></div>
 <div class="card-body"><div id="sales-over-time-chart" class="h-300"></div></div>
 </div>
 </div>
 <div class="col-lg-6 col-sm-12">
 <div class="card">
-<div class="card-header"><h5 class="card-title">Revenue by Order Type</h5></div>
+<div class="card-header"><h5 class="card-title" data-i18n="report.revenue_by_type">Revenue by Order Type</h5></div>
 <div class="card-body"><div id="revenue-order-type-chart" class="h-300"></div></div>
 </div>
 </div>
 <div class="col-lg-6 col-sm-12">
 <div class="card">
-<div class="card-header"><h5 class="card-title">Order Type Distribution</h5></div>
+<div class="card-header"><h5 class="card-title" data-i18n="report.type_distribution">Order Type Distribution</h5></div>
 <div class="card-body"><div id="order-type-chart" class="h-300"></div></div>
 </div>
 </div>
@@ -207,7 +207,7 @@ registerRoute('/reports-dates', async (app) => {
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
     if (!startDate || !endDate) {
-      Swal.fire('Error!', 'Please select both start and end dates.', 'error');
+      Swal.fire(window.t('common.error'), window.t('report.select_dates_error'), 'error');
       return;
     }
 
@@ -218,7 +218,7 @@ registerRoute('/reports-dates', async (app) => {
       ]);
       renderCharts(salesData, ordersData);
     } catch (err) {
-      Swal.fire('Error!', 'Failed to fetch report: ' + err.message, 'error');
+      Swal.fire(window.t('common.error'), window.t('report.fetch_failed') + err.message, 'error');
     }
   });
 });

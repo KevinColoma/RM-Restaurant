@@ -12,37 +12,37 @@ registerRoute('/signin', (app) => {
   <img src="assets/img/logo.png" alt="RMS">
 </div>
 <div class="login-userheading">
-  <h3>Sign In</h3>
+  <h3 data-i18n="signin.title">Sign In</h3>
   <h4 data-i18n="signin.tagline">Restaurant management, in one place: menu, orders, inventory, expenses and reports.</h4>
   <p class="text-muted mb-0" data-i18n="signin.sub">Sign in with the account your restaurant registered.</p>
 </div>
 <div id="error-message" class="alert alert-danger d-none"></div>
 <form id="signin-form">
   <div class="form-login">
-    <label for="email">Email</label>
+    <label for="email" data-i18n="form.email">Email</label>
     <div class="form-addons">
-      <input type="email" name="email" id="email" placeholder="Enter your email address" autocomplete="username" required>
+      <input type="email" name="email" id="email" placeholder="Enter your email address" autocomplete="username" required data-i18n-placeholder="signin.email_placeholder">
       <img src="assets/img/icons/mail.svg" alt="">
     </div>
   </div>
   <div class="form-login">
-    <label for="password">Password</label>
+    <label for="password" data-i18n="form.password">Password</label>
     <div class="pass-group">
-      <input type="password" name="password" id="password" class="pass-input" placeholder="Enter your password" autocomplete="current-password" required minlength="3">
+      <input type="password" name="password" id="password" class="pass-input" placeholder="Enter your password" autocomplete="current-password" required minlength="3" data-i18n-placeholder="signin.password_placeholder">
       <span class="fas toggle-password fa-eye-slash"></span>
     </div>
   </div>
   <div class="form-login">
     <div class="alreadyuser">
-      <h4><a href="#/forgot-password" class="hover-a">Forgot Password?</a></h4>
+      <h4><a href="#/forgot-password" class="hover-a" data-i18n="signin.forgot">Forgot Password?</a></h4>
     </div>
   </div>
   <div class="form-login">
-    <button type="submit" class="btn btn-login" id="submit-button">Sign In</button>
+    <button type="submit" class="btn btn-login" id="submit-button" data-i18n="signin.submit">Sign In</button>
   </div>
 </form>
 <div class="signinform text-center">
-  <h4>Don't have an account? <a href="#/signup" class="hover-a">Sign Up</a></h4>
+  <h4 data-i18n="signin.no_account">Don't have an account? <a href="#/signup" class="hover-a">Sign Up</a></h4>
 </div>
 </div>
 </div>
@@ -63,13 +63,13 @@ registerRoute('/signin', (app) => {
 
     errorEl.classList.add('d-none');
     if (!email || !password) {
-      errorEl.textContent = 'Please enter both email and password.';
+      errorEl.textContent = window.t('signin.empty_fields');
       errorEl.classList.remove('d-none');
       return;
     }
 
     btn.disabled = true;
-    btn.textContent = 'Signing in...';
+    btn.textContent = window.t('signin.signing_in');
 
     try {
       const data = await signin(email, password);
@@ -79,15 +79,15 @@ registerRoute('/signin', (app) => {
         return;
       }
 
-      errorEl.textContent = data?.message || 'Invalid credentials.';
+      errorEl.textContent = data?.message || window.t('signin.invalid_credentials');
       errorEl.classList.remove('d-none');
     } catch (err) {
       console.error('Sign in failed:', err);
-      errorEl.textContent = 'Could not reach the server. Please check your connection and try again.';
+      errorEl.textContent = window.t('signin.server_error');
       errorEl.classList.remove('d-none');
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Sign In';
+      btn.textContent = window.t('signin.submit');
     }
   });
 

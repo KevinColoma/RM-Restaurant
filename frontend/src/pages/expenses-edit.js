@@ -34,8 +34,8 @@ registerRoute('/expenses-edit/', async (app) => {
 <div class="content">
 <div class="page-header">
 <div class="page-title">
-<h4>Edit Expense</h4>
-<h6>Update expense details</h6>
+<h4 data-i18n="expense.edit_title">Edit Expense</h4>
+<h6 data-i18n="expense.edit_sub">Update expense details</h6>
 </div>
 </div>
 <div class="card">
@@ -44,7 +44,7 @@ registerRoute('/expenses-edit/', async (app) => {
 <div class="row">
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label for="category">Expense Category</label>
+<label for="category" data-i18n="expense.choose_category">Expense Category</label>
 <select class="form-control" id="category" required>
 <option value="" disabled>expense category</option>
 ${catOptions}
@@ -53,46 +53,46 @@ ${catOptions}
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label for="expenseDate">Expense Date</label>
+<label for="expenseDate" data-i18n="form.expense_date">Expense Date</label>
 <input type="date" id="expenseDate" class="form-control" value="${expenseDate}" required>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label for="amount">Amount</label>
+<label for="amount" data-i18n="form.amount">Amount</label>
 <input type="number" id="amount" class="form-control" step="0.01" min="0.01" value="${expense.amount || 0}" required>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label for="paymentMethod">Payment Method</label>
+<label for="paymentMethod" data-i18n="expense.payment_method">Payment Method</label>
 <select class="form-control" id="paymentMethod" required>
-<option value="">Select Payment Method</option>
+<option value="" data-i18n-value="expense.select_payment">Select Payment Method</option>
 ${pmOptions}
 </select>
 </div>
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label for="invoiceNumber">Invoice Number / Reference</label>
+<label for="invoiceNumber" data-i18n="expense.invoice_number">Invoice Number / Reference</label>
 <input type="text" id="invoiceNumber" class="form-control" value="${expense.invoiceNumber || ''}">
 </div>
 </div>
 <div class="col-lg-12">
 <div class="form-group">
-<label for="vendor">Expense for (vendor/employee)</label>
+<label for="vendor" data-i18n="expense.vendor_label">Expense for (vendor/employee)</label>
 <input type="text" id="vendor" class="form-control" value="${expense.vendor || ''}">
 </div>
 </div>
 <div class="col-lg-12">
 <div class="form-group">
-<label for="description">Description</label>
+<label for="description" data-i18n="form.description">Description</label>
 <textarea class="form-control" id="description">${expense.description || ''}</textarea>
 </div>
 </div>
 <div class="col-lg-12">
-<button type="submit" class="btn btn-submit me-2">Update</button>
-<a href="#/expenses-list" class="btn btn-cancel">Cancel</a>
+<button type="submit" class="btn btn-submit me-2" data-i18n="common.update">Update</button>
+<a href="#/expenses-list" class="btn btn-cancel" data-i18n="form.cancel">Cancel</a>
 </div>
 </div>
 </form>
@@ -108,7 +108,7 @@ ${pmOptions}
 
       const amountValue = Number(document.getElementById('amount').value);
       if (isNaN(amountValue) || amountValue <= 0) {
-        Swal.fire('Error!', 'Amount must be a valid number greater than zero.', 'error');
+        Swal.fire(window.t('common.error'), window.t('expense.amount_invalid'), 'error');
         return;
       }
 
@@ -121,14 +121,14 @@ ${pmOptions}
         vendor: document.getElementById('vendor').value,
         description: document.getElementById('description').value
       };
-      const done = setBusy(e.submitter || e.target.querySelector('[type="submit"]'), 'Saving changes...');
+      const done = setBusy(e.submitter || e.target.querySelector('[type="submit"]'), window.t('expense.updating'));
       try {
         await put('/expenses/' + id, data);
-        Swal.fire('Updated!', 'Expense has been updated.', 'success')
+        Swal.fire(window.t('common.success'), window.t('expense.updated'), 'success')
           .then(() => navigateTo('#/expenses-list'));
       } catch (err) {
         done();
-        Swal.fire('Error!', err.message || 'Failed to update.', 'error');
+        Swal.fire(window.t('common.error'), err.message || window.t('expense.failed_update'), 'error');
       }
     });
   } catch (err) {

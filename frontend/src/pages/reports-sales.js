@@ -22,14 +22,14 @@ registerRoute('/reports-sales', async (app) => {
 <div class="page-header">
 <div class="row">
 <div class="col-sm-12">
-<h3 class="page-title">Sales Reports - Today</h3>
+<h3 class="page-title" data-i18n="report.sales_title">Sales Reports - Today</h3>
 <ul class="breadcrumb">
-<li class="breadcrumb-item"><a href="#/dashboard">Dashboard</a></li>
-<li class="breadcrumb-item active">Reports</li>
+<li class="breadcrumb-item"><a href="#/dashboard" data-i18n="report.breadcrumb_dashboard">Dashboard</a></li>
+<li class="breadcrumb-item active" data-i18n="report.breadcrumb_reports">Reports</li>
 </ul>
 <div class="mt-2">
-<a href="/api/export/sales/pdf" class="btn btn-sm btn-primary me-2">PDF</a>
-<a href="/api/export/sales/csv" class="btn btn-sm btn-success">CSV</a>
+<a href="/api/export/sales/pdf" class="btn btn-sm btn-primary me-2" data-i18n="common.pdf">PDF</a>
+<a href="/api/export/sales/csv" class="btn btn-sm btn-success" data-i18n="common.csv">CSV</a>
 </div>
 </div>
 </div>
@@ -37,13 +37,13 @@ registerRoute('/reports-sales', async (app) => {
 <div class="row">
 <div class="col-lg-6 col-sm-12">
 <div class="card">
-<div class="card-header"><div class="card-title">Sales by Category (Veg/Non-Veg)</div></div>
+<div class="card-header"><div class="card-title" data-i18n="report.sales_by_category">Sales by Category (Veg/Non-Veg)</div></div>
 <div class="card-body"><div id="chartDonut" class="h-300"></div></div>
 </div>
 </div>
 <div class="col-lg-6 col-sm-12">
 <div class="card">
-<div class="card-header"><div class="card-title">Sales by Sub Category</div></div>
+<div class="card-header"><div class="card-title" data-i18n="report.sales_by_subcategory">Sales by Sub Category</div></div>
 <div class="card-body"><div id="chartPie" class="h-300"></div></div>
 </div>
 </div>

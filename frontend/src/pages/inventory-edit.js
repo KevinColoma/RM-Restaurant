@@ -31,8 +31,8 @@ registerRoute('/inventory-edit/', async (app) => {
 <div class="content">
 <div class="page-header">
 <div class="page-title">
-<h4>Edit Inventory Item</h4>
-<h6>Update item details</h6>
+<h4 data-i18n="inventory.edit_title">Edit Inventory Item</h4>
+<h6 data-i18n="inventory.edit_sub">Update item details</h6>
 </div>
 </div>
 <div class="card">
@@ -41,34 +41,34 @@ registerRoute('/inventory-edit/', async (app) => {
 <div class="row">
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label for="name">Item Name</label>
+<label for="name" data-i18n="form.item_name">Item Name</label>
 <input type="text" name="name" id="name" class="form-control" value="${item.name || ''}" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label for="quantity">Quantity</label>
+<label for="quantity" data-i18n="form.qty">Quantity</label>
 <input type="number" name="quantity" id="quantity" class="form-control" min="0" step="1" value="${item.quantity || 0}" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label for="price">Price</label>
+<label for="price" data-i18n="form.price">Price</label>
 <input type="number" name="price" id="price" step="0.01" min="0" class="form-control" value="${item.price || 0}" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
-<label for="supplier">Supplier</label>
+<label for="supplier" data-i18n="form.supplier">Supplier</label>
 <select class="form-control" name="supplier" id="supplier" required>
-<option value="">Choose Supplier</option>
+<option value="" data-i18n-placeholder="inventory.choose_supplier">Choose Supplier</option>
 ${supplierOpts}
 </select>
 </div>
 </div>
 <div class="col-lg-12">
-<button type="submit" class="btn btn-submit me-2">Update</button>
-<a href="#/inventory-list" class="btn btn-cancel">Cancel</a>
+<button type="submit" class="btn btn-submit me-2" data-i18n="common.update">Update</button>
+<a href="#/inventory-list" class="btn btn-cancel" data-i18n="form.cancel">Cancel</a>
 </div>
 </div>
 </form>
@@ -87,14 +87,14 @@ ${supplierOpts}
         price: document.getElementById('price').value,
         supplier: document.getElementById('supplier').value
       };
-      const done = setBusy(e.submitter || e.target.querySelector('[type="submit"]'), 'Saving changes...');
+      const done = setBusy(e.submitter || e.target.querySelector('[type="submit"]'), window.t('inventory.updating'));
       try {
         await put('/inventory/' + id, data);
-        Swal.fire('Updated!', 'Inventory item has been updated.', 'success')
+        Swal.fire(window.t('common.success'), window.t('inventory.updated'), 'success')
           .then(() => navigateTo('#/inventory-list'));
       } catch (err) {
         done();
-        Swal.fire('Error!', err.message || 'Failed to update.', 'error');
+        Swal.fire(window.t('common.error'), err.message || window.t('inventory.failed_update'), 'error');
       }
     });
   } catch (err) {
