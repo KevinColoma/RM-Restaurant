@@ -42,7 +42,7 @@ registerRoute('/signin', (app) => {
   </div>
 </form>
 <div class="signinform text-center">
-  <h4>Don't have an account? <a href="#/" class="hover-a">Sign Up</a></h4>
+  <h4>Don't have an account? <a href="#/signup" class="hover-a">Sign Up</a></h4>
 </div>
 </div>
 </div>

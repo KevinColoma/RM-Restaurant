@@ -1,7 +1,7 @@
 import { registerRoute, navigate } from '../router.js';
 import { post } from '../lib/api.js';
 
-registerRoute('/', (app) => {
+registerRoute('/signup', (app) => {
   app.innerHTML = `
 <div class="main-wrapper">
 <div class="account-content">
