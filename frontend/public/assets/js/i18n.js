@@ -703,7 +703,7 @@ const translations = {
     'form.address': 'Dirección',
     'form.email': 'Correo Electrónico',
     'form.mobile': 'Teléfono',
-    'form.password': 'Contraseña',
+    'form.password': 'Contraseña', // NOSONAR - translation label
     'form.customer_name': 'Nombre del Cliente',
     'form.phone': 'Teléfono',
     'form.branch_name': 'Nombre del Restaurante',
@@ -732,7 +732,7 @@ const translations = {
     'profile.address': 'Dirección',
     'profile.save': 'Guardar Cambios',
     'profile.change_photo': 'Cambiar Foto',
-    'profile.change_password': 'Cambiar Contraseña',
+    'profile.change_password': 'Cambiar Contraseña', // NOSONAR - translation label
     'profile.current_pw': 'Contraseña Actual',
     'profile.new_pw': 'Nueva Contraseña',
     'profile.confirm_pw': 'Confirmar Contraseña',
@@ -957,7 +957,7 @@ const translations = {
     'audit.cancel': 'Cancelar',
     'audit.login': 'Inicio Sesión',
     'audit.logout': 'Cierre Sesión',
-    'audit.password': 'Contraseña',
+    'audit.password': 'Contraseña', // NOSONAR - translation label, not a real credential
     'empty.your_menu_empty': 'Tu menú está vacío',
     'empty.menu_hint': 'Agrega platos para que puedan venderse desde la pantalla de facturación.',
     'empty.menu_action': 'Agregar el primer plato',
