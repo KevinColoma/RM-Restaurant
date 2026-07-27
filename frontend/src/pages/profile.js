@@ -105,68 +105,85 @@ Change Photo
 
     renderLayout(app, 'profile', html);
 
-    document.getElementById('avatar-input').addEventListener('change', async function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const formData = new FormData();
-      formData.append('avatar', file);
-      try {
-        const data = await upload('/profile/avatar', formData);
-        if (data.success) {
-          document.getElementById('profile-avatar').src = data.avatarUrl + '?t=' + Date.now();
-          Swal.fire(window.t('common.success'), window.t('profile.photo_updated'), 'success')
-            .then(() => location.reload());
-        } else {
-          Swal.fire(window.t('common.error'), data.error || window.t('profile.upload_failed'), 'error');
-        }
-      } catch (err) {
-        Swal.fire(window.t('common.error'), err.message || window.t('profile.upload_failed'), 'error');
-      }
-    });
+    const $ = (sel) => app.querySelector(sel);
+    const el = (id) => {
+      const e = app.querySelector('#' + id);
+      if (!e) console.warn('profile.js: element #' + id + ' not found');
+      return e;
+    };
 
-    document.getElementById('profile-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const data = {
-        ownerName: document.getElementById('ownerName').value,
-        restaurantName: document.getElementById('restaurantName').value,
-        city: document.getElementById('city').value,
-        address: document.getElementById('address').value,
-        mobile: document.getElementById('mobile').value
-      };
-      try {
-        const res = await put('/profile', data);
-        if (res.success) {
-          Swal.fire(window.t('common.success'), window.t('profile.updated'), 'success')
-            .then(() => location.reload());
-        } else {
-          Swal.fire(window.t('common.error'), res.error || window.t('profile.update_failed'), 'error');
+    const avatarInput = el('avatar-input');
+    if (avatarInput) {
+      avatarInput.addEventListener('change', async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('avatar', file);
+        try {
+          const data = await upload('/profile/avatar', formData);
+          if (data.success) {
+            const avatarImg = el('profile-avatar');
+            if (avatarImg) avatarImg.src = data.avatarUrl + '?t=' + Date.now();
+            Swal.fire(window.t('common.success'), window.t('profile.photo_updated'), 'success')
+              .then(() => location.reload());
+          } else {
+            Swal.fire(window.t('common.error'), data.error || window.t('profile.upload_failed'), 'error');
+          }
+        } catch (err) {
+          Swal.fire(window.t('common.error'), err.message || window.t('profile.upload_failed'), 'error');
         }
-      } catch (err) {
-        Swal.fire(window.t('common.error'), err.message || window.t('profile.update_failed'), 'error');
-      }
-    });
+      });
+    }
 
-    document.getElementById('password-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const currentPassword = document.getElementById('currentPassword').value;
-      const newPassword = document.getElementById('newPassword').value;
-      const confirmPassword = document.getElementById('confirmPassword').value;
-      if (newPassword !== confirmPassword) {
-        Swal.fire(window.t('common.error'), window.t('profile.pw_mismatch'), 'error');
-        return;
-      }
-      try {
-        const res = await put('/profile/password', { currentPassword, newPassword });
-        if (res.success) {
-          Swal.fire(window.t('common.success'), window.t('profile.pw_changed'), 'success');
-          document.getElementById('password-form').reset();
-        } else {
-          Swal.fire(window.t('common.error'), res.error || window.t('profile.pw_change_failed'), 'error');
+    const profileForm = el('profile-form');
+    if (profileForm) {
+      profileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+          ownerName: ($('#ownerName')).value,
+          restaurantName: ($('#restaurantName')).value,
+          city: ($('#city')).value,
+          address: ($('#address')).value,
+          mobile: ($('#mobile')).value
+        };
+        try {
+          const res = await put('/profile', data);
+          if (res.success) {
+            Swal.fire(window.t('common.success'), window.t('profile.updated'), 'success')
+              .then(() => location.reload());
+          } else {
+            Swal.fire(window.t('common.error'), res.error || window.t('profile.update_failed'), 'error');
+          }
+        } catch (err) {
+          Swal.fire(window.t('common.error'), err.message || window.t('profile.update_failed'), 'error');
         }
-      } catch (err) {
-        Swal.fire(window.t('common.error'), err.message || window.t('profile.pw_change_failed'), 'error');
-      }
-    });
+      });
+    }
+
+    const passwordForm = el('password-form');
+    if (passwordForm) {
+      passwordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const currentPassword = ($('#currentPassword')).value;
+        const newPassword = ($('#newPassword')).value;
+        const confirmPassword = ($('#confirmPassword')).value;
+        if (newPassword !== confirmPassword) {
+          Swal.fire(window.t('common.error'), window.t('profile.pw_mismatch'), 'error');
+          return;
+        }
+        try {
+          const res = await put('/profile/password', { currentPassword, newPassword });
+          if (res.success) {
+            Swal.fire(window.t('common.success'), window.t('profile.pw_changed'), 'success');
+            passwordForm.reset();
+          } else {
+            Swal.fire(window.t('common.error'), res.error || window.t('profile.pw_change_failed'), 'error');
+          }
+        } catch (err) {
+          Swal.fire(window.t('common.error'), err.message || window.t('profile.pw_change_failed'), 'error');
+        }
+      });
+    }
   } catch (err) {
     app.innerHTML = `<div class="page-wrapper"><div class="content"><p class="text-danger">Failed to load: ${err.message}</p></div></div>`;
   }
