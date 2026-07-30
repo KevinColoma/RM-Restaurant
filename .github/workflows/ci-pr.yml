@@ -49,6 +49,16 @@ jobs:
       - run: cd backend && npx eslint . 2>&1 | tee lint-backend.log
       - run: cd frontend && npm ci
       - run: cd frontend && npx eslint src/ 2>&1 | tee lint-frontend.log
+      # Sube los logs de lint aunque un paso anterior haya fallado, para que
+      # el job final de resultados siempre tenga algo que empaquetar.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lint-logs
+          path: |
+            backend/lint-backend.log
+            frontend/lint-frontend.log
+          if-no-files-found: ignore
       # Notifica por Telegram que el lint pasó
       - name: Notify lint result
         uses: appleboy/telegram-action@v1.0.1
@@ -74,11 +84,19 @@ jobs:
           node-version: 20
       - run: cd backend && npm ci
       - run: cd backend && npm test -- --coverage 2>&1 | tee test-backend.log
-      # Guarda reporte de cobertura como artefacto para SonarCloud
+      # Guarda reporte de cobertura + log como artefacto para SonarCloud y para
+      # el job de resultados consolidados. if: always() para que quede
+      # disponible incluso si "npm test" falló (con pipefail, un test roto
+      # corta el job antes de este paso salvo que se le diga explícitamente
+      # que corra siempre).
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: coverage-backend
-          path: backend/coverage/
+          path: |
+            backend/coverage/
+            backend/test-backend.log
+          if-no-files-found: ignore
       - name: Notify backend test result
         uses: appleboy/telegram-action@v1.0.1
         with:
@@ -102,11 +120,16 @@ jobs:
           node-version: 20
       - run: cd frontend && npm ci
       - run: cd frontend && npm test 2>&1 | tee test-frontend.log
-      # Guarda reporte de cobertura como artefacto para SonarCloud
+      # Guarda reporte de cobertura + log como artefacto para SonarCloud y para
+      # el job de resultados consolidados (if: always(), ver nota en test-backend).
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: coverage-frontend
-          path: frontend/coverage/
+          path: |
+            frontend/coverage/
+            frontend/test-frontend.log
+          if-no-files-found: ignore
       - name: Notify frontend test result
         uses: appleboy/telegram-action@v1.0.1
         with:
@@ -207,6 +230,91 @@ jobs:
             ✅ *CodeQL completado*
             🔒 Análisis de seguridad: sin vulnerabilidades críticas
             📌 Siguiente: ${{ github.ref_name == 'dev' && 'Sync a test' || 'Auto-merge a main + Deploy' }}
+
+  # ── Job 5.5: Resultados consolidados en un solo archivo descargable ──────
+  # Corre siempre (if: always()), sin importar si lint/tests/CodeQL fallaron,
+  # para que siempre haya un artefacto único con todo lo ocurrido en este run:
+  # logs de lint, logs de tests, cobertura y un resumen legible. Se descarga
+  # desde la sección "Artifacts" al final de la página del run en GitHub
+  # Actions (Summary), disponible apenas termina este job - no hace falta
+  # esperar a que el pipeline completo pase.
+  test-results:
+    if: always()
+    needs: [lint, test-backend, test-frontend, codeql]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: lint-logs
+          path: results/
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: coverage-backend
+          path: results/backend/
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: coverage-frontend
+          path: results/frontend/
+      - name: Build summary
+        run: |
+          mkdir -p results
+          {
+            echo "# Resultados de CI — ${{ github.repository }}"
+            echo ""
+            echo "- Rama: \`${{ github.ref_name }}\`"
+            echo "- Commit: \`${{ github.sha }}\`"
+            echo "- Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "- Fecha: $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo ""
+            echo "## Estado por job"
+            echo ""
+            echo "| Job | Resultado |"
+            echo "|---|---|"
+            echo "| Lint | ${{ needs.lint.result }} |"
+            echo "| Tests Backend | ${{ needs.test-backend.result }} |"
+            echo "| Tests Frontend | ${{ needs.test-frontend.result }} |"
+            echo "| CodeQL | ${{ needs.codeql.result }} |"
+            echo ""
+            echo "## Resumen de tests"
+            echo ""
+            echo "### Backend"
+            echo '```'
+            grep -E "Tests:|Test Suites:|Suites de prueba|✕|failed" results/backend/test-backend.log 2>/dev/null || echo "(log no disponible)"
+            echo '```'
+            echo ""
+            echo "### Frontend"
+            echo '```'
+            grep -E "Test Files|Tests |FAIL" results/frontend/test-frontend.log 2>/dev/null || echo "(log no disponible)"
+            echo '```'
+            echo ""
+            echo "## Resumen de lint"
+            echo ""
+            echo "### Backend"
+            echo '```'
+            tail -5 results/backend/lint-backend.log 2>/dev/null || echo "(log no disponible)"
+            echo '```'
+            echo ""
+            echo "### Frontend"
+            echo '```'
+            tail -5 results/frontend/lint-frontend.log 2>/dev/null || echo "(log no disponible)"
+            echo '```'
+            echo ""
+            echo "## Contenido de este archivo"
+            echo ""
+            echo "- SUMMARY.md (este archivo)"
+            echo "- backend/lint-backend.log, backend/test-backend.log, backend/coverage/ (lcov.info, test-report.xml, html)"
+            echo "- frontend/lint-frontend.log, frontend/test-frontend.log, frontend/coverage/ (lcov.info, test-report.xml, html)"
+          } > results/SUMMARY.md
+          cat results/SUMMARY.md
+      - name: Upload single consolidated artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-test-results
+          path: results/
+          if-no-files-found: warn
 
   # ── Job 6: Sync dev → test ───────────────────────────────────────────────
   sync-to-test:
