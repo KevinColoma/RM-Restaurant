@@ -129,19 +129,16 @@ const GetOrders = async (req, res) => {
     try {
         const personaId = req.personaId;
         const filter = { personaId };
-        if (req.query.orderType && VALID_ORDER_TYPES.includes(req.query.orderType)) {
-            filter.orderType = req.query.orderType;
-        }
-        if (req.query.dateFrom || req.query.dateTo) {
-            const fromDate = req.query.dateFrom ? parseDate(req.query.dateFrom) : null;
-            const toDate = req.query.dateTo ? parseDate(req.query.dateTo) : null;
-            if (fromDate || toDate) {
-                filter.createdAt = {};
-                if (fromDate) filter.createdAt.$gte = fromDate;
-                if (toDate) {
-                    toDate.setHours(23, 59, 59, 999);
-                    filter.createdAt.$lte = toDate;
-                }
+        const orderType = VALID_ORDER_TYPES.find(t => t === req.query.orderType);
+        if (orderType) filter.orderType = orderType;
+        const fromDate = parseDate(req.query.dateFrom);
+        const toDate = parseDate(req.query.dateTo);
+        if (fromDate || toDate) {
+            filter.createdAt = {};
+            if (fromDate) filter.createdAt.$gte = fromDate;
+            if (toDate) {
+                toDate.setHours(23, 59, 59, 999);
+                filter.createdAt.$lte = toDate;
             }
         }
         const orders = await Order.find(filter)
