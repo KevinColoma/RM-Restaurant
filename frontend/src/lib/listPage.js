@@ -37,7 +37,6 @@ function setupPage(app) {
       $dt.DataTable({ paging: false, info: false, bFilter: false });
     }
   }
-  bindFilterToggle(app);
   bindPagination(app);
 }
 
@@ -217,7 +216,7 @@ ${f.options.map(o => `<option value="${String(o).replace(/"/g, '&quot;')}">${o}<
 </div>`).join('');
 
   return `
-<div class="card mb-0" id="filter_inputs">
+<div class="card mb-0" id="filter_inputs" style="display:none">
 <div class="card-body pb-0">
 <div class="row">
 ${cols}
