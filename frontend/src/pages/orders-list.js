@@ -37,11 +37,14 @@ registerRoute('/orders-list', async (app) => {
   try {
     const res = await get(buildApiUrl());
     const orders = extractList(res, 'orders');
-    const rows = orders.length ? orders.map(o => {
-      const items = o.items ? o.items.map(i => i.menuItem ? i.menuItem.item : (window.t ? window.t('orders.unknown_item') : 'Unknown')).join(', ') : '-';
+    // Row number instead of the Mongo _id - the id has no meaning to the user
+    // and shouldn't be shown in a list, but stays on data-id for the cancel action.
+    const rowOffset = ((res?.page || 1) - 1) * (res?.limit || 0);
+    const rows = orders.length ? orders.map((o, i) => {
+      const items = o.items ? o.items.map(oi => oi.menuItem ? oi.menuItem.item : (window.t ? window.t('orders.unknown_item') : 'Unknown')).join(', ') : '-';
       const date = o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '-';
       return `<tr>
-        <td>${o._id || '-'}</td>
+        <td>${rowOffset + i + 1}</td>
         <td>${items}</td>
         <td>${typeof o.totalAmount === 'number' ? o.totalAmount.toFixed(2) : (o.totalAmount || '0.00')}</td>
         <td>${o.taxAmount !== undefined ? (typeof o.taxAmount === 'number' ? o.taxAmount.toFixed(2) : o.taxAmount) : '-'}</td>
@@ -106,7 +109,7 @@ registerRoute('/orders-list', async (app) => {
 <table class="table datanew">
 <thead>
 <tr>
-<th data-i18n="table.order_id">Order ID</th>
+<th data-i18n="table.row_number">#</th>
 <th data-i18n="table.items">Items</th>
 <th data-i18n="table.total">Total</th>
 <th data-i18n="table.tax">Tax</th>
