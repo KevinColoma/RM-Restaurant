@@ -14,16 +14,25 @@ async function buildDashboard(personaId) {
         const endOfDay = new Date();
         endOfDay.setHours(23, 59, 59, 999);
 
+        // Purchases are entered through a plain <input type="date">, so
+        // purchaseDate is always stored at UTC midnight of the picked calendar
+        // day (that's how JS parses a date-only string) - unlike Order's
+        // createdAt, which is a real timestamp. Comparing that against the
+        // server's local start/end of day drops today's purchases in any
+        // timezone behind UTC, so match on today's date at UTC midnight instead.
+        const startOfDayUTC = new Date(Date.UTC(startOfDay.getFullYear(), startOfDay.getMonth(), startOfDay.getDate(), 0, 0, 0, 0));
+        const endOfDayUTC = new Date(Date.UTC(startOfDay.getFullYear(), startOfDay.getMonth(), startOfDay.getDate(), 23, 59, 59, 999));
+
         const totalPurchases = await Purchase.countDocuments({
             personaId: new mongoose.Types.ObjectId(personaId),
-            purchaseDate: { $gte: startOfDay, $lte: endOfDay }
+            purchaseDate: { $gte: startOfDayUTC, $lte: endOfDayUTC }
         });
 
         const totalPurchaseAmount = await Purchase.aggregate([
             {
                 $match: {
                     personaId: new mongoose.Types.ObjectId(personaId),
-                    purchaseDate: { $gte: startOfDay, $lte: endOfDay }
+                    purchaseDate: { $gte: startOfDayUTC, $lte: endOfDayUTC }
                 }
             },
             {

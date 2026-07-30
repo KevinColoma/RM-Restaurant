@@ -10,6 +10,8 @@ const Usuario = require('../models/Usuario');
 const Menu = require('../models/menu');
 const Order = require('../models/order');
 const Expense = require('../models/Expense');
+const Purchase = require('../models/Purchase');
+const Supplier = require('../models/Supplier');
 const app = require('../app');
 const bcrypt = require('bcrypt');
 
@@ -60,6 +62,22 @@ beforeAll(async () => {
     amount: 20, description: 'Vegetables', paymentMethod: 'cash'
   });
 
+  const supplier = await Supplier.create({
+    personaId, name: 'Dash Supplier', contactInfo: '1234567890 - Test St'
+  });
+
+  // The "Add Purchase" form sends a plain <input type="date"> value like
+  // "2026-07-30", which Mongoose/JS parses as UTC midnight of that day - not
+  // local midnight. Reproducing that exact string (rather than `new Date()`)
+  // is what catches the dashboard comparing it against server-local day
+  // bounds and dropping it in any timezone behind UTC.
+  const todayDateOnly = new Date().toISOString().slice(0, 10);
+  await Purchase.create({
+    personaId, supplier: supplier._id, totalAmount: 176,
+    purchaseDate: todayDateOnly,
+    items: [{ itemName: 'Tomatoes', quantity: 10, unitPrice: 17.6, totalPrice: 176 }]
+  });
+
   const res = await request(app)
     .post('/api/signin')
     .send({ email: 'dash@test.com', password: 'password123' });
@@ -84,6 +102,13 @@ describe('GET /api/dashboard', () => {
     expect(res.body.totalOrders).toBe(2);
     expect(res.body.totalEarnings).toBe(51);
     expect(res.body.totalExpenses).toBe(20);
+  });
+
+  it('counts a purchase dated with today\'s date-only string, regardless of server timezone', async () => {
+    const res = await auth(request(app).get('/api/dashboard'));
+
+    expect(res.body.totalPurchases).toBe(1);
+    expect(res.body.totalPurchaseAmount).toBe(176);
   });
 
   it('ranks the best sellers by quantity across every order', async () => {
