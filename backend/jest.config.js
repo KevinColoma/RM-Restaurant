@@ -24,6 +24,9 @@ module.exports = {
     'utils/validate.js',
     '!**/node_modules/**'
   ],
+  coverageThreshold: {
+    global: { branches: 80, functions: 80, lines: 80, statements: 80 }
+  },
   coverageReporters: ['lcov', 'text', 'clover'],
   testMatch: ['**/tests/**/*.test.js'],
   testResultsProcessor: 'jest-sonar-reporter'

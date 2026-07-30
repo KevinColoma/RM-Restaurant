@@ -4,7 +4,7 @@
 // session is closed on both the client and the server and the user is returned
 // to the sign-in screen.
 
-export const IDLE_LIMIT_MS = 10 * 60 * 1000; // 10 minutes
+export const IDLE_LIMIT_MS = 1 * 60 * 1000; // 1 minute
 
 const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
 
@@ -33,7 +33,7 @@ async function expireSession() {
     Swal.fire({
       icon: 'info',
       title: 'Session expired',
-      text: 'You were signed out after 10 minutes of inactivity.',
+      text: 'You were signed out after 1 minute of inactivity.',
       timer: 4000,
       showConfirmButton: true
     });

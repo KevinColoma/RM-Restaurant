@@ -54,7 +54,7 @@ exports.SignIn = async function (req, res) {
     const { email, password } = req.body;
 
     try {
-        const usuario = await Usuario.findOne({ username: String(email) });
+        const usuario = await Usuario.findOne({ username: String(email) }).populate('rolId');
 
         if (!usuario) {
             return res.json({
@@ -109,14 +109,16 @@ exports.SignIn = async function (req, res) {
             usuario: {
                 _id: usuario._id,
                 username: usuario.username,
-                personaId: usuario.personaId
+                personaId: usuario.personaId,
+                rol: usuario.rolId?.nombre || 'admin'
             }
         });
     } catch (err) {
+        console.error('SignIn error:', err);
         return res.json({
             success: false,
             message: "Authentication failed",
-            error: err
+            error: String(err)
         });
     }
 }

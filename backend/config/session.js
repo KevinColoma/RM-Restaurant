@@ -9,7 +9,7 @@
 // This is what keeps "block a second login" from ever locking an account out
 // permanently: a browser that closes, crashes or loses power can never tell
 // the server it is gone, so the session has to expire on its own.
-const SESSION_IDLE_MS = 10 * 60 * 1000; // 10 minutes
+const SESSION_IDLE_MS = 1 * 60 * 1000; // 1 minute
 
 // Minimum gap between lastSeenAt writes, so an active user costs at most one
 // extra update per minute instead of one per request.

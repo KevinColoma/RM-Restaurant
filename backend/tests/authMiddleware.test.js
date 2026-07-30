@@ -22,6 +22,15 @@ function mockReqRes(path) {
   return { req, res };
 }
 
+function mockFindById(userData) {
+  const secondPopulate = {
+    populate: jest.fn().mockResolvedValue(userData)
+  };
+  return {
+    populate: jest.fn().mockReturnValue(secondPopulate)
+  };
+}
+
 describe('authMiddleware', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -42,7 +51,7 @@ describe('authMiddleware', () => {
 
   it('should redirect to signin when user is not found', async () => {
     jwtUtils.verifyToken.mockResolvedValue({ usuarioId: 'nonexistent' });
-    Usuario.findById.mockReturnValue({ populate: jest.fn().mockResolvedValue(null) });
+    Usuario.findById.mockReturnValue(mockFindById(null));
     const { requireAuth } = require('../middleware/authMiddleware');
     const { req, res } = mockReqRes();
     req.cookies.jwt = 'valid-token';
@@ -72,12 +81,10 @@ describe('authMiddleware', () => {
     const sessionId = 'session-abc-123';
 
     jwtUtils.verifyToken.mockResolvedValue({ usuarioId: userId, sessionId });
-    Usuario.findById.mockReturnValue({
-      populate: jest.fn().mockResolvedValue({
-        _id: userId, personaId, activeSessionId: sessionId,
-        lastSeenAt: null, save: jest.fn().mockResolvedValue()
-      })
-    });
+    Usuario.findById.mockReturnValue(mockFindById({
+      _id: userId, personaId, activeSessionId: sessionId,
+      lastSeenAt: null, save: jest.fn().mockResolvedValue()
+    }));
 
     const { requireAuth } = require('../middleware/authMiddleware');
     const { req, res } = mockReqRes();
@@ -90,19 +97,15 @@ describe('authMiddleware', () => {
   });
 
   it('should still authenticate when the lastSeenAt write fails', async () => {
-    // Activity tracking is bookkeeping; a failed write must never cost a
-    // legitimate user their session.
     const userId = '507f1f77bcf86cd799439011';
     const personaId = { _id: '507f1f77bcf86cd799439012', ownerName: 'Test', restaurantName: 'Test Rest', avatar: '' };
     const sessionId = 'session-abc-123';
 
     jwtUtils.verifyToken.mockResolvedValue({ usuarioId: userId, sessionId });
-    Usuario.findById.mockReturnValue({
-      populate: jest.fn().mockResolvedValue({
-        _id: userId, personaId, activeSessionId: sessionId,
-        lastSeenAt: null, save: jest.fn().mockRejectedValue(new Error('DB down'))
-      })
-    });
+    Usuario.findById.mockReturnValue(mockFindById({
+      _id: userId, personaId, activeSessionId: sessionId,
+      lastSeenAt: null, save: jest.fn().mockRejectedValue(new Error('DB down'))
+    }));
 
     const { requireAuth } = require('../middleware/authMiddleware');
     const { req, res } = mockReqRes();
@@ -113,18 +116,58 @@ describe('authMiddleware', () => {
     expect(next).toHaveBeenCalled();
   });
 
+  it('should re-claim the slot when activeSessionId is null on refresh', async () => {
+    const userId = '507f1f77bcf86cd799439011';
+    const personaId = { _id: '507f1f77bcf86cd799439012', ownerName: 'Test', restaurantName: 'Test Rest', avatar: 'pic.jpg' };
+    const sessionId = 'session-abc-123';
+    const saveMock = jest.fn().mockResolvedValue();
+
+    jwtUtils.verifyToken.mockResolvedValue({ usuarioId: userId, sessionId });
+    Usuario.findById.mockReturnValue(mockFindById({
+      _id: userId, personaId, activeSessionId: null, lastSeenAt: null, save: saveMock
+    }));
+
+    const { requireAuth } = require('../middleware/authMiddleware');
+    const { req, res } = mockReqRes();
+    req.cookies.jwt = 'valid-token';
+    const next = jest.fn();
+
+    await requireAuth(req, res, next);
+    expect(next).toHaveBeenCalled();
+    expect(saveMock).toHaveBeenCalled();
+  });
+
+  it('should throttle lastSeenAt writes within LAST_SEEN_THROTTLE_MS', async () => {
+    const userId = '507f1f77bcf86cd799439011';
+    const personaId = { _id: '507f1f77bcf86cd799439012', ownerName: 'Test', restaurantName: 'Test Rest', avatar: 'pic.jpg' };
+    const sessionId = 'session-abc-123';
+    const saveMock = jest.fn().mockResolvedValue();
+    const recent = new Date();
+
+    jwtUtils.verifyToken.mockResolvedValue({ usuarioId: userId, sessionId });
+    Usuario.findById.mockReturnValue(mockFindById({
+      _id: userId, personaId, activeSessionId: sessionId,
+      lastSeenAt: recent, save: saveMock
+    }));
+
+    const { requireAuth } = require('../middleware/authMiddleware');
+    const { req, res } = mockReqRes();
+    req.cookies.jwt = 'valid-token';
+    const next = jest.fn();
+
+    await requireAuth(req, res, next);
+    expect(next).toHaveBeenCalled();
+    expect(saveMock).not.toHaveBeenCalled();
+  });
+
   it('should still authenticate when another device holds the active session (soft single-session)', async () => {
-    // Soft single-session: an already-authenticated token stays valid even
-    // after a later login elsewhere changed activeSessionId. "One at a time"
-    // is only surfaced at login, never enforced mid-session, so the user is
-    // not kicked out on navigation.
     const userId = '507f1f77bcf86cd799439011';
     const personaId = { _id: '507f1f77bcf86cd799439012', ownerName: 'Test', restaurantName: 'Test Rest', avatar: 'pic.jpg' };
 
     jwtUtils.verifyToken.mockResolvedValue({ usuarioId: userId, sessionId: 'old-session' });
-    Usuario.findById.mockReturnValue({
-      populate: jest.fn().mockResolvedValue({ _id: userId, personaId, activeSessionId: 'new-session' })
-    });
+    Usuario.findById.mockReturnValue(mockFindById({
+      _id: userId, personaId, activeSessionId: 'new-session'
+    }));
 
     const { requireAuth } = require('../middleware/authMiddleware');
     const { req, res } = mockReqRes();

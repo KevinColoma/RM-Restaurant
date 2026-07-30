@@ -1,11 +1,41 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, currentPage, renderPagination, emptyState, canWrite } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
+
+function filtersFromHash() {
+  const q = window.location.hash.split('?')[1] || '';
+  const params = new URLSearchParams(q);
+  return {
+    orderType: params.get('orderType') || '',
+    dateFrom: params.get('dateFrom') || '',
+    dateTo: params.get('dateTo') || ''
+  };
+}
+
+function buildApiUrl() {
+  const f = filtersFromHash();
+  const params = new URLSearchParams();
+  params.set('page', String(currentPage()));
+  if (f.orderType) params.set('orderType', f.orderType);
+  if (f.dateFrom) params.set('dateFrom', f.dateFrom);
+  if (f.dateTo) params.set('dateTo', f.dateTo);
+  return '/orders?' + params.toString();
+}
+
+function filterHash() {
+  const f = filtersFromHash();
+  const params = new URLSearchParams();
+  if (f.orderType) params.set('orderType', f.orderType);
+  if (f.dateFrom) params.set('dateFrom', f.dateFrom);
+  if (f.dateTo) params.set('dateTo', f.dateTo);
+  const q = params.toString();
+  return '#/orders-list' + (q ? '?' + q : '');
+}
 
 registerRoute('/orders-list', async (app) => {
   showLoading(app);
   try {
-    const res = await get('/orders?page=' + currentPage());
+    const res = await get(buildApiUrl());
     const orders = extractList(res, 'orders');
     const rows = orders.length ? orders.map(o => {
       const items = o.items ? o.items.map(i => i.menuItem ? i.menuItem.item : (window.t ? window.t('orders.unknown_item') : 'Unknown')).join(', ') : '-';
@@ -24,6 +54,8 @@ registerRoute('/orders-list', async (app) => {
       </tr>`;
     }).join('') : emptyState({ colspan: 8, title: 'No orders yet', i18nTitle: 'empty.no_orders', hint: 'Orders appear here once you start billing.', i18nHint: 'empty.orders_hint', actionHref: '#/pos', actionLabel: 'Go to billing', i18nAction: 'empty.orders_action' });
 
+    const f = filtersFromHash();
+
     const html = `
 <div class="page-wrapper">
 <div class="content">
@@ -39,6 +71,37 @@ registerRoute('/orders-list', async (app) => {
 </div>
 <div class="card">
 <div class="card-body">
+<div class="row mb-3 align-items-end">
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="table.order_type">Order Type</label>
+<select class="form-control" id="filter-orderType">
+<option value="">All</option>
+<option value="dine-in"${f.orderType === 'dine-in' ? ' selected' : ''}>Dine-in</option>
+<option value="takeaway"${f.orderType === 'takeaway' ? ' selected' : ''}>Takeaway</option>
+<option value="delivery"${f.orderType === 'delivery' ? ' selected' : ''}>Delivery</option>
+</select>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="common.from">From</label>
+<input type="date" class="form-control" id="filter-dateFrom" value="${f.dateFrom}">
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="common.to">To</label>
+<input type="date" class="form-control" id="filter-dateTo" value="${f.dateTo}">
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12 d-flex align-items-end">
+<div class="form-group mb-0 d-flex">
+<a class="btn btn-primary" id="apply-filters"><span data-i18n="common.apply">Apply</span></a>
+<a class="btn btn-secondary ms-2" id="reset-filters"><span data-i18n="common.reset">Reset</span></a>
+</div>
+</div>
+</div>
 <div class="table-responsive">
 <table class="table datanew">
 <thead>
@@ -46,9 +109,9 @@ registerRoute('/orders-list', async (app) => {
 <th data-i18n="table.order_id">Order ID</th>
 <th data-i18n="table.items">Items</th>
 <th data-i18n="table.total">Total</th>
-            <th data-i18n="table.tax">Tax</th>
+<th data-i18n="table.tax">Tax</th>
 <th data-i18n="table.order_type">Type</th>
-            <th data-i18n="table.comment">Comment</th>
+<th data-i18n="table.comment">Comment</th>
 <th data-i18n="table.date">Date</th>
 <th data-i18n="table.action">Actions</th>
 </tr>
@@ -63,6 +126,29 @@ ${renderPagination(res)}
 </div>`;
 
     renderPage(app, 'orders-list', html);
+
+    const applyBtn = app.querySelector('#apply-filters');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', () => {
+        const orderType = app.querySelector('#filter-orderType').value;
+        const dateFrom = app.querySelector('#filter-dateFrom').value;
+        const dateTo = app.querySelector('#filter-dateTo').value;
+        const params = new URLSearchParams();
+        if (orderType) params.set('orderType', orderType);
+        if (dateFrom) params.set('dateFrom', dateFrom);
+        if (dateTo) params.set('dateTo', dateTo);
+        const q = params.toString();
+        window.location.hash = '#/orders-list' + (q ? '?' + q : '');
+      });
+    }
+
+    const resetBtn = app.querySelector('#reset-filters');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        window.location.hash = '#/orders-list';
+      });
+    }
+
     bindDelete(app, '.cancel-order', { itemName: 'order',
       del, endpoint: '/orders/', successMsg: 'Order has been cancelled.', listRoute: '#/orders-list',
       confirmTitle: 'Cancel Order?', confirmText: 'This action cannot be undone!', confirmBtn: 'Yes, cancel it!'

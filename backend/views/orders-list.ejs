@@ -15,6 +15,37 @@
 
 <div class="card">
 <div class="card-body">
+<form method="GET" action="/orders-list" class="row mb-3 align-items-end">
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="table.order_type">Order Type</label>
+<select name="orderType" class="form-control">
+<option value="">All</option>
+<option value="dine-in"<%= (typeof query !== 'undefined' && query.orderType === 'dine-in') ? ' selected' : '' %>>Dine-in</option>
+<option value="takeaway"<%= (typeof query !== 'undefined' && query.orderType === 'takeaway') ? ' selected' : '' %>>Takeaway</option>
+<option value="delivery"<%= (typeof query !== 'undefined' && query.orderType === 'delivery') ? ' selected' : '' %>>Delivery</option>
+</select>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="common.from">From</label>
+<input type="date" name="dateFrom" class="form-control" value="<%= (typeof query !== 'undefined' && query.dateFrom) || '' %>">
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="common.to">To</label>
+<input type="date" name="dateTo" class="form-control" value="<%= (typeof query !== 'undefined' && query.dateTo) || '' %>">
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12 d-flex align-items-end">
+<div class="form-group mb-0 d-flex">
+<button type="submit" class="btn btn-primary"><span data-i18n="common.apply">Apply</span></button>
+<a href="/orders-list" class="btn btn-secondary ms-2"><span data-i18n="common.reset">Reset</span></a>
+</div>
+</div>
+</form>
 <div class="table-responsive">
 <table class="table datanew">
 <thead>

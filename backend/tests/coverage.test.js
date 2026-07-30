@@ -5,10 +5,19 @@ const request = require('supertest');
 jest.mock('../jwt');
 jest.mock('../models/Usuario');
 
+function mockFindById(userData) {
+  const secondPopulate = {
+    populate: jest.fn().mockResolvedValue(userData)
+  };
+  return {
+    populate: jest.fn().mockReturnValue(secondPopulate)
+  };
+}
+
 describe('Auth middleware – remaining branches', () => {
   it('returns 401 JSON when user not found on an API path', async () => {
     jwtUtils.verifyToken.mockResolvedValue({ usuarioId: '507f1f77bcf86cd799439011' });
-    Usuario.findById.mockReturnValue({ populate: jest.fn().mockResolvedValue(null) });
+    Usuario.findById.mockReturnValue(mockFindById(null));
     const { requireAuth } = require('../middleware/authMiddleware');
     const req = { cookies: { jwt: 'x' }, path: '/api/dashboard' };
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn(), redirect: jest.fn(), send: jest.fn() };

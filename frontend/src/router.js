@@ -1,5 +1,17 @@
 import { isAuthenticated } from './lib/auth.js';
 
+const routePermissions = {
+  mesero: ['/pos', '/orders-list', '/profile', '/signin', '/signup', '/forgot-password'],
+  cocinero: ['/pos', '/orders-list', '/menu-list', '/profile', '/signin', '/signup', '/forgot-password'],
+  gerente: ['/dashboard', '/pos', '/menu-list', '/orders-list', '/inventory-list', '/profile', '/signin', '/signup', '/forgot-password']
+};
+
+const routeDefaults = {
+  mesero: '/pos',
+  cocinero: '/pos',
+  gerente: '/dashboard'
+};
+
 const routes = {};
 
 export function registerRoute(path, renderFn) {
@@ -12,15 +24,20 @@ export function navigate(path) {
 
 export function initRouter() {
   function resolve() {
-    // A stray anchor (href="#") can wipe the hash. Falling back to /signin then
-    // strands an authenticated user on the login screen, so send them to the
-    // dashboard instead and only default to /signin when actually signed out.
-    const fallback = isAuthenticated() ? '/dashboard' : '/signin';
+    const rol = localStorage.getItem('rol') || 'admin';
+    const defaultRoute = routeDefaults[rol] || '/dashboard';
+    const fallback = isAuthenticated() ? defaultRoute : '/signin';
     const hash = window.location.hash.slice(1) || fallback;
     const base = hash.split('?')[0];
 
     if (!isAuthenticated() && base !== '/signin' && base !== '/signup' && base !== '/forgot-password') {
       window.location.hash = '#/signin';
+      return;
+    }
+
+    const allowed = routePermissions[rol] || null;
+    if (allowed && !allowed.includes(base)) {
+      window.location.hash = '#' + defaultRoute;
       return;
     }
 

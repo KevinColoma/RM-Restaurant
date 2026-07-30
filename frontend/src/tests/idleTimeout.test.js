@@ -101,7 +101,7 @@ describe('expiry notice', () => {
       icon: 'info',
       title: 'Session expired'
     }));
-    expect(fire.mock.calls[0][0].text).toMatch(/10 minutes of inactivity/);
+    expect(fire.mock.calls[0][0].text).toMatch(/1 minute of inactivity/);
   });
 
   it('still signs the user out when SweetAlert is unavailable', async () => {

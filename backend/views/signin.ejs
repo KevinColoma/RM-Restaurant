@@ -105,7 +105,9 @@ document.getElementById('signin-form').addEventListener('submit', async function
 
         const data = await res.json();
         if (data.success) {
-            window.location.href = '/index';
+            const roleRedirects = { mesero: '/pos', cocinero: '/pos', gerente: '/index' };
+            const target = roleRedirects[data.usuario?.rol] || '/index';
+            window.location.href = target;
         } else {
             errorEl.textContent = data.message || (window.t ? window.t('signin.invalid_credentials') : 'Invalid credentials.');
             errorEl.classList.remove('d-none');

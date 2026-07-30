@@ -87,7 +87,18 @@ exports.listPurchases = jsonRead(async (req, res) => {
 });
 
 exports.listOrders = jsonRead(async (req, res) => {
-    const result = await paginate(Order, { personaId: req.personaId }, getPageParams(req), {
+    const filter = { personaId: req.personaId };
+    if (req.query.orderType) filter.orderType = req.query.orderType;
+    if (req.query.dateFrom || req.query.dateTo) {
+        filter.createdAt = {};
+        if (req.query.dateFrom) filter.createdAt.$gte = new Date(req.query.dateFrom);
+        if (req.query.dateTo) {
+            const end = new Date(req.query.dateTo);
+            end.setHours(23, 59, 59, 999);
+            filter.createdAt.$lte = end;
+        }
+    }
+    const result = await paginate(Order, filter, getPageParams(req), {
         sort: { createdAt: -1 },
         populate: { path: 'items.menuItem', select: 'item price' }
     });

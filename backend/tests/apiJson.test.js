@@ -253,3 +253,37 @@ describe('Pagination', () => {
     expect(res.body).toHaveProperty('pages');
   });
 });
+
+describe('Order filters', () => {
+  beforeAll(async () => {
+    const Order = require('../models/order');
+    const Menu = require('../models/menu');
+    const menuItem = await Menu.findOne({ personaId });
+    await Order.insertMany([
+      { personaId, orderType: 'dine in', totalAmount: 10, taxAmount: 1, items: [{ menuItem: menuItem._id, quantity: 1, price: 10 }] },
+      { personaId, orderType: 'take away', totalAmount: 20, taxAmount: 2, items: [{ menuItem: menuItem._id, quantity: 1, price: 20 }] },
+      { personaId, orderType: 'online', totalAmount: 30, taxAmount: 3, items: [{ menuItem: menuItem._id, quantity: 1, price: 30 }] }
+    ]);
+  });
+
+  it('filters by orderType', async () => {
+    const res = await authGet('/api/orders?orderType=dine in');
+    expect(res.body.orders.every(o => o.orderType === 'dine in')).toBe(true);
+  });
+
+  it('filters by dateFrom', async () => {
+    const res = await authGet('/api/orders?dateFrom=1970-01-01');
+    expect(res.body.orders.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('filters by dateFrom and dateTo', async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const res = await authGet('/api/orders?dateFrom=' + today + '&dateTo=' + today);
+    expect(res.body.orders.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('returns empty when dateTo is in the past', async () => {
+    const res = await authGet('/api/orders?dateTo=2000-01-01');
+    expect(res.body.orders).toHaveLength(0);
+  });
+});

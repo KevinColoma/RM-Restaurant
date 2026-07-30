@@ -13,6 +13,7 @@ const session = require('express-session');
 const multer = require('multer');
 const mongoSanitize = require('express-mongo-sanitize');
 const webRoutes = require('./routes/restaurantRoutes')
+const autoSeed = require('./seed/autoseed')
 const port = process.env.PORT
 const app = express()
 app.disable('x-powered-by');
@@ -28,7 +29,7 @@ app.use((req, res, next) => { req.upload = upload; next(); });
 app.use(cookieParser());
 
 if (process.env.NODE_ENV !== 'test') {
-  connectDB();
+  connectDB().then(() => autoSeed());
 }
 
 app.use(bodyParser.urlencoded({ extended: false }));

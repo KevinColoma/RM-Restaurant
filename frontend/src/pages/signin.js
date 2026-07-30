@@ -75,7 +75,9 @@ registerRoute('/signin', (app) => {
       const data = await signin(email, password);
 
       if (data?.success) {
-        window.location.hash = '#/dashboard';
+        const rol = localStorage.getItem('rol') || 'admin';
+        const roleRedirects = { mesero: '#/pos', cocinero: '#/pos', gerente: '#/dashboard' };
+        window.location.hash = roleRedirects[rol] || '#/dashboard';
         return;
       }
 

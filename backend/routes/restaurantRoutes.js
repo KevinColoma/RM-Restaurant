@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const restaurantController = require('../controllers/restaurantController')
 const {requireAuth} = require('../middleware/authMiddleware')
+const {requireWriteAccess} = require('../middleware/roleMiddleware')
+const protect = [requireAuth, requireWriteAccess]
 const menuController = require('../controllers/menuController')
 const orderController = require('../controllers/orderController')
 const reportController = require('../controllers/reportController')
@@ -38,21 +40,21 @@ router.get('/forgot-password',(req,res)=>{
     res.render('forgot-password')
 })
 
-router.get('/index',requireAuth,dashboardController.Dashboard)
+router.get('/index',protect,dashboardController.Dashboard)
 
 
 router.post('/api/signup', restaurantController.SignUp );
 router.post('/api/signin',restaurantController.SignIn)
 router.post('/api/log-out',restaurantController.LogOut)
 router.post('/api/session/release',restaurantController.ReleaseSession)
-router.get('/api/personas', requireAuth, restaurantController.getPersonas)
+router.get('/api/personas', protect, restaurantController.getPersonas)
 
 // All menu relate routes are here
-router.get('/addmenupage',requireAuth,(req,res)=>{
+router.get('/addmenupage',protect,(req,res)=>{
     res.render('add-item')
 })
 
-router.get('/edit-item/:id', requireAuth, async (req, res) => {
+router.get('/edit-item/:id', protect, async (req, res) => {
     try {
         if (!isValidObjectId(req.params.id)) return res.status(400).send('Invalid ID');
         const Menu = require('../models/menu');
@@ -64,43 +66,43 @@ router.get('/edit-item/:id', requireAuth, async (req, res) => {
     }
 })
 
-router.get('/pos',requireAuth,menuController.GetPos)
-router.get('/getmenu',requireAuth,menuController.GetMenu)
-router.post('/api/addmenu',requireAuth,menuController.AddMenu)
-router.put('/api/menu/:id',requireAuth,menuController.UpdateMenu)
-router.delete('/api/menu/:id',requireAuth,menuController.DeleteMenu)
-router.post ('/api/placeorder',requireAuth,orderController.PlaceOrder)
-router.get('/orders-list', requireAuth, orderController.GetOrders)
+router.get('/pos',protect,menuController.GetPos)
+router.get('/getmenu',protect,menuController.GetMenu)
+router.post('/api/addmenu',protect,menuController.AddMenu)
+router.put('/api/menu/:id',protect,menuController.UpdateMenu)
+router.delete('/api/menu/:id',protect,menuController.DeleteMenu)
+router.post ('/api/placeorder',protect,orderController.PlaceOrder)
+router.get('/orders-list', protect, orderController.GetOrders)
 
 // All report releted  routes 
 
-router.get('/chart-js',requireAuth,(req,res)=>{
+router.get('/chart-js',protect,(req,res)=>{
 
     res.render('chart-js')
 
 })
 
-router.get('/api/reports/sales',requireAuth, reportController.sales)
-router.get('/api/reports/orders',requireAuth, reportController.orders)
+router.get('/api/reports/sales',protect, reportController.sales)
+router.get('/api/reports/orders',protect, reportController.orders)
 
 // All report releted  routes 
 
-router.get('/datechart',requireAuth,(req,res)=>{
+router.get('/datechart',protect,(req,res)=>{
 
     res.render('datechart')
 
 })
 
-router.get('/api/reports/sales-by-date',requireAuth, datereportController.salesByDate)
-router.get('/api/reports/orders-by-date',requireAuth, datereportController.ordersByDate)
+router.get('/api/reports/sales-by-date',protect, datereportController.salesByDate)
+router.get('/api/reports/orders-by-date',protect, datereportController.ordersByDate)
 
 
 //inventroy coontroller routes 
-router.get('/addinventory',requireAuth,inventoryController.addInventory)
+router.get('/addinventory',protect,inventoryController.addInventory)
 
-router.post('/api/addinventory',requireAuth, inventoryController.addItem);
-router.get('/get-expense-list',requireAuth,inventoryController.getItem)
-router.get('/edit-inventory/:id', requireAuth, async (req, res) => {
+router.post('/api/addinventory',protect, inventoryController.addItem);
+router.get('/get-expense-list',protect,inventoryController.getItem)
+router.get('/edit-inventory/:id', protect, async (req, res) => {
     try {
         if (!isValidObjectId(req.params.id)) return res.status(400).send('Invalid ID');
         const InventoryItem = require('../models/InventoryItem');
@@ -113,30 +115,30 @@ router.get('/edit-inventory/:id', requireAuth, async (req, res) => {
         res.status(500).send(err.message);
     }
 })
-router.put('/api/inventory/:id',requireAuth,inventoryController.updateItem)
-router.delete('/api/inventory/:id',requireAuth,inventoryController.deleteInventory );
+router.put('/api/inventory/:id',protect,inventoryController.updateItem)
+router.delete('/api/inventory/:id',protect,inventoryController.deleteInventory );
 
 
 
 // suppliers related routes 
 
 
-router.post('/api/suppliers',requireAuth, supplierController.createSupplier);
-router.get('/api/suppliers',requireAuth, supplierController.getSuppliers);
-router.get('/suppliers-list', requireAuth, supplierController.getSuppliersPage);
-router.get('/api/suppliers/:id' ,requireAuth, supplierController.getSupplierById);
-router.put('/api/suppliers/:id' ,requireAuth, supplierController.updateSupplier);
-router.delete('/api/suppliers/:id' ,requireAuth, supplierController.deleteSupplier);
+router.post('/api/suppliers',protect, supplierController.createSupplier);
+router.get('/api/suppliers',protect, supplierController.getSuppliers);
+router.get('/suppliers-list', protect, supplierController.getSuppliersPage);
+router.get('/api/suppliers/:id' ,protect, supplierController.getSupplierById);
+router.put('/api/suppliers/:id' ,protect, supplierController.updateSupplier);
+router.delete('/api/suppliers/:id' ,protect, supplierController.deleteSupplier);
 
 
 //all expense related rouets are here 
 
-router.get('/addexpense',requireAuth,expenseController.addExpensePage)
+router.get('/addexpense',protect,expenseController.addExpensePage)
 
 
-router.post('/api/addexpense',requireAuth,expenseController.addExpense)
-router.get('/getexpense',requireAuth, expenseController.getExpense);
-router.delete('/api/expense/:id', requireAuth, expenseController.deleteExpense);
+router.post('/api/addexpense',protect,expenseController.addExpense)
+router.get('/getexpense',protect, expenseController.getExpense);
+router.delete('/api/expense/:id', protect, expenseController.deleteExpense);
 
 // ── JSON API consumed by the SPA ─────────────────────────────────────────────
 // Everything above serves the EJS app and stays as it is. These expose the same
@@ -145,63 +147,63 @@ router.delete('/api/expense/:id', requireAuth, expenseController.deleteExpense);
 // own HTML and reads looked empty while writes 404'd.
 
 // Expenses
-router.get('/api/expenses', requireAuth, expenseController.listExpenses);
-router.post('/api/expenses', requireAuth, expenseController.addExpense);
-router.get('/api/expenses/edit/:id', requireAuth, expenseController.getExpenseById);
-router.put('/api/expenses/:id', requireAuth, expenseController.updateExpense);
-router.delete('/api/expenses/:id', requireAuth, expenseController.deleteExpense);
+router.get('/api/expenses', protect, expenseController.listExpenses);
+router.post('/api/expenses', protect, expenseController.addExpense);
+router.get('/api/expenses/edit/:id', protect, expenseController.getExpenseById);
+router.put('/api/expenses/:id', protect, expenseController.updateExpense);
+router.delete('/api/expenses/:id', protect, expenseController.deleteExpense);
 
 // Menu
-router.get('/api/menu', requireAuth, apiController.listMenu);
-router.post('/api/menu', requireAuth, menuController.AddMenu);
+router.get('/api/menu', protect, apiController.listMenu);
+router.post('/api/menu', protect, menuController.AddMenu);
 
 // Inventory
-router.get('/api/inventory', requireAuth, apiController.listInventory);
-router.post('/api/inventory', requireAuth, inventoryController.addItem);
-router.get('/api/inventory/edit/:id', requireAuth, apiController.getInventoryItem);
+router.get('/api/inventory', protect, apiController.listInventory);
+router.post('/api/inventory', protect, inventoryController.addItem);
+router.get('/api/inventory/edit/:id', protect, apiController.getInventoryItem);
 
 // Customers, branches, purchases and orders (creates/updates already existed)
-router.get('/api/customers', requireAuth, apiController.listCustomers);
-router.get('/api/branches', requireAuth, apiController.listBranches);
-router.get('/api/purchases', requireAuth, apiController.listPurchases);
-router.get('/api/orders', requireAuth, apiController.listOrders);
+router.get('/api/customers', protect, apiController.listCustomers);
+router.get('/api/branches', protect, apiController.listBranches);
+router.get('/api/purchases', protect, apiController.listPurchases);
+router.get('/api/orders', protect, apiController.listOrders);
 
 // Screens that read a composite payload
-router.get('/api/dashboard', requireAuth, dashboardController.DashboardJson);
-router.get('/api/pos', requireAuth, apiController.getPos);
-router.get('/api/profile', requireAuth, apiController.getProfile);
-router.get('/api/settings', requireAuth, apiController.getSettings);
-router.get('/api/audit-log', requireAuth, apiController.listAuditLog);
+router.get('/api/dashboard', protect, dashboardController.DashboardJson);
+router.get('/api/pos', protect, apiController.getPos);
+router.get('/api/profile', protect, apiController.getProfile);
+router.get('/api/settings', protect, apiController.getSettings);
+router.get('/api/audit-log', protect, apiController.listAuditLog);
 
 
 
 // all cutomer related routes 
 
-router.post('/api/customers',requireAuth,customerController.createCustomers)
-router.get('/customers-list', requireAuth, customerController.getCustomers)
-router.put('/api/customers/:id', requireAuth, customerController.updateCustomer)
-router.delete('/api/customers/:id', requireAuth, customerController.deleteCustomer)
+router.post('/api/customers',protect,customerController.createCustomers)
+router.get('/customers-list', protect, customerController.getCustomers)
+router.put('/api/customers/:id', protect, customerController.updateCustomer)
+router.delete('/api/customers/:id', protect, customerController.deleteCustomer)
 
 // branch related routes
 
-router.get('/branches', requireAuth, branchController.getBranches)
-router.get('/add-branch', requireAuth, branchController.addBranchPage)
-router.post('/api/branches', requireAuth, branchController.createBranch)
-router.get('/api/branches/:id', requireAuth, branchController.getBranchById)
-router.put('/api/branches/:id', requireAuth, branchController.updateBranch)
-router.delete('/api/branches/:id', requireAuth, branchController.deleteBranch)
+router.get('/branches', protect, branchController.getBranches)
+router.get('/add-branch', protect, branchController.addBranchPage)
+router.post('/api/branches', protect, branchController.createBranch)
+router.get('/api/branches/:id', protect, branchController.getBranchById)
+router.put('/api/branches/:id', protect, branchController.updateBranch)
+router.delete('/api/branches/:id', protect, branchController.deleteBranch)
 
 // purchase related routes
 
-router.get('/purchase-list', requireAuth, purchaseController.listPurchases)
-router.get('/add-purchase', requireAuth, purchaseController.addPurchasePage)
-router.post('/api/purchases', requireAuth, purchaseController.createPurchase)
-router.get('/api/purchases/:id', requireAuth, purchaseController.getPurchaseById)
-router.delete('/api/purchases/:id', requireAuth, purchaseController.deletePurchase)
+router.get('/purchase-list', protect, purchaseController.listPurchases)
+router.get('/add-purchase', protect, purchaseController.addPurchasePage)
+router.post('/api/purchases', protect, purchaseController.createPurchase)
+router.get('/api/purchases/:id', protect, purchaseController.getPurchaseById)
+router.delete('/api/purchases/:id', protect, purchaseController.deletePurchase)
 
 // expense edit routes
 
-router.get('/edit-expense/:id', requireAuth, async (req, res) => {
+router.get('/edit-expense/:id', protect, async (req, res) => {
     try {
         if (!isValidObjectId(req.params.id)) return res.status(400).send('Invalid ID');
         const expense = await Expense.findOne({ _id: req.params.id, personaId: req.personaId });
@@ -211,42 +213,42 @@ router.get('/edit-expense/:id', requireAuth, async (req, res) => {
         res.status(500).send('Server Error');
     }
 })
-router.put('/api/expense/:id', requireAuth, expenseController.updateExpense)
+router.put('/api/expense/:id', protect, expenseController.updateExpense)
 
 // Profile routes
-router.get('/profile', requireAuth, profileController.getProfile)
-router.put('/api/profile', requireAuth, (req, res, next) => { req.upload.single('avatar')(req, res, next); }, profileController.updateProfile)
-router.post('/api/profile/avatar', requireAuth, (req, res, next) => { req.upload.single('avatar')(req, res, next); }, profileController.uploadAvatar)
-router.put('/api/profile/password', requireAuth, profileController.changePassword)
+router.get('/profile', protect, profileController.getProfile)
+router.put('/api/profile', protect, (req, res, next) => { req.upload.single('avatar')(req, res, next); }, profileController.updateProfile)
+router.post('/api/profile/avatar', protect, (req, res, next) => { req.upload.single('avatar')(req, res, next); }, profileController.uploadAvatar)
+router.put('/api/profile/password', protect, profileController.changePassword)
 
 // Settings routes
-router.get('/settings', requireAuth, settingsController.getSettings)
-router.put('/api/settings', requireAuth, settingsController.updateSettings)
+router.get('/settings', protect, settingsController.getSettings)
+router.put('/api/settings', protect, settingsController.updateSettings)
 
 // Export routes
-router.get('/export/menu/csv', requireAuth, exportController.exportMenuCsv)
-router.get('/export/menu/pdf', requireAuth, exportController.exportMenuPdf)
-router.get('/export/orders/csv', requireAuth, exportController.exportOrdersCsv)
-router.get('/export/orders/pdf', requireAuth, exportController.exportOrdersPdf)
-router.get('/export/customers/csv', requireAuth, exportController.exportCustomersCsv)
-router.get('/export/customers/pdf', requireAuth, exportController.exportCustomersPdf)
-router.get('/export/expenses/csv', requireAuth, exportController.exportExpensesCsv)
-router.get('/export/expenses/pdf', requireAuth, exportController.exportExpensesPdf)
-router.get('/export/inventory/csv', requireAuth, exportController.exportInventoryCsv)
-router.get('/export/inventory/pdf', requireAuth, exportController.exportInventoryPdf)
-router.get('/export/branches/csv', requireAuth, exportController.exportBranchesCsv)
-router.get('/export/branches/pdf', requireAuth, exportController.exportBranchesPdf)
-router.get('/export/suppliers/csv', requireAuth, exportController.exportSuppliersCsv)
-router.get('/export/suppliers/pdf', requireAuth, exportController.exportSuppliersPdf)
-router.get('/export/sales/csv', requireAuth, exportController.exportSalesCsv)
-router.get('/export/sales/pdf', requireAuth, exportController.exportSalesPdf)
-router.get('/export/purchases/csv', requireAuth, exportController.exportPurchasesCsv)
-router.get('/export/purchases/pdf', requireAuth, exportController.exportPurchasesPdf)
+router.get('/export/menu/csv', protect, exportController.exportMenuCsv)
+router.get('/export/menu/pdf', protect, exportController.exportMenuPdf)
+router.get('/export/orders/csv', protect, exportController.exportOrdersCsv)
+router.get('/export/orders/pdf', protect, exportController.exportOrdersPdf)
+router.get('/export/customers/csv', protect, exportController.exportCustomersCsv)
+router.get('/export/customers/pdf', protect, exportController.exportCustomersPdf)
+router.get('/export/expenses/csv', protect, exportController.exportExpensesCsv)
+router.get('/export/expenses/pdf', protect, exportController.exportExpensesPdf)
+router.get('/export/inventory/csv', protect, exportController.exportInventoryCsv)
+router.get('/export/inventory/pdf', protect, exportController.exportInventoryPdf)
+router.get('/export/branches/csv', protect, exportController.exportBranchesCsv)
+router.get('/export/branches/pdf', protect, exportController.exportBranchesPdf)
+router.get('/export/suppliers/csv', protect, exportController.exportSuppliersCsv)
+router.get('/export/suppliers/pdf', protect, exportController.exportSuppliersPdf)
+router.get('/export/sales/csv', protect, exportController.exportSalesCsv)
+router.get('/export/sales/pdf', protect, exportController.exportSalesPdf)
+router.get('/export/purchases/csv', protect, exportController.exportPurchasesCsv)
+router.get('/export/purchases/pdf', protect, exportController.exportPurchasesPdf)
 
 // Order cancel route
-router.delete('/api/orders/:id', requireAuth, orderController.deleteOrder)
+router.delete('/api/orders/:id', protect, orderController.deleteOrder)
 
 // Audit log route
-router.get('/audit-log', requireAuth, auditController.getAuditLog)
+router.get('/audit-log', protect, auditController.getAuditLog)
 
 module.exports = router;

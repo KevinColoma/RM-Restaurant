@@ -1,7 +1,7 @@
 import { notifyError, notifyWarning } from '../lib/notify.js';
 
-export function renderLayout(app, activePage, contentHtml) {
-  const sidebarItems = [
+function sidebarForRol() {
+  const fullMenu = [
     { href: '#/dashboard', icon: 'dashboard.svg', label: 'nav.dashboard', children: null },
     { icon: 'product.svg', label: 'nav.food', children: [
       { href: '#/pos', label: 'nav.billing' },
@@ -37,6 +37,42 @@ export function renderLayout(app, activePage, contentHtml) {
     { href: '#/settings', icon: 'settings.svg', label: 'nav.settings', children: null },
     { href: '#/audit-log', icon: 'time.svg', label: 'nav.audit_log', children: null }
   ];
+  const meseroMenu = [
+    { href: '#/pos', icon: 'product.svg', label: 'nav.billing', children: null },
+    { href: '#/orders-list', icon: 'time.svg', label: 'nav.orders_list', children: null },
+    { href: '#/profile', icon: 'users1.svg', label: 'nav.my_profile', children: null }
+  ];
+  const cocineroMenu = [
+    { href: '#/pos', icon: 'product.svg', label: 'nav.billing', children: null },
+    { icon: 'product.svg', label: 'nav.food', children: [
+      { href: '#/menu-list', label: 'nav.list_items' }
+    ]},
+    { href: '#/orders-list', icon: 'time.svg', label: 'nav.orders_list', children: null },
+    { href: '#/profile', icon: 'users1.svg', label: 'nav.my_profile', children: null }
+  ];
+  const gerenteMenu = [
+    { href: '#/dashboard', icon: 'dashboard.svg', label: 'nav.dashboard', children: null },
+    { icon: 'product.svg', label: 'nav.food', children: [
+      { href: '#/pos', label: 'nav.billing' },
+      { href: '#/menu-list', label: 'nav.list_items' }
+    ]},
+    { href: '#/orders-list', icon: 'time.svg', label: 'nav.orders_list', children: null },
+    { icon: 'sales1.svg', label: 'nav.suppliers_inventory', children: [
+      { href: '#/inventory-list', label: 'nav.inventory_list' }
+    ]},
+    { href: '#/profile', icon: 'users1.svg', label: 'nav.my_profile', children: null }
+  ];
+  const rol = localStorage.getItem('rol') || 'admin';
+  switch (rol) {
+    case 'mesero': return meseroMenu;
+    case 'cocinero': return cocineroMenu;
+    case 'gerente': return gerenteMenu;
+    default: return fullMenu;
+  }
+}
+
+export function renderLayout(app, activePage, contentHtml) {
+  const sidebarItems = sidebarForRol();
 
   const targetHash = '#/' + activePage;
 

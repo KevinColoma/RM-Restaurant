@@ -8,12 +8,21 @@ export function showError(app, err) {
   app.innerHTML = `<div class="page-wrapper"><div class="content"><p class="text-danger">Failed to load: ${err.message}</p></div></div>`;
 }
 
+export function canWrite() {
+  return (localStorage.getItem('rol') || 'admin') === 'admin';
+}
+
 export function renderPage(app, pageName, html) {
   renderLayout(app, pageName, html);
   setTimeout(setupPage, 100, app);
 }
 
 function setupPage(app) {
+  if (!canWrite()) {
+    app.querySelectorAll('.delete-item, .edit-item, .action-btns a').forEach(b => b.remove());
+    const addBtn = app.querySelector('a[href*="add"][class*="btn"]:not(#apply-filters)');
+    if (addBtn) addBtn.remove();
+  }
   if (typeof $ !== 'undefined' && $.fn.DataTable) {
     const table = app.querySelector('.datanew');
     // A "No X found" placeholder row uses a single colspan cell. Initializing

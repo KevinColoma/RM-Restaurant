@@ -121,10 +121,21 @@ const PlaceOrder = async (req, res) => {
 const GetOrders = async (req, res) => {
     try {
         const personaId = req.personaId;
-        const orders = await Order.find({ personaId })
+        const filter = { personaId };
+        if (req.query.orderType) filter.orderType = req.query.orderType;
+        if (req.query.dateFrom || req.query.dateTo) {
+            filter.createdAt = {};
+            if (req.query.dateFrom) filter.createdAt.$gte = new Date(req.query.dateFrom);
+            if (req.query.dateTo) {
+                const end = new Date(req.query.dateTo);
+                end.setHours(23, 59, 59, 999);
+                filter.createdAt.$lte = end;
+            }
+        }
+        const orders = await Order.find(filter)
             .populate('items.menuItem', 'item price')
             .sort({ createdAt: -1 });
-        res.render('orders-list', { orders });
+        res.render('orders-list', { orders, query: req.query });
     } catch (error) {
         res.status(400).send(error.message);
     }

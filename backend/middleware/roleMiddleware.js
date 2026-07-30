@@ -1,14 +1,20 @@
-const requireRole = (...roles) => {
-  return (req, res, next) => {
-    if (!req.usuario) {
-      return res.status(401).json({ error: 'Authentication required' });
+const writeExemptPaths = ['/api/profile', '/api/pos', '/api/placeorder', '/api/orders', '/api/session'];
+
+function isExempt(path) {
+  return writeExemptPaths.some(p => path.startsWith(p));
+}
+
+const requireWriteAccess = (req, res, next) => {
+  if (isExempt(req.path)) return next();
+  if (req.method === 'GET') return next();
+  const userRole = req.usuario?.rolId?.nombre;
+  if (userRole !== 'admin') {
+    if (req.path.startsWith('/api/')) {
+      return res.status(403).json({ success: false, message: 'Forbidden: write access requires admin role' });
     }
-    const userRole = req.usuario.rolId ? req.usuario.rolId.nombre : null;
-    if (!userRole || !roles.includes(userRole)) {
-      return res.status(403).json({ error: 'Forbidden: insufficient permissions' });
-    }
-    next();
-  };
+    return res.status(403).send('Forbidden: write access requires admin role');
+  }
+  next();
 };
 
-module.exports = { requireRole };
+module.exports = { requireWriteAccess };
