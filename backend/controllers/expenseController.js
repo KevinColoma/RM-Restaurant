@@ -2,7 +2,7 @@
 
 const Expense = require('../models/Expense');
 const { logAudit } = require('../utils/audit');
-const { isValidObjectId } = require('../utils/validate');
+const { isValidObjectId, escapeRegex } = require('../utils/validate');
 const { getPageParams, paginate } = require('../utils/pagination');
 
 exports. addExpensePage = (req,res)=>{
@@ -17,7 +17,7 @@ exports.addExpense = async (req, res) => {
         const personaId = req.personaId;
 
         const numericAmount = Number(amount);
-        if (isNaN(numericAmount) || numericAmount <= 0) {
+        if (Number.isNaN(numericAmount) || numericAmount <= 0) {
             return res.status(400).json({ message: 'Amount must be a valid number greater than zero' });
         }
 
@@ -55,11 +55,11 @@ exports.getExpense = async(req,res)=>{
 
 }
 
-const VALID_PAYMENT_METHODS = ['cash', 'credit card', 'bank transfer', 'other'];
+const VALID_PAYMENT_METHODS = new Set(['cash', 'credit card', 'bank transfer', 'other']);
 
 function parseDate(value) {
   const d = new Date(value);
-  return isNaN(d.getTime()) ? null : d;
+  return Number.isNaN(d.getTime()) ? null : d;
 }
 
 // JSON list for the SPA. getExpense above renders the EJS page instead, which
@@ -69,12 +69,12 @@ exports.listExpenses = async (req, res) => {
     try {
         const filter = { personaId: req.personaId };
         if (req.query.category) filter.category = req.query.category;
-        if (req.query.expenseType) filter.expenseType = { $regex: req.query.expenseType, $options: 'i' };
-        if (VALID_PAYMENT_METHODS.includes(req.query.paymentMethod)) filter.paymentMethod = req.query.paymentMethod;
+        if (req.query.expenseType) filter.expenseType = { $regex: escapeRegex(req.query.expenseType), $options: 'i' };
+        if (VALID_PAYMENT_METHODS.has(req.query.paymentMethod)) filter.paymentMethod = req.query.paymentMethod;
         if (req.query.q) filter.$or = [
-            { description: { $regex: req.query.q, $options: 'i' } },
-            { vendor: { $regex: req.query.q, $options: 'i' } },
-            { invoiceNumber: { $regex: req.query.q, $options: 'i' } }
+            { description: { $regex: escapeRegex(req.query.q), $options: 'i' } },
+            { vendor: { $regex: escapeRegex(req.query.q), $options: 'i' } },
+            { invoiceNumber: { $regex: escapeRegex(req.query.q), $options: 'i' } }
         ];
         const fromDate = parseDate(req.query.dateFrom);
         const toDate = parseDate(req.query.dateTo);
@@ -136,7 +136,7 @@ exports.updateExpense = async (req, res) => {
 
         if (amount !== undefined) {
             const numericAmount = Number(amount);
-            if (isNaN(numericAmount) || numericAmount <= 0) {
+            if (Number.isNaN(numericAmount) || numericAmount <= 0) {
                 return res.status(400).json({ message: 'Amount must be a valid number greater than zero' });
             }
         }

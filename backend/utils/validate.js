@@ -21,13 +21,17 @@ function sanitizeFields(body, allowed) {
   return safe;
 }
 
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function isPositiveNumber(val) {
   const n = Number(val);
-  return !isNaN(n) && n > 0;
+  return !Number.isNaN(n) && n > 0;
 }
 
 function isValidEmail(val) {
   return typeof val === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
 }
 
-module.exports = { isValidObjectId, validateObjectId, sanitizeFields, isPositiveNumber, isValidEmail };
+module.exports = { isValidObjectId, validateObjectId, sanitizeFields, escapeRegex, isPositiveNumber, isValidEmail };

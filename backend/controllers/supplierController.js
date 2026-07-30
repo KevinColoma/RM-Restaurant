@@ -1,6 +1,6 @@
 const Supplier = require('../models/Supplier');
 const { logAudit } = require('../utils/audit');
-const { isValidObjectId } = require('../utils/validate');
+const { isValidObjectId, escapeRegex } = require('../utils/validate');
 const { getPageParams, paginate } = require('../utils/pagination');
 
 exports.createSupplier = async (req, res) => {
@@ -28,8 +28,8 @@ exports.getSuppliers = async (req, res) => {
   try {
     const filter = { personaId: req.personaId };
     if (req.query.q) filter.$or = [
-      { name: { $regex: req.query.q, $options: 'i' } },
-      { contactInfo: { $regex: req.query.q, $options: 'i' } }
+      { name: { $regex: escapeRegex(req.query.q), $options: 'i' } },
+      { contactInfo: { $regex: escapeRegex(req.query.q), $options: 'i' } }
     ];
     const result = await paginate(Supplier, filter, getPageParams(req), {
       sort: { name: 1 }

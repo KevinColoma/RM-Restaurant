@@ -17,7 +17,7 @@ const Purchase = require('../models/Purchase');
 const Order = require('../models/order');
 const Persona = require('../models/Persona');
 const AuditLog = require('../models/AuditLog');
-const { isValidObjectId } = require('../utils/validate');
+const { isValidObjectId, escapeRegex } = require('../utils/validate');
 const { getPageParams, paginate } = require('../utils/pagination');
 
 // Wraps a read so every endpoint reports failure the same way, and a thrown
@@ -43,15 +43,16 @@ const sendPage = (res, key, result) => res.json({
     limit: result.limit
 });
 
+const VALID_CATEGORIES = new Set(['Veg', 'Non-Veg']);
+const VALID_SUBCATEGORIES = new Set(['Starter', 'Main Course', 'Beverage', 'Soup', 'Salad', 'Roti', 'Rice', 'Dessert', 'Juice', 'Snack', 'Side Dish']);
+
 exports.listMenu = jsonRead(async (req, res) => {
     const filter = { personaId: req.personaId };
-    const VALID_CATEGORIES = ['Veg', 'Non-Veg'];
-    const VALID_SUBCATEGORIES = ['Starter', 'Main Course', 'Beverage', 'Soup', 'Salad', 'Roti', 'Rice', 'Dessert', 'Juice', 'Snack', 'Side Dish'];
-    if (VALID_CATEGORIES.includes(req.query.category)) filter.category = req.query.category;
-    if (VALID_SUBCATEGORIES.includes(req.query.subCategory)) filter.subCategory = req.query.subCategory;
+    if (VALID_CATEGORIES.has(req.query.category)) filter.category = req.query.category;
+    if (VALID_SUBCATEGORIES.has(req.query.subCategory)) filter.subCategory = req.query.subCategory;
     if (req.query.availability === 'true') filter.availability = true;
     else if (req.query.availability === 'false') filter.availability = false;
-    if (req.query.q) filter.item = { $regex: req.query.q, $options: 'i' };
+    if (req.query.q) filter.item = { $regex: escapeRegex(req.query.q), $options: 'i' };
     const result = await paginate(Menu, filter, getPageParams(req));
     sendPage(res, 'menus', result);
 });
@@ -59,8 +60,8 @@ exports.listMenu = jsonRead(async (req, res) => {
 exports.listCustomers = jsonRead(async (req, res) => {
     const filter = { personaId: req.personaId };
     if (req.query.q) filter.$or = [
-        { name: { $regex: req.query.q, $options: 'i' } },
-        { phone: { $regex: req.query.q, $options: 'i' } }
+        { name: { $regex: escapeRegex(req.query.q), $options: 'i' } },
+        { phone: { $regex: escapeRegex(req.query.q), $options: 'i' } }
     ];
     const result = await paginate(Customer, filter, getPageParams(req), {
         sort: { createdAt: -1 }
@@ -70,7 +71,7 @@ exports.listCustomers = jsonRead(async (req, res) => {
 
 exports.listInventory = jsonRead(async (req, res) => {
     const filter = { personaId: req.personaId };
-    if (req.query.q) filter.name = { $regex: req.query.q, $options: 'i' };
+    if (req.query.q) filter.name = { $regex: escapeRegex(req.query.q), $options: 'i' };
     if (req.query.lowStock === 'true') filter.quantity = { $lte: 10 };
     const result = await paginate(InventoryItem, filter, getPageParams(req), {
         populate: { path: 'supplier', select: 'name' }
@@ -91,11 +92,11 @@ exports.getInventoryItem = jsonRead(async (req, res) => {
 
 exports.listBranches = jsonRead(async (req, res) => {
     const filter = { personaId: req.personaId };
-    if (req.query.city) filter.city = { $regex: req.query.city, $options: 'i' };
+    if (req.query.city) filter.city = { $regex: escapeRegex(req.query.city), $options: 'i' };
     if (req.query.q) filter.$or = [
-        { restaurantName: { $regex: req.query.q, $options: 'i' } },
-        { city: { $regex: req.query.q, $options: 'i' } },
-        { ownerName: { $regex: req.query.q, $options: 'i' } }
+        { restaurantName: { $regex: escapeRegex(req.query.q), $options: 'i' } },
+        { city: { $regex: escapeRegex(req.query.q), $options: 'i' } },
+        { ownerName: { $regex: escapeRegex(req.query.q), $options: 'i' } }
     ];
     const result = await paginate(Branch, filter, getPageParams(req));
     sendPage(res, 'branches', result);
@@ -103,7 +104,7 @@ exports.listBranches = jsonRead(async (req, res) => {
 
 exports.listPurchases = jsonRead(async (req, res) => {
     const filter = { personaId: req.personaId };
-    if (req.query.q) filter['items.itemName'] = { $regex: req.query.q, $options: 'i' };
+    if (req.query.q) filter['items.itemName'] = { $regex: escapeRegex(req.query.q), $options: 'i' };
     const fromDate = parseDate(req.query.dateFrom);
     const toDate = parseDate(req.query.dateTo);
     if (fromDate || toDate) {
@@ -121,16 +122,16 @@ exports.listPurchases = jsonRead(async (req, res) => {
     sendPage(res, 'purchases', result);
 });
 
-const VALID_ORDER_TYPES = ['dine in', 'take away', 'online'];
+const VALID_ORDER_TYPES = new Set(['dine in', 'take away', 'online']);
 
 function parseDate(value) {
   const d = new Date(value);
-  return isNaN(d.getTime()) ? null : d;
+  return Number.isNaN(d.getTime()) ? null : d;
 }
 
 exports.listOrders = jsonRead(async (req, res) => {
     const filter = { personaId: req.personaId };
-    const orderType = VALID_ORDER_TYPES.find(t => t === req.query.orderType);
+    const orderType = VALID_ORDER_TYPES.has(req.query.orderType) ? req.query.orderType : null;
     if (orderType) filter.orderType = orderType;
     const fromDate = parseDate(req.query.dateFrom);
     const toDate = parseDate(req.query.dateTo);
@@ -176,14 +177,14 @@ exports.getSettings = jsonRead(async (req, res) => {
     res.json({ success: true, persona });
 });
 
-const VALID_AUDIT_ACTIONS = ['create', 'update', 'delete', 'cancel', 'login', 'logout', 'password_change', 'settings_update', 'signup'];
-const VALID_AUDIT_COLLECTIONS = ['Menu', 'Order', 'InventoryItem', 'Supplier', 'Expense', 'Customer', 'Branch', 'Purchase', 'Persona', 'Usuario', 'Rol'];
+const VALID_AUDIT_ACTIONS = new Set(['create', 'update', 'delete', 'cancel', 'login', 'logout', 'password_change', 'settings_update', 'signup']);
+const VALID_AUDIT_COLLECTIONS = new Set(['Menu', 'Order', 'InventoryItem', 'Supplier', 'Expense', 'Customer', 'Branch', 'Purchase', 'Persona', 'Usuario', 'Rol']);
 
 exports.listAuditLog = jsonRead(async (req, res) => {
     const filter = { personaId: req.personaId };
-    if (VALID_AUDIT_ACTIONS.includes(req.query.action)) filter.action = req.query.action;
-    if (VALID_AUDIT_COLLECTIONS.includes(req.query.collection)) filter.collection = req.query.collection;
-    if (req.query.q) filter.details = { $regex: req.query.q, $options: 'i' };
+    if (VALID_AUDIT_ACTIONS.has(req.query.action)) filter.action = req.query.action;
+    if (VALID_AUDIT_COLLECTIONS.has(req.query.collection)) filter.collection = req.query.collection;
+    if (req.query.q) filter.details = { $regex: escapeRegex(req.query.q), $options: 'i' };
     const fromDate = parseDate(req.query.dateFrom);
     const toDate = parseDate(req.query.dateTo);
     if (fromDate || toDate) {
