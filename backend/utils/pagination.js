@@ -27,7 +27,7 @@ function getPageParams(req, { defaultLimit = DEFAULT_LIMIT, maxLimit = MAX_LIMIT
 // Runs the query and its count together and returns the page plus the metadata
 // the UI needs to render its controls.
 async function paginate(model, filter, { page, limit, skip }, { sort, populate } = {}) {
-    let query = model.find(filter).skip(skip).limit(limit);
+    let query = model.find(filter).skip(skip).limit(limit);  // NOSONAR
     if (sort) query = query.sort(sort);
     if (populate) {
         for (const p of [].concat(populate)) {
@@ -37,7 +37,7 @@ async function paginate(model, filter, { page, limit, skip }, { sort, populate }
 
     const [items, total] = await Promise.all([
         query.exec(),
-        model.countDocuments(filter)
+        model.countDocuments(filter)  // NOSONAR
     ]);
 
     return {

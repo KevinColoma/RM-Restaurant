@@ -118,18 +118,30 @@ const PlaceOrder = async (req, res) => {
 
 
 
+const VALID_ORDER_TYPES = ['dine in', 'take away', 'online'];
+
+function parseDate(value) {
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 const GetOrders = async (req, res) => {
     try {
         const personaId = req.personaId;
         const filter = { personaId };
-        if (req.query.orderType) filter.orderType = req.query.orderType;
+        if (req.query.orderType && VALID_ORDER_TYPES.includes(req.query.orderType)) {
+            filter.orderType = req.query.orderType;
+        }
         if (req.query.dateFrom || req.query.dateTo) {
-            filter.createdAt = {};
-            if (req.query.dateFrom) filter.createdAt.$gte = new Date(req.query.dateFrom);
-            if (req.query.dateTo) {
-                const end = new Date(req.query.dateTo);
-                end.setHours(23, 59, 59, 999);
-                filter.createdAt.$lte = end;
+            const fromDate = req.query.dateFrom ? parseDate(req.query.dateFrom) : null;
+            const toDate = req.query.dateTo ? parseDate(req.query.dateTo) : null;
+            if (fromDate || toDate) {
+                filter.createdAt = {};
+                if (fromDate) filter.createdAt.$gte = fromDate;
+                if (toDate) {
+                    toDate.setHours(23, 59, 59, 999);
+                    filter.createdAt.$lte = toDate;
+                }
             }
         }
         const orders = await Order.find(filter)

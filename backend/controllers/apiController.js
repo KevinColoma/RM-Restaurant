@@ -86,16 +86,28 @@ exports.listPurchases = jsonRead(async (req, res) => {
     sendPage(res, 'purchases', result);
 });
 
+const VALID_ORDER_TYPES = ['dine in', 'take away', 'online'];
+
+function parseDate(value) {
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 exports.listOrders = jsonRead(async (req, res) => {
     const filter = { personaId: req.personaId };
-    if (req.query.orderType) filter.orderType = req.query.orderType;
+    if (req.query.orderType && VALID_ORDER_TYPES.includes(req.query.orderType)) {
+        filter.orderType = req.query.orderType;
+    }
     if (req.query.dateFrom || req.query.dateTo) {
-        filter.createdAt = {};
-        if (req.query.dateFrom) filter.createdAt.$gte = new Date(req.query.dateFrom);
-        if (req.query.dateTo) {
-            const end = new Date(req.query.dateTo);
-            end.setHours(23, 59, 59, 999);
-            filter.createdAt.$lte = end;
+        const fromDate = req.query.dateFrom ? parseDate(req.query.dateFrom) : null;
+        const toDate = req.query.dateTo ? parseDate(req.query.dateTo) : null;
+        if (fromDate || toDate) {
+            filter.createdAt = {};
+            if (fromDate) filter.createdAt.$gte = fromDate;
+            if (toDate) {
+                toDate.setHours(23, 59, 59, 999);
+                filter.createdAt.$lte = toDate;
+            }
         }
     }
     const result = await paginate(Order, filter, getPageParams(req), {
