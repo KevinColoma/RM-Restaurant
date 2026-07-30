@@ -72,7 +72,7 @@ registerRoute('/signup', (app) => {
   </div>
 </form>
 <div class="signinform text-center">
-  <h4 data-i18n="signup.already_user">Already a user? <a href="#/signin" class="hover-a">Sign In</a></h4>
+  <h4><span data-i18n="signup.already_user">Already a user?</span> <a href="#/signin" class="hover-a" data-i18n="signin.submit">Sign In</a></h4>
 </div>
 </div>
 </div>
