@@ -3,35 +3,40 @@ const { escapeRegex } = require('./validate');
 const VALID_ACTIONS = new Set(['create', 'update', 'delete', 'cancel', 'login', 'logout', 'password_change', 'settings_update', 'signup']);
 const VALID_COLLECTIONS = new Set(['Menu', 'Order', 'InventoryItem', 'Supplier', 'Expense', 'Customer', 'Branch', 'Purchase', 'Persona', 'Usuario', 'Rol']);
 
-function buildAuditFilter(personaId, query) {
+function buildAuditFilter(personaId, action, collection, q, dateFrom, dateTo) {
   const filter = {};
-
-  if (typeof query.action === 'string' && VALID_ACTIONS.has(query.action)) {
-    filter.action = query.action;
-  }
-
-  if (typeof query.collection === 'string' && VALID_COLLECTIONS.has(query.collection)) {
-    filter.collection = query.collection;
-  }
-
-  if (typeof query.q === 'string' && query.q.length > 0) {
-    filter.details = { $regex: escapeRegex(query.q), $options: 'i' };
-  }
-
-  const dateFrom = typeof query.dateFrom === 'string' ? new Date(query.dateFrom) : null;
-  if (dateFrom && !Number.isNaN(dateFrom.getTime())) {
-    filter.createdAt = filter.createdAt || {};
-    filter.createdAt.$gte = dateFrom;
-  }
-
-  const dateTo = typeof query.dateTo === 'string' ? new Date(query.dateTo) : null;
-  if (dateTo && !Number.isNaN(dateTo.getTime())) {
-    dateTo.setHours(23, 59, 59, 999);
-    filter.createdAt = filter.createdAt || {};
-    filter.createdAt.$lte = dateTo;
-  }
-
   filter.personaId = personaId;
+
+  if (VALID_ACTIONS.has(action)) {
+    filter.action = action;
+  }
+
+  if (VALID_COLLECTIONS.has(collection)) {
+    filter.collection = collection;
+  }
+
+  const search = q;
+  if (typeof search === 'string' && search.length > 0) {
+    filter.details = { $regex: escapeRegex(search), $options: 'i' };
+  }
+
+  if (typeof dateFrom === 'string') {
+    const from = new Date(dateFrom);
+    if (!Number.isNaN(from.getTime())) {
+      filter.createdAt = filter.createdAt || {};
+      filter.createdAt.$gte = from;
+    }
+  }
+
+  if (typeof dateTo === 'string') {
+    const to = new Date(dateTo);
+    if (!Number.isNaN(to.getTime())) {
+      to.setHours(23, 59, 59, 999);
+      filter.createdAt = filter.createdAt || {};
+      filter.createdAt.$lte = to;
+    }
+  }
+
   return filter;
 }
 

@@ -322,7 +322,8 @@ exports.exportPurchasesPdf = pdfExport(Purchase, {
 // Audit Log exports (with filter support)
 exports.exportAuditLogCsv = async (req, res) => {
   try {
-    const filter = buildAuditFilter(req.personaId, req.query);
+    const { action, collection, q, dateFrom, dateTo } = req.query;
+    const filter = buildAuditFilter(req.personaId, action, collection, q, dateFrom, dateTo);
     const items = await AuditLog.find(filter).sort({ createdAt: -1 });
     const columns = [
       { label: 'Action', getValue: r => r.action },
@@ -339,7 +340,8 @@ exports.exportAuditLogCsv = async (req, res) => {
 
 exports.exportAuditLogPdf = async (req, res) => {
   try {
-    const filter = buildAuditFilter(req.personaId, req.query);
+    const { action, collection, q, dateFrom, dateTo } = req.query;
+    const filter = buildAuditFilter(req.personaId, action, collection, q, dateFrom, dateTo);
     const items = await AuditLog.find(filter).sort({ createdAt: -1 });
     const columns = [
       { label: 'Action', getValue: r => r.action },

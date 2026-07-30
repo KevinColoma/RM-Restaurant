@@ -179,7 +179,8 @@ exports.getSettings = jsonRead(async (req, res) => {
 });
 
 exports.listAuditLog = jsonRead(async (req, res) => {
-    const filter = buildAuditFilter(req.personaId, req.query);
+    const { action, collection, q, dateFrom, dateTo } = req.query;
+    const filter = buildAuditFilter(req.personaId, action, collection, q, dateFrom, dateTo);
     const result = await paginate(AuditLog, filter, getPageParams(req), {
         sort: { createdAt: -1 }
     });
