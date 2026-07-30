@@ -277,6 +277,20 @@ export function renderLayout(app, activePage, contentHtml) {
         if (data.avatar) {
           avatarImgs.forEach(img => { img.src = data.avatar; });
         }
+        // Settings saves persona.theme on the server, but until now nothing
+        // ever read it back: every page only ever checked localStorage (set
+        // below), so the theme only ever "stuck" on the one browser that
+        // saved it. Signing in on another device or after clearing storage
+        // silently reverted to light even though the account's Settings page
+        // still showed Dark as selected. This runs on every page (it reuses
+        // the profile fetch already made here) so the account's theme now
+        // wins over local state, and it keeps localStorage in sync as a
+        // same-session cache for the next render.
+        const accountTheme = data.persona?.theme;
+        if (accountTheme === 'dark' || accountTheme === 'light') {
+          document.body.classList.toggle('dark-mode', accountTheme === 'dark');
+          localStorage.setItem('rms-theme', accountTheme);
+        }
       }
     })
     .catch(() => {});
