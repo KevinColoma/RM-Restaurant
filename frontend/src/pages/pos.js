@@ -10,6 +10,11 @@ registerRoute('/pos', async (app) => {
     const data = await get('/pos');
     const menus = data?.menus || [];
     const customers = data?.customers || [];
+    // Falls back to the same defaults the backend uses (Settings > Tax Rate,
+    // default 10%) so a missing value here can never silently under- or
+    // over-charge relative to what PlaceOrder actually bills.
+    const taxRate = typeof data?.taxRate === 'number' ? data.taxRate : 10;
+    const currencySymbol = data?.currencySymbol || '$';
 
     const categories = [...new Set(menus.map(m => m.category).filter(Boolean))];
 
@@ -97,7 +102,7 @@ registerRoute('/pos', async (app) => {
                   <div class="menu-card" data-id="${m._id}" data-item="${m.item}" data-price="${m.price}" data-category="${m.category}">
                     <div class="item-name">${m.item}</div>
                     <div class="item-category">${m.subCategory || ''}</div>
-                    <div class="item-price">$${Number(m.price).toFixed(2)}</div>
+                    <div class="item-price">${currencySymbol}${Number(m.price).toFixed(2)}</div>
                   </div>
                 `).join('')}
               </div>
@@ -111,7 +116,7 @@ registerRoute('/pos', async (app) => {
                   <div class="menu-card" data-id="${m._id}" data-item="${m.item}" data-price="${m.price}" data-category="">
                     <div class="item-name">${m.item}</div>
                     <div class="item-category"></div>
-                    <div class="item-price">$${Number(m.price).toFixed(2)}</div>
+                    <div class="item-price">${currencySymbol}${Number(m.price).toFixed(2)}</div>
                   </div>
                 `).join('')}
               </div>
@@ -152,9 +157,9 @@ registerRoute('/pos', async (app) => {
 
         <div class="cart-summary">
           <ul>
-            <li><span data-i18n="pos.subtotal">Subtotal</span><span id="subtotal">0.00</span></li>
-            <li><span data-i18n="pos.tax_label">Tax (10%)</span><span id="tax">0.00</span></li>
-            <li class="total-value"><span data-i18n="pos.total">Total</span><span id="total">0.00</span></li>
+            <li><span data-i18n="pos.subtotal">Subtotal</span><span id="subtotal">${currencySymbol}0.00</span></li>
+            <li><span id="tax-label">${(window.t ? window.t('pos.tax_label') : 'Tax') + ' (' + taxRate + '%)'}</span><span id="tax">${currencySymbol}0.00</span></li>
+            <li class="total-value"><span data-i18n="pos.total">Total</span><span id="total">${currencySymbol}0.00</span></li>
           </ul>
         </div>
 
@@ -220,10 +225,10 @@ registerRoute('/pos', async (app) => {
       const entries = Object.entries(cart);
       if (entries.length === 0) {
         cartBody.innerHTML = '<tr><td colspan="4" class="no-items-msg">No items in cart</td></tr>';
-        subtotalEl.textContent = '0.00';
-        taxEl.textContent = '0.00';
-        totalEl.textContent = '0.00';
-        checkoutTotalEl.textContent = '0.00';
+        subtotalEl.textContent = currencySymbol + '0.00';
+        taxEl.textContent = currencySymbol + '0.00';
+        totalEl.textContent = currencySymbol + '0.00';
+        checkoutTotalEl.textContent = currencySymbol + '0.00';
         return;
       }
 
@@ -242,18 +247,18 @@ registerRoute('/pos', async (app) => {
       <button class="qty-inc" data-id="${id}">+</button>
     </div>
   </td>
-  <td>$${lineTotal.toFixed(2)}</td>
+  <td>${currencySymbol}${lineTotal.toFixed(2)}</td>
   <td><span class="remove-item" data-id="${id}">×</span></td>
 </tr>`;
       });
 
       cartBody.innerHTML = rowsHtml;
-      const tax = subtotal * 0.1;
+      const tax = subtotal * (taxRate / 100);
       const total = subtotal + tax;
-      subtotalEl.textContent = subtotal.toFixed(2);
-      taxEl.textContent = tax.toFixed(2);
-      totalEl.textContent = total.toFixed(2);
-      checkoutTotalEl.textContent = total.toFixed(2);
+      subtotalEl.textContent = currencySymbol + subtotal.toFixed(2);
+      taxEl.textContent = currencySymbol + tax.toFixed(2);
+      totalEl.textContent = currencySymbol + total.toFixed(2);
+      checkoutTotalEl.textContent = currencySymbol + total.toFixed(2);
 
       cartBody.querySelectorAll('.qty-inc').forEach(btn => {
         btn.addEventListener('click', () => {

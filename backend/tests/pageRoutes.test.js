@@ -78,6 +78,28 @@ describe('Authenticated static page routes', () => {
   });
 });
 
+describe('GET /pos', () => {
+  it('renders the pos page with the persona tax rate', async () => {
+    const res = await request(app)
+      .get('/pos')
+      .set('Cookie', [`jwt=${token}`]);
+    expect(res.status).toBe(200);
+  });
+
+  it('returns 500 when a database error occurs', async () => {
+    jest.spyOn(Persona, 'findById').mockImplementationOnce(() => {
+      throw new Error('DB failure');
+    });
+
+    const res = await request(app)
+      .get('/pos')
+      .set('Cookie', [`jwt=${token}`]);
+    expect(res.status).toBe(500);
+
+    Persona.findById.mockRestore();
+  });
+});
+
 describe('GET /edit-item/:id', () => {
   it('returns 400 for an invalid id', async () => {
     const res = await request(app)

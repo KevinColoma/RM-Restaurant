@@ -1,5 +1,6 @@
 const Menu = require('../models/menu')
 const Customer = require('../models/Customer')
+const Persona = require('../models/Persona')
 const { logAudit } = require('../utils/audit');
 const { isValidObjectId } = require('../utils/validate');
 
@@ -48,7 +49,11 @@ const GetPos = async(req,res)=>{
     try {
         const menus = await Menu.find({ personaId });
         const customers = await Customer.find({ personaId }).sort({ name: 1 });
-        res.render('pos', { menus, customers });
+        const persona = await Persona.findById(personaId);
+        // Same default PlaceOrder uses when actually charging the order, so
+        // this preview can never drift from what gets billed.
+        const taxRate = (persona && persona.taxRate != null) ? persona.taxRate : 10;
+        res.render('pos', { menus, customers, taxRate });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

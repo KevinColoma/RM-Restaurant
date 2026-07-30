@@ -153,9 +153,17 @@ exports.listOrders = jsonRead(async (req, res) => {
 
 // The point-of-sale screen loads its menu and customer pickers in one call.
 exports.getPos = jsonRead(async (req, res) => {
-    const menus = await Menu.find({ personaId: req.personaId });
-    const customers = await Customer.find({ personaId: req.personaId }).sort({ name: 1 });
-    res.json({ success: true, menus, customers });
+    const [menus, customers, persona] = await Promise.all([
+        Menu.find({ personaId: req.personaId }),
+        Customer.find({ personaId: req.personaId }).sort({ name: 1 }),
+        Persona.findById(req.personaId)
+    ]);
+    // Same defaults PlaceOrder uses when actually charging the order, so the
+    // cart preview the cashier sees always matches what gets billed - see the
+    // comment there for why this mirrors it instead of importing it.
+    const taxRate = (persona && persona.taxRate != null) ? persona.taxRate : 10;
+    const currencySymbol = (persona && persona.currencySymbol) ? persona.currencySymbol : '$';
+    res.json({ success: true, menus, customers, taxRate, currencySymbol });
 });
 
 exports.getProfile = jsonRead(async (req, res) => {

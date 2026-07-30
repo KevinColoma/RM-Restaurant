@@ -229,6 +229,9 @@
     const checkoutTotalEl = document.getElementById('checkout-total');
     const checkoutButton = document.getElementById('checkout-button');
     const submitButton = document.getElementById('submit-button');
+    // Same default PlaceOrder uses when actually charging the order, so this
+    // preview matches what gets billed.
+    const taxRate = (<%= typeof taxRate !== 'undefined' && taxRate != null ? taxRate : 10 %>) / 100;
     let selectedOrderType = '';
 
 
@@ -418,7 +421,7 @@
             subtotal += quantity * price;
         });
 
-        const tax = subtotal * 0.1; // Assuming a tax rate of 10%
+        const tax = subtotal * taxRate;
         const total = subtotal + tax;
 
         subtotalEl.textContent = subtotal.toFixed(2);
