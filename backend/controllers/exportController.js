@@ -10,7 +10,7 @@ const AuditLog = require('../models/AuditLog');
 const { generateCsv } = require('../utils/csv');
 const { generatePdf, generateSalesReportPdf } = require('../utils/pdf');
 const { aggregateSales, aggregateOrders } = require('../utils/reportUtils');
-const { escapeRegex } = require('../utils/validate');
+const { buildAuditFilter } = require('../utils/auditFilter');
 
 function setCsvHeaders(res, filename) {
   res.setHeader('Content-Type', 'text/csv');
@@ -319,32 +319,10 @@ exports.exportPurchasesPdf = pdfExport(Purchase, {
   filename: 'purchases.pdf'
 });
 
-const VALID_AUDIT_ACTIONS = new Set(['create', 'update', 'delete', 'cancel', 'login', 'logout', 'password_change', 'settings_update', 'signup']);
-const VALID_AUDIT_COLLECTIONS = new Set(['Menu', 'Order', 'InventoryItem', 'Supplier', 'Expense', 'Customer', 'Branch', 'Purchase', 'Persona', 'Usuario', 'Rol']);
-
-function buildAuditFilter(req) {
-  const filter = { personaId: req.personaId };
-  if (VALID_AUDIT_ACTIONS.has(req.query.action)) filter.action = req.query.action;
-  if (VALID_AUDIT_COLLECTIONS.has(req.query.collection)) filter.collection = req.query.collection;
-  if (req.query.q) filter.details = { $regex: escapeRegex(req.query.q), $options: 'i' };
-  const fromDate = req.query.dateFrom ? new Date(req.query.dateFrom) : null;
-  const toDate = req.query.dateTo ? new Date(req.query.dateTo) : null;
-  if (fromDate && !Number.isNaN(fromDate.getTime())) {
-    filter.createdAt = filter.createdAt || {};
-    filter.createdAt.$gte = fromDate;
-  }
-  if (toDate && !Number.isNaN(toDate.getTime())) {
-    toDate.setHours(23, 59, 59, 999);
-    filter.createdAt = filter.createdAt || {};
-    filter.createdAt.$lte = toDate;
-  }
-  return filter;
-}
-
 // Audit Log exports (with filter support)
 exports.exportAuditLogCsv = async (req, res) => {
   try {
-    const filter = buildAuditFilter(req);
+    const filter = buildAuditFilter(req.personaId, req.query);
     const items = await AuditLog.find(filter).sort({ createdAt: -1 });
     const columns = [
       { label: 'Action', getValue: r => r.action },
@@ -361,7 +339,7 @@ exports.exportAuditLogCsv = async (req, res) => {
 
 exports.exportAuditLogPdf = async (req, res) => {
   try {
-    const filter = buildAuditFilter(req);
+    const filter = buildAuditFilter(req.personaId, req.query);
     const items = await AuditLog.find(filter).sort({ createdAt: -1 });
     const columns = [
       { label: 'Action', getValue: r => r.action },

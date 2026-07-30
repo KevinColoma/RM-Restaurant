@@ -19,6 +19,7 @@ const Persona = require('../models/Persona');
 const AuditLog = require('../models/AuditLog');
 const { isValidObjectId, escapeRegex } = require('../utils/validate');
 const { getPageParams, paginate } = require('../utils/pagination');
+const { buildAuditFilter } = require('../utils/auditFilter');
 
 // Wraps a read so every endpoint reports failure the same way, and a thrown
 // error can never leak a stack trace to the client.
@@ -177,24 +178,8 @@ exports.getSettings = jsonRead(async (req, res) => {
     res.json({ success: true, persona });
 });
 
-const VALID_AUDIT_ACTIONS = new Set(['create', 'update', 'delete', 'cancel', 'login', 'logout', 'password_change', 'settings_update', 'signup']);
-const VALID_AUDIT_COLLECTIONS = new Set(['Menu', 'Order', 'InventoryItem', 'Supplier', 'Expense', 'Customer', 'Branch', 'Purchase', 'Persona', 'Usuario', 'Rol']);
-
 exports.listAuditLog = jsonRead(async (req, res) => {
-    const filter = { personaId: req.personaId };
-    if (VALID_AUDIT_ACTIONS.has(req.query.action)) filter.action = req.query.action;
-    if (VALID_AUDIT_COLLECTIONS.has(req.query.collection)) filter.collection = req.query.collection;
-    if (req.query.q) filter.details = { $regex: escapeRegex(req.query.q), $options: 'i' };
-    const fromDate = parseDate(req.query.dateFrom);
-    const toDate = parseDate(req.query.dateTo);
-    if (fromDate || toDate) {
-        filter.createdAt = {};
-        if (fromDate) filter.createdAt.$gte = fromDate;
-        if (toDate) {
-            toDate.setHours(23, 59, 59, 999);
-            filter.createdAt.$lte = toDate;
-        }
-    }
+    const filter = buildAuditFilter(req.personaId, req.query);
     const result = await paginate(AuditLog, filter, getPageParams(req), {
         sort: { createdAt: -1 }
     });
