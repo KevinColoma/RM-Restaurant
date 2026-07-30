@@ -248,7 +248,9 @@ router.get('/export/purchases/pdf', protect, exportController.exportPurchasesPdf
 // Order cancel route
 router.delete('/api/orders/:id', protect, orderController.deleteOrder)
 
-// Audit log route
+// Audit log routes
 router.get('/audit-log', protect, auditController.getAuditLog)
+router.get('/export/audit-log/csv', protect, exportController.exportAuditLogCsv)
+router.get('/export/audit-log/pdf', protect, exportController.exportAuditLogPdf)
 
 module.exports = router;

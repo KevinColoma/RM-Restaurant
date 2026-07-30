@@ -6,8 +6,10 @@ const InventoryItem = require('../models/InventoryItem');
 const Branch = require('../models/branchRestaurant');
 const Supplier = require('../models/Supplier');
 const Purchase = require('../models/Purchase');
+const AuditLog = require('../models/AuditLog');
 const { generateCsv } = require('../utils/csv');
-const { generatePdf } = require('../utils/pdf');
+const { generatePdf, generateSalesReportPdf } = require('../utils/pdf');
+const { aggregateSales, aggregateOrders } = require('../utils/reportUtils');
 
 function setCsvHeaders(res, filename) {
   res.setHeader('Content-Type', 'text/csv');
@@ -261,6 +263,7 @@ exports.exportSalesPdf = async (req, res) => {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
+    let dateLabel = 'Today';
     let query = { personaId, createdAt: { $gte: startOfDay, $lte: endOfDay } };
     if (req.query.startDate && req.query.endDate) {
       query = {
@@ -270,17 +273,17 @@ exports.exportSalesPdf = async (req, res) => {
           $lte: new Date(req.query.endDate + 'T23:59:59.999Z'),
         },
       };
+      dateLabel = req.query.startDate + ' to ' + req.query.endDate;
     }
 
-    const orders = await Order.find(query).populate('items.menuItem', 'item').sort({ createdAt: -1 });
-    const columns = [
-      { label: 'Order ID', getValue: r => String(r._id).slice(-8) },
-      { label: 'Items', getValue: r => r.items.map(i => i.menuItem ? i.menuItem.item : 'N/A').join(', ') },
-      { label: 'Type', getValue: r => r.orderType },
-      { label: 'Total', getValue: r => r.totalAmount.toFixed(2) },
-      { label: 'Date', getValue: r => new Date(r.createdAt).toLocaleDateString() },
-    ];
-    const doc = generatePdf('Sales Report', orders, columns, {
+    const orders = await Order.find(query).populate('items.menuItem');
+
+    const [salesData, ordersData] = await Promise.all([
+      aggregateSales(orders),
+      aggregateOrders(orders),
+    ]);
+
+    const doc = generateSalesReportPdf(salesData, ordersData, 'Sales Report', dateLabel, {
       restaurantName: req.usuario?.personaId?.restaurantName
     });
     setPdfHeaders(res, 'sales-report.pdf');
@@ -314,3 +317,61 @@ exports.exportPurchasesPdf = pdfExport(Purchase, {
   title: 'Purchases List',
   filename: 'purchases.pdf'
 });
+
+const VALID_AUDIT_ACTIONS = ['create', 'update', 'delete', 'cancel', 'login', 'logout', 'password_change', 'settings_update', 'signup'];
+const VALID_AUDIT_COLLECTIONS = ['Menu', 'Order', 'InventoryItem', 'Supplier', 'Expense', 'Customer', 'Branch', 'Purchase', 'Persona', 'Usuario', 'Rol'];
+
+function buildAuditFilter(req) {
+  const filter = { personaId: req.personaId };
+  if (VALID_AUDIT_ACTIONS.includes(req.query.action)) filter.action = req.query.action;
+  if (VALID_AUDIT_COLLECTIONS.includes(req.query.collection)) filter.collection = req.query.collection;
+  if (req.query.q) filter.details = { $regex: req.query.q, $options: 'i' };
+  const fromDate = req.query.dateFrom ? new Date(req.query.dateFrom) : null;
+  const toDate = req.query.dateTo ? new Date(req.query.dateTo) : null;
+  if (fromDate && !isNaN(fromDate.getTime())) {
+    filter.createdAt = filter.createdAt || {};
+    filter.createdAt.$gte = fromDate;
+  }
+  if (toDate && !isNaN(toDate.getTime())) {
+    toDate.setHours(23, 59, 59, 999);
+    filter.createdAt = filter.createdAt || {};
+    filter.createdAt.$lte = toDate;
+  }
+  return filter;
+}
+
+// Audit Log exports (with filter support)
+exports.exportAuditLogCsv = async (req, res) => {
+  try {
+    const filter = buildAuditFilter(req);
+    const items = await AuditLog.find(filter).sort({ createdAt: -1 });
+    const columns = [
+      { label: 'Action', getValue: r => r.action },
+      { label: 'Collection', getValue: r => r.collection || '' },
+      { label: 'Document ID', getValue: r => r.documentId ? String(r.documentId) : '' },
+      { label: 'Details', getValue: r => r.details || '' },
+      { label: 'Date / Time', getValue: r => new Date(r.createdAt).toLocaleString() },
+    ];
+    const csv = generateCsv(items, columns);
+    setCsvHeaders(res, 'audit-log.csv');
+    res.send(csv);
+  } catch (err) { res.status(500).send(err.message); }
+};
+
+exports.exportAuditLogPdf = async (req, res) => {
+  try {
+    const filter = buildAuditFilter(req);
+    const items = await AuditLog.find(filter).sort({ createdAt: -1 });
+    const columns = [
+      { label: 'Action', getValue: r => r.action },
+      { label: 'Collection', getValue: r => r.collection || '' },
+      { label: 'Details', getValue: r => r.details || '' },
+      { label: 'Date', getValue: r => new Date(r.createdAt).toLocaleString() },
+    ];
+    const doc = generatePdf('Audit Log', items, columns, {
+      restaurantName: req.usuario?.personaId?.restaurantName
+    });
+    setPdfHeaders(res, 'audit-log.pdf');
+    doc.pipe(res);
+  } catch (err) { res.status(500).send(err.message); }
+};

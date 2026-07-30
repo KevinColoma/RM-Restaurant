@@ -2,10 +2,34 @@ import { registerRoute } from '../router.js';
 import { showLoading, showError, renderPage, bindDelete, extractList, navigateTo, emptyState, currentPage, renderPagination } from '../lib/listPage.js';
 import { get, del, post } from '../lib/api.js';
 
+function filtersFromHash() {
+  const q = window.location.hash.split('?')[1] || '';
+  const params = new URLSearchParams(q);
+  return {
+    q: params.get('q') || ''
+  };
+}
+
+function buildApiUrl() {
+  const f = filtersFromHash();
+  const params = new URLSearchParams();
+  params.set('page', String(currentPage()));
+  if (f.q) params.set('q', f.q);
+  return '/suppliers?' + params.toString();
+}
+
+function filterHash() {
+  const f = filtersFromHash();
+  const params = new URLSearchParams();
+  if (f.q) params.set('q', f.q);
+  const p = params.toString();
+  return '#/suppliers-list' + (p ? '?' + p : '');
+}
+
 registerRoute('/suppliers-list', async (app) => {
   showLoading(app);
   try {
-    const suppliers = await get('/suppliers?page=' + currentPage());
+    const suppliers = await get(buildApiUrl());
     const list = Array.isArray(suppliers) ? suppliers : extractList(suppliers, 'suppliers');
     const rows = list.length ? list.map(s => {
       const contact = [s.email, s.phone, s.address].filter(Boolean).join(', ') || '-';
@@ -17,6 +41,8 @@ registerRoute('/suppliers-list', async (app) => {
         </td>
       </tr>`;
     }).join('') : emptyState({ colspan: 3, title: 'No suppliers yet', i18nTitle: 'empty.no_suppliers', hint: 'Add suppliers so you can assign them to inventory and purchases.', i18nHint: 'empty.suppliers_hint' });
+
+    const f = filtersFromHash();
 
     const html = `
 <div class="page-wrapper">
@@ -33,6 +59,37 @@ registerRoute('/suppliers-list', async (app) => {
 </div>
 <div class="card">
 <div class="card-body">
+<div class="table-top">
+<div class="search-set">
+<div class="search-path">
+<a class="btn btn-filter" id="filter_search" title="Filter what this list shows" aria-label="Filter what this list shows">
+<img src="assets/img/icons/filter.svg" alt="">
+<span><img src="assets/img/icons/closes.svg" alt=""></span>
+</a>
+</div>
+<div class="search-input">
+<a class="btn btn-searchset"><img src="assets/img/icons/search-white.svg" alt=""></a>
+</div>
+</div>
+</div>
+<div class="card mb-0" id="filter_inputs" style="display:none">
+<div class="card-body pb-0">
+<div class="row">
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="filter.search">Search</label>
+<input type="text" class="form-control" id="filter-q" data-i18n-placeholder="filter.search_name_contact" placeholder="Search by name or contact..." value="${f.q}">
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12 d-flex align-items-end">
+<div class="form-group mb-0 d-flex">
+<a class="btn btn-primary" id="apply-filters"><span data-i18n="common.apply">Apply</span></a>
+<a class="btn btn-secondary ms-2" id="reset-filters"><span data-i18n="common.reset">Reset</span></a>
+</div>
+</div>
+</div>
+</div>
+</div>
 <div class="table-responsive">
 <table class="table datanew">
 <thead>
@@ -88,7 +145,7 @@ ${renderPagination(suppliers)}
             }).then(res => {
               if (res && !res.error) {
                 Swal.fire(window.t('common.success'), window.t('supplier.added'), 'success')
-                  .then(() => navigateTo('#/suppliers-list'));
+                  .then(() => navigateTo(filterHash()));
               } else {
                 Swal.fire(window.t('common.error'), res?.message || window.t('supplier.failed_add'), 'error');
               }
@@ -96,7 +153,25 @@ ${renderPagination(suppliers)}
           }
         });
       });
-      bindDelete(app, '.delete-supplier', { itemName: 'supplier', del, endpoint: '/suppliers/', successMsg: 'Supplier has been deleted.', listRoute: '#/suppliers-list' });
+      bindDelete(app, '.delete-supplier', { itemName: window.t('delete.supplier'), del, endpoint: '/suppliers/', successMsg: window.t('delete.supplier_deleted'), listRoute: filterHash() });
     }, 100);
+
+    const applyBtn = app.querySelector('#apply-filters');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', () => {
+        const q = app.querySelector('#filter-q').value;
+        const params = new URLSearchParams();
+        if (q) params.set('q', q);
+        const p = params.toString();
+        window.location.hash = '#/suppliers-list' + (p ? '?' + p : '');
+      });
+    }
+
+    const resetBtn = app.querySelector('#reset-filters');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        window.location.hash = '#/suppliers-list';
+      });
+    }
   } catch (err) { showError(app, err); }
 });

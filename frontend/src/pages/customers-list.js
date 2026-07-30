@@ -1,11 +1,35 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, navigateTo, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, navigateTo, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
 import { get, post, put, del } from '../lib/api.js';
+
+function filtersFromHash() {
+  const q = window.location.hash.split('?')[1] || '';
+  const params = new URLSearchParams(q);
+  return {
+    q: params.get('q') || ''
+  };
+}
+
+function buildApiUrl() {
+  const f = filtersFromHash();
+  const params = new URLSearchParams();
+  params.set('page', String(currentPage()));
+  if (f.q) params.set('q', f.q);
+  return '/customers?' + params.toString();
+}
+
+function filterHash() {
+  const f = filtersFromHash();
+  const params = new URLSearchParams();
+  if (f.q) params.set('q', f.q);
+  const p = params.toString();
+  return '#/customers-list' + (p ? '?' + p : '');
+}
 
 registerRoute('/customers-list', async (app) => {
   showLoading(app);
   try {
-    const res = await get('/customers?page=' + currentPage());
+    const res = await get(buildApiUrl());
     const customers = extractList(res, 'customers');
 
     const renderRows = (list) => list.length ? list.map(c => {
@@ -23,11 +47,7 @@ registerRoute('/customers-list', async (app) => {
       </tr>`;
     }).join('') : emptyState({ colspan: 6, title: 'No customers yet', i18nTitle: 'empty.no_customers', hint: 'Customers are added automatically when you take an order in billing.', i18nHint: 'empty.customers_hint', actionHref: '#/pos', actionLabel: 'Go to billing', i18nAction: 'empty.customers_action' });
 
-    const filterableCustomers = customers.map(c => ({ ...c, ordersStatus: c.orders && c.orders.length ? 'Has Orders' : 'No Orders' }));
-    const filterPanel = renderFilterPanel([
-      { key: 'ordersStatus', label: 'Orders', options: ['Has Orders', 'No Orders'] }
-    ]);
-    const rows = renderRows(customers);
+    const f = filtersFromHash();
 
     const html = `
 <div class="page-wrapper">
@@ -63,7 +83,24 @@ registerRoute('/customers-list', async (app) => {
 </ul>
 </div>
 </div>
-${filterPanel}
+<div class="card mb-0" id="filter_inputs" style="display:none">
+<div class="card-body pb-0">
+<div class="row">
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="filter.search">Search</label>
+<input type="text" class="form-control" id="filter-q" data-i18n-placeholder="filter.search_name_phone" placeholder="Search by name or phone..." value="${f.q}">
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12 d-flex align-items-end">
+<div class="form-group mb-0 d-flex">
+<a class="btn btn-primary" id="apply-filters"><span data-i18n="common.apply">Apply</span></a>
+<a class="btn btn-secondary ms-2" id="reset-filters"><span data-i18n="common.reset">Reset</span></a>
+</div>
+</div>
+</div>
+</div>
+</div>
 <div class="table-responsive">
 <table class="table datanew">
 <thead>
@@ -76,7 +113,7 @@ ${filterPanel}
 <th data-i18n="table.action">Actions</th>
 </tr>
 </thead>
-<tbody>${rows}</tbody>
+<tbody>${renderRows(customers)}</tbody>
 </table>
 </div>
 ${renderPagination(res)}
@@ -120,7 +157,7 @@ ${renderPagination(res)}
                 address: document.getElementById('swal-address').value
               }).then(res => {
                 if (res && !res.error) {
-                  Swal.fire(window.t('common.success'), '', 'success').then(() => navigateTo('#/customers-list'));
+                  Swal.fire(window.t('common.success'), '', 'success').then(() => navigateTo(filterHash()));
                 } else {
                   Swal.fire(window.t('common.error'), window.t('customer.updated_failed'), 'error');
                 }
@@ -129,7 +166,7 @@ ${renderPagination(res)}
           });
         });
       });
-      bindDelete(app, '.delete-customer', { itemName: 'customer', del, endpoint: '/customers/', successMsg: 'Customer has been deleted.', listRoute: '#/customers-list' });
+      bindDelete(app, '.delete-customer', { itemName: window.t('delete.customer'), del, endpoint: '/customers/', successMsg: window.t('delete.customer_deleted'), listRoute: filterHash() });
     };
 
     renderPage(app, 'customers-list', html);
@@ -157,7 +194,7 @@ ${renderPagination(res)}
             }).then(res => {
               if (res && !res.error) {
                 Swal.fire(window.t('common.success'), window.t('customer.added'), 'success')
-                  .then(() => navigateTo('#/customers-list'));
+                  .then(() => navigateTo(filterHash()));
               } else {
                 Swal.fire(window.t('common.error'), res?.message || window.t('customer.failed_add'), 'error');
               }
@@ -166,7 +203,24 @@ ${renderPagination(res)}
         });
       });
       bindCustomerActions();
-      bindFilterPanel(app, { data: filterableCustomers, renderRows, onRendered: bindCustomerActions });
     }, 100);
+
+    const applyBtn = app.querySelector('#apply-filters');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', () => {
+        const q = app.querySelector('#filter-q').value;
+        const params = new URLSearchParams();
+        if (q) params.set('q', q);
+        const p = params.toString();
+        window.location.hash = '#/customers-list' + (p ? '?' + p : '');
+      });
+    }
+
+    const resetBtn = app.querySelector('#reset-filters');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        window.location.hash = '#/customers-list';
+      });
+    }
   } catch (err) { showError(app, err); }
 });

@@ -157,7 +157,7 @@ export function renderLayout(app, activePage, contentHtml) {
       </li>
       <li class="nav-item dropdown has-arrow flag-nav">
         <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="javascript:void(0);" role="button">
-          <img src="assets/img/flags/us.png" alt="" height="20" id="lang-flag">
+          <img src="assets/img/flags/${(localStorage.getItem('rms-lang') || 'es') === 'es' ? 'es' : 'us'}.png" alt="" height="20" id="lang-flag">
         </a>
         <div class="dropdown-menu dropdown-menu-right">
           <a href="javascript:void(0);" class="dropdown-item" data-lang="en">

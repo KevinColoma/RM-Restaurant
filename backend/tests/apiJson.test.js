@@ -259,10 +259,14 @@ describe('Order filters', () => {
     const Order = require('../models/order');
     const Menu = require('../models/menu');
     const menuItem = await Menu.findOne({ personaId });
+    // Use UTC midnight so it matches parseDate('YYYY-MM-DD') in the
+    // controller (which interprets the string as midnight UTC).
+    const utcNow = new Date();
+    const createdAt = new Date(Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth(), utcNow.getUTCDate()));
     await Order.insertMany([
-      { personaId, orderType: 'dine in', totalAmount: 10, taxAmount: 1, items: [{ menuItem: menuItem._id, quantity: 1, price: 10 }] },
-      { personaId, orderType: 'take away', totalAmount: 20, taxAmount: 2, items: [{ menuItem: menuItem._id, quantity: 1, price: 20 }] },
-      { personaId, orderType: 'online', totalAmount: 30, taxAmount: 3, items: [{ menuItem: menuItem._id, quantity: 1, price: 30 }] }
+      { personaId, orderType: 'dine in', totalAmount: 10, taxAmount: 1, createdAt, items: [{ menuItem: menuItem._id, quantity: 1, price: 10 }] },
+      { personaId, orderType: 'take away', totalAmount: 20, taxAmount: 2, createdAt, items: [{ menuItem: menuItem._id, quantity: 1, price: 20 }] },
+      { personaId, orderType: 'online', totalAmount: 30, taxAmount: 3, createdAt, items: [{ menuItem: menuItem._id, quantity: 1, price: 30 }] }
     ]);
   });
 

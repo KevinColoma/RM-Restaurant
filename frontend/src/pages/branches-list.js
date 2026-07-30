@@ -1,11 +1,38 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues, navigateTo, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, navigateTo, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
 import { get, put, del } from '../lib/api.js';
+
+function filtersFromHash() {
+  const q = window.location.hash.split('?')[1] || '';
+  const params = new URLSearchParams(q);
+  return {
+    q: params.get('q') || '',
+    city: params.get('city') || ''
+  };
+}
+
+function buildApiUrl() {
+  const f = filtersFromHash();
+  const params = new URLSearchParams();
+  params.set('page', String(currentPage()));
+  if (f.q) params.set('q', f.q);
+  if (f.city) params.set('city', f.city);
+  return '/branches?' + params.toString();
+}
+
+function filterHash() {
+  const f = filtersFromHash();
+  const params = new URLSearchParams();
+  if (f.q) params.set('q', f.q);
+  if (f.city) params.set('city', f.city);
+  const p = params.toString();
+  return '#/branches-list' + (p ? '?' + p : '');
+}
 
 registerRoute('/branches-list', async (app) => {
   showLoading(app);
   try {
-    const res = await get('/branches?page=' + currentPage());
+    const res = await get(buildApiUrl());
     const branches = extractList(res, 'branches');
 
     const renderRows = (list) => list.length ? list.map(b => {
@@ -24,11 +51,7 @@ registerRoute('/branches-list', async (app) => {
       </tr>`;
     }).join('') : emptyState({ colspan: 8, title: 'No branches registered', i18nTitle: 'empty.no_branches', hint: 'Add the locations this restaurant operates from.', i18nHint: 'empty.branches_hint', actionHref: '#/branches-add', actionLabel: 'Add the first branch', i18nAction: 'empty.branches_action' });
 
-    const filterPanel = renderFilterPanel([
-      { key: 'Parent_Rest', label: 'Parent Restaurant', options: uniqueValues(branches, 'Parent_Rest') },
-      { key: 'city', label: 'Choose City', options: uniqueValues(branches, 'city') }
-    ]);
-    const rows = renderRows(branches);
+    const f = filtersFromHash();
 
     const html = `
 <div class="page-wrapper">
@@ -64,7 +87,30 @@ registerRoute('/branches-list', async (app) => {
 </ul>
 </div>
 </div>
-${filterPanel}
+<div class="card mb-0" id="filter_inputs" style="display:none">
+<div class="card-body pb-0">
+<div class="row">
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="filter.search">Search</label>
+<input type="text" class="form-control" id="filter-q" data-i18n-placeholder="filter.search_name_city" placeholder="Search by name, city or owner..." value="${f.q}">
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="filter.city">City</label>
+<input type="text" class="form-control" id="filter-city" data-i18n-placeholder="filter.filter_city" placeholder="Filter by city..." value="${f.city}">
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12 d-flex align-items-end">
+<div class="form-group mb-0 d-flex">
+<a class="btn btn-primary" id="apply-filters"><span data-i18n="common.apply">Apply</span></a>
+<a class="btn btn-secondary ms-2" id="reset-filters"><span data-i18n="common.reset">Reset</span></a>
+</div>
+</div>
+</div>
+</div>
+</div>
 <div class="table-responsive">
 <table class="table datanew">
 <thead>
@@ -79,7 +125,7 @@ ${filterPanel}
 <th data-i18n="table.action">Actions</th>
 </tr>
 </thead>
-<tbody>${rows}</tbody>
+<tbody>${renderRows(branches)}</tbody>
 </table>
 </div>
 ${renderPagination(res)}
@@ -89,7 +135,7 @@ ${renderPagination(res)}
 </div>`;
 
     const bindBranchActions = () => {
-      bindDelete(app, '.delete-branch', { itemName: 'branch', del, endpoint: '/branches/', successMsg: 'Branch has been deleted.', listRoute: '#/branches-list' });
+      bindDelete(app, '.delete-branch', { itemName: window.t('delete.branch'), del, endpoint: '/branches/', successMsg: window.t('delete.branch_deleted'), listRoute: filterHash() });
       app.querySelectorAll('.edit-branch').forEach(btn => {
         btn.addEventListener('click', function(e) {
           e.preventDefault();
@@ -126,7 +172,7 @@ ${renderPagination(res)}
                 mobile: document.getElementById('swal-mobile').value.trim()
               }).then(res => {
                 if (res && !res.error) {
-                  Swal.fire(window.t('common.success'), '', 'success').then(() => navigateTo('#/branches-list'));
+                  Swal.fire(window.t('common.success'), '', 'success').then(() => navigateTo(filterHash()));
                 } else {
                   Swal.fire(window.t('common.error'), window.t('branch.updated_failed'), 'error');
                 }
@@ -139,6 +185,25 @@ ${renderPagination(res)}
 
     renderPage(app, 'branches-list', html);
     bindBranchActions();
-    setTimeout(() => bindFilterPanel(app, { data: branches, renderRows, onRendered: bindBranchActions }), 100);
+
+    const applyBtn = app.querySelector('#apply-filters');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', () => {
+        const q = app.querySelector('#filter-q').value;
+        const city = app.querySelector('#filter-city').value;
+        const params = new URLSearchParams();
+        if (q) params.set('q', q);
+        if (city) params.set('city', city);
+        const p = params.toString();
+        window.location.hash = '#/branches-list' + (p ? '?' + p : '');
+      });
+    }
+
+    const resetBtn = app.querySelector('#reset-filters');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        window.location.hash = '#/branches-list';
+      });
+    }
   } catch (err) { showError(app, err); }
 });

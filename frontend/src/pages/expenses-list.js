@@ -1,11 +1,47 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
+
+function filtersFromHash() {
+  const q = window.location.hash.split('?')[1] || '';
+  const params = new URLSearchParams(q);
+  return {
+    category: params.get('category') || '',
+    paymentMethod: params.get('paymentMethod') || '',
+    dateFrom: params.get('dateFrom') || '',
+    dateTo: params.get('dateTo') || '',
+    q: params.get('q') || ''
+  };
+}
+
+function buildApiUrl() {
+  const f = filtersFromHash();
+  const params = new URLSearchParams();
+  params.set('page', String(currentPage()));
+  if (f.category) params.set('category', f.category);
+  if (f.paymentMethod) params.set('paymentMethod', f.paymentMethod);
+  if (f.dateFrom) params.set('dateFrom', f.dateFrom);
+  if (f.dateTo) params.set('dateTo', f.dateTo);
+  if (f.q) params.set('q', f.q);
+  return '/expenses?' + params.toString();
+}
+
+function filterHash() {
+  const f = filtersFromHash();
+  const params = new URLSearchParams();
+  if (f.category) params.set('category', f.category);
+  if (f.paymentMethod) params.set('paymentMethod', f.paymentMethod);
+  if (f.dateFrom) params.set('dateFrom', f.dateFrom);
+  if (f.dateTo) params.set('dateTo', f.dateTo);
+  if (f.q) params.set('q', f.q);
+  const p = params.toString();
+  return '#/expenses-list' + (p ? '?' + p : '');
+}
 
 registerRoute('/expenses-list', async (app) => {
   showLoading(app);
   try {
-    const res = await get('/expenses?page=' + currentPage());
+    const res = await get(buildApiUrl());
     const expenses = extractList(res, 'expenses');
 
     const renderRows = (list) => list.length ? list.map(e => {
@@ -25,11 +61,7 @@ registerRoute('/expenses-list', async (app) => {
       </tr>`;
     }).join('') : emptyState({ colspan: 7, title: 'No expenses recorded yet', i18nTitle: 'empty.no_expenses', hint: 'Track what the restaurant spends to see it reflected in your reports.', i18nHint: 'empty.expense_hint', actionHref: '#/expenses-add', actionLabel: 'Record the first expense', i18nAction: 'empty.expense_action' });
 
-    const filterPanel = renderFilterPanel([
-      { key: 'category', label: 'Category', options: uniqueValues(expenses, 'category') },
-      { key: 'paymentMethod', label: 'Payment Method', options: uniqueValues(expenses, 'paymentMethod') }
-    ]);
-    const rows = renderRows(expenses);
+    const f = filtersFromHash();
 
     const html = `
 <div class="page-wrapper">
@@ -65,7 +97,48 @@ registerRoute('/expenses-list', async (app) => {
 </ul>
 </div>
 </div>
-${filterPanel}
+<div class="card mb-0" id="filter_inputs" style="display:none">
+<div class="card-body pb-0">
+<div class="row">
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="filter.search">Search</label>
+<input type="text" class="form-control" id="filter-q" data-i18n-placeholder="filter.search_desc_vendor" placeholder="Search description, vendor..." value="${f.q}">
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="common.from">From</label>
+<input type="date" class="form-control" id="filter-dateFrom" value="${f.dateFrom}">
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="common.to">To</label>
+<input type="date" class="form-control" id="filter-dateTo" value="${f.dateTo}">
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="filter.payment_method">Payment Method</label>
+<select class="form-control" id="filter-paymentMethod">
+<option value="" data-i18n="filter.all">All</option>
+<option value="cash" data-i18n="filter.cash"${f.paymentMethod === 'cash' ? ' selected' : ''}>Cash</option>
+<option value="credit card" data-i18n="filter.credit_card"${f.paymentMethod === 'credit card' ? ' selected' : ''}>Credit Card</option>
+<option value="bank transfer" data-i18n="filter.bank_transfer"${f.paymentMethod === 'bank transfer' ? ' selected' : ''}>Bank Transfer</option>
+<option value="other" data-i18n="filter.other"${f.paymentMethod === 'other' ? ' selected' : ''}>Other</option>
+</select>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12 d-flex align-items-end">
+<div class="form-group mb-0 d-flex">
+<a class="btn btn-primary" id="apply-filters"><span data-i18n="common.apply">Apply</span></a>
+<a class="btn btn-secondary ms-2" id="reset-filters"><span data-i18n="common.reset">Reset</span></a>
+</div>
+</div>
+</div>
+</div>
+</div>
 <div class="table-responsive">
 <table class="table datanew">
 <thead>
@@ -79,7 +152,7 @@ ${filterPanel}
 <th data-i18n="table.action">Actions</th>
 </tr>
 </thead>
-<tbody>${rows}</tbody>
+<tbody>${renderRows(expenses)}</tbody>
 </table>
 </div>
 ${renderPagination(res)}
@@ -88,10 +161,33 @@ ${renderPagination(res)}
 </div>
 </div>`;
 
-    const bindExpenseDelete = () => bindDelete(app, '.delete-expense', { itemName: 'expense', del, endpoint: '/expense/', successMsg: 'Expense has been deleted.', listRoute: '#/expenses-list' });
+    const bindExpenseDelete = () => bindDelete(app, '.delete-expense', { itemName: window.t('delete.expense'), del, endpoint: '/expense/', successMsg: window.t('delete.expense_deleted'), listRoute: filterHash() });
 
     renderPage(app, 'expenses-list', html);
     bindExpenseDelete();
-    setTimeout(() => bindFilterPanel(app, { data: expenses, renderRows, onRendered: bindExpenseDelete }), 100);
+
+    const applyBtn = app.querySelector('#apply-filters');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', () => {
+        const q = app.querySelector('#filter-q').value;
+        const dateFrom = app.querySelector('#filter-dateFrom').value;
+        const dateTo = app.querySelector('#filter-dateTo').value;
+        const paymentMethod = app.querySelector('#filter-paymentMethod').value;
+        const params = new URLSearchParams();
+        if (q) params.set('q', q);
+        if (dateFrom) params.set('dateFrom', dateFrom);
+        if (dateTo) params.set('dateTo', dateTo);
+        if (paymentMethod) params.set('paymentMethod', paymentMethod);
+        const p = params.toString();
+        window.location.hash = '#/expenses-list' + (p ? '?' + p : '');
+      });
+    }
+
+    const resetBtn = app.querySelector('#reset-filters');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        window.location.hash = '#/expenses-list';
+      });
+    }
   } catch (err) { showError(app, err); }
 });

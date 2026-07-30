@@ -44,19 +44,35 @@ const sendPage = (res, key, result) => res.json({
 });
 
 exports.listMenu = jsonRead(async (req, res) => {
-    const result = await paginate(Menu, { personaId: req.personaId }, getPageParams(req));
+    const filter = { personaId: req.personaId };
+    const VALID_CATEGORIES = ['Veg', 'Non-Veg'];
+    const VALID_SUBCATEGORIES = ['Starter', 'Main Course', 'Beverage', 'Soup', 'Salad', 'Roti', 'Rice', 'Dessert', 'Juice', 'Snack', 'Side Dish'];
+    if (VALID_CATEGORIES.includes(req.query.category)) filter.category = req.query.category;
+    if (VALID_SUBCATEGORIES.includes(req.query.subCategory)) filter.subCategory = req.query.subCategory;
+    if (req.query.availability === 'true') filter.availability = true;
+    else if (req.query.availability === 'false') filter.availability = false;
+    if (req.query.q) filter.item = { $regex: req.query.q, $options: 'i' };
+    const result = await paginate(Menu, filter, getPageParams(req));
     sendPage(res, 'menus', result);
 });
 
 exports.listCustomers = jsonRead(async (req, res) => {
-    const result = await paginate(Customer, { personaId: req.personaId }, getPageParams(req), {
+    const filter = { personaId: req.personaId };
+    if (req.query.q) filter.$or = [
+        { name: { $regex: req.query.q, $options: 'i' } },
+        { phone: { $regex: req.query.q, $options: 'i' } }
+    ];
+    const result = await paginate(Customer, filter, getPageParams(req), {
         sort: { createdAt: -1 }
     });
     sendPage(res, 'customers', result);
 });
 
 exports.listInventory = jsonRead(async (req, res) => {
-    const result = await paginate(InventoryItem, { personaId: req.personaId }, getPageParams(req), {
+    const filter = { personaId: req.personaId };
+    if (req.query.q) filter.name = { $regex: req.query.q, $options: 'i' };
+    if (req.query.lowStock === 'true') filter.quantity = { $lte: 10 };
+    const result = await paginate(InventoryItem, filter, getPageParams(req), {
         populate: { path: 'supplier', select: 'name' }
     });
     sendPage(res, 'inventoryItems', result);
@@ -74,12 +90,31 @@ exports.getInventoryItem = jsonRead(async (req, res) => {
 });
 
 exports.listBranches = jsonRead(async (req, res) => {
-    const result = await paginate(Branch, { personaId: req.personaId }, getPageParams(req));
+    const filter = { personaId: req.personaId };
+    if (req.query.city) filter.city = { $regex: req.query.city, $options: 'i' };
+    if (req.query.q) filter.$or = [
+        { restaurantName: { $regex: req.query.q, $options: 'i' } },
+        { city: { $regex: req.query.q, $options: 'i' } },
+        { ownerName: { $regex: req.query.q, $options: 'i' } }
+    ];
+    const result = await paginate(Branch, filter, getPageParams(req));
     sendPage(res, 'branches', result);
 });
 
 exports.listPurchases = jsonRead(async (req, res) => {
-    const result = await paginate(Purchase, { personaId: req.personaId }, getPageParams(req), {
+    const filter = { personaId: req.personaId };
+    if (req.query.q) filter['items.itemName'] = { $regex: req.query.q, $options: 'i' };
+    const fromDate = parseDate(req.query.dateFrom);
+    const toDate = parseDate(req.query.dateTo);
+    if (fromDate || toDate) {
+        filter.purchaseDate = {};
+        if (fromDate) filter.purchaseDate.$gte = fromDate;
+        if (toDate) {
+            toDate.setHours(23, 59, 59, 999);
+            filter.purchaseDate.$lte = toDate;
+        }
+    }
+    const result = await paginate(Purchase, filter, getPageParams(req), {
         sort: { purchaseDate: -1 },
         populate: { path: 'supplier', select: 'name' }
     });
@@ -141,8 +176,25 @@ exports.getSettings = jsonRead(async (req, res) => {
     res.json({ success: true, persona });
 });
 
+const VALID_AUDIT_ACTIONS = ['create', 'update', 'delete', 'cancel', 'login', 'logout', 'password_change', 'settings_update', 'signup'];
+const VALID_AUDIT_COLLECTIONS = ['Menu', 'Order', 'InventoryItem', 'Supplier', 'Expense', 'Customer', 'Branch', 'Purchase', 'Persona', 'Usuario', 'Rol'];
+
 exports.listAuditLog = jsonRead(async (req, res) => {
-    const result = await paginate(AuditLog, { personaId: req.personaId }, getPageParams(req), {
+    const filter = { personaId: req.personaId };
+    if (VALID_AUDIT_ACTIONS.includes(req.query.action)) filter.action = req.query.action;
+    if (VALID_AUDIT_COLLECTIONS.includes(req.query.collection)) filter.collection = req.query.collection;
+    if (req.query.q) filter.details = { $regex: req.query.q, $options: 'i' };
+    const fromDate = parseDate(req.query.dateFrom);
+    const toDate = parseDate(req.query.dateTo);
+    if (fromDate || toDate) {
+        filter.createdAt = {};
+        if (fromDate) filter.createdAt.$gte = fromDate;
+        if (toDate) {
+            toDate.setHours(23, 59, 59, 999);
+            filter.createdAt.$lte = toDate;
+        }
+    }
+    const result = await paginate(AuditLog, filter, getPageParams(req), {
         sort: { createdAt: -1 }
     });
     sendPage(res, 'logs', result);

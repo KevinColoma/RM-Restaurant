@@ -28,8 +28,8 @@ registerRoute('/reports-sales', async (app) => {
 <li class="breadcrumb-item active" data-i18n="report.breadcrumb_reports">Reports</li>
 </ul>
 <div class="mt-2">
-<a href="/api/export/sales/pdf" class="btn btn-sm btn-primary me-2" data-i18n="common.pdf">PDF</a>
-<a href="/api/export/sales/csv" class="btn btn-sm btn-success" data-i18n="common.csv">CSV</a>
+<a href="/export/sales/pdf" class="btn btn-sm btn-primary me-2" data-i18n="common.pdf">PDF</a>
+<a href="/export/sales/csv" class="btn btn-sm btn-success" data-i18n="common.csv">CSV</a>
 </div>
 </div>
 </div>

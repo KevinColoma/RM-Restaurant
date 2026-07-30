@@ -26,7 +26,12 @@ exports.createSupplier = async (req, res) => {
 // Now paginated and shaped like the rest.
 exports.getSuppliers = async (req, res) => {
   try {
-    const result = await paginate(Supplier, { personaId: req.personaId }, getPageParams(req), {
+    const filter = { personaId: req.personaId };
+    if (req.query.q) filter.$or = [
+      { name: { $regex: req.query.q, $options: 'i' } },
+      { contactInfo: { $regex: req.query.q, $options: 'i' } }
+    ];
+    const result = await paginate(Supplier, filter, getPageParams(req), {
       sort: { name: 1 }
     });
     res.status(200).json({

@@ -1,11 +1,44 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
+
+function filtersFromHash() {
+  const q = window.location.hash.split('?')[1] || '';
+  const params = new URLSearchParams(q);
+  return {
+    category: params.get('category') || '',
+    subCategory: params.get('subCategory') || '',
+    availability: params.get('availability') || '',
+    q: params.get('q') || ''
+  };
+}
+
+function buildApiUrl() {
+  const f = filtersFromHash();
+  const params = new URLSearchParams();
+  params.set('page', String(currentPage()));
+  if (f.category) params.set('category', f.category);
+  if (f.subCategory) params.set('subCategory', f.subCategory);
+  if (f.availability) params.set('availability', f.availability);
+  if (f.q) params.set('q', f.q);
+  return '/menu?' + params.toString();
+}
+
+function filterHash() {
+  const f = filtersFromHash();
+  const params = new URLSearchParams();
+  if (f.category) params.set('category', f.category);
+  if (f.subCategory) params.set('subCategory', f.subCategory);
+  if (f.availability) params.set('availability', f.availability);
+  if (f.q) params.set('q', f.q);
+  const p = params.toString();
+  return '#/menu-list' + (p ? '?' + p : '');
+}
 
 registerRoute('/menu-list', async (app) => {
   showLoading(app);
   try {
-    const res = await get('/menu?page=' + currentPage());
+    const res = await get(buildApiUrl());
     const menus = extractList(res, 'menus');
 
     const renderRows = (list) => list.length ? list.map(m => {
@@ -25,11 +58,7 @@ registerRoute('/menu-list', async (app) => {
       </tr>`;
     }).join('') : emptyState({ colspan: 6, title: 'Your menu is empty', i18nTitle: 'empty.your_menu_empty', hint: 'Add dishes so they can be sold from the billing screen.', i18nHint: 'empty.menu_hint', actionHref: '#/menu-add', actionLabel: 'Add the first dish', i18nAction: 'empty.menu_action' });
 
-    const filterPanel = renderFilterPanel([
-      { key: 'category', label: 'Category', options: uniqueValues(menus, 'category') },
-      { key: 'subCategory', label: 'Choose Sub Category', options: uniqueValues(menus, 'subCategory') }
-    ]);
-    const rows = renderRows(menus);
+    const f = filtersFromHash();
 
     const html = `
 <div class="page-wrapper">
@@ -65,7 +94,63 @@ registerRoute('/menu-list', async (app) => {
 </ul>
 </div>
 </div>
-${filterPanel}
+<div class="card mb-0" id="filter_inputs" style="display:none">
+<div class="card-body pb-0">
+<div class="row">
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="filter.category">Category</label>
+<select class="form-control" id="filter-category">
+<option value="" data-i18n="filter.all_categories">All Categories</option>
+<option value="Veg" data-i18n="menu.veg"${f.category === 'Veg' ? ' selected' : ''}>Veg</option>
+<option value="Non-Veg" data-i18n="menu.non_veg"${f.category === 'Non-Veg' ? ' selected' : ''}>Non-Veg</option>
+</select>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="filter.subcategory">Sub Category</label>
+<select class="form-control" id="filter-subCategory">
+<option value="" data-i18n="filter.all_subcategories">All Sub Categories</option>
+<option value="Starter"${f.subCategory === 'Starter' ? ' selected' : ''}>Starter</option>
+<option value="Main Course"${f.subCategory === 'Main Course' ? ' selected' : ''}>Main Course</option>
+<option value="Beverage"${f.subCategory === 'Beverage' ? ' selected' : ''}>Beverage</option>
+<option value="Soup"${f.subCategory === 'Soup' ? ' selected' : ''}>Soup</option>
+<option value="Salad"${f.subCategory === 'Salad' ? ' selected' : ''}>Salad</option>
+<option value="Roti"${f.subCategory === 'Roti' ? ' selected' : ''}>Roti</option>
+<option value="Rice"${f.subCategory === 'Rice' ? ' selected' : ''}>Rice</option>
+<option value="Dessert"${f.subCategory === 'Dessert' ? ' selected' : ''}>Dessert</option>
+<option value="Juice"${f.subCategory === 'Juice' ? ' selected' : ''}>Juice</option>
+<option value="Snack"${f.subCategory === 'Snack' ? ' selected' : ''}>Snack</option>
+<option value="Side Dish"${f.subCategory === 'Side Dish' ? ' selected' : ''}>Side Dish</option>
+</select>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="filter.availability">Availability</label>
+<select class="form-control" id="filter-availability">
+<option value="" data-i18n="filter.all">All</option>
+<option value="true" data-i18n="dash.available"${f.availability === 'true' ? ' selected' : ''}>Available</option>
+<option value="false" data-i18n="dash.unavailable"${f.availability === 'false' ? ' selected' : ''}>Unavailable</option>
+</select>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="filter.search">Search</label>
+<input type="text" class="form-control" id="filter-q" data-i18n-placeholder="filter.search_item" placeholder="Search item..." value="${f.q}">
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12 d-flex align-items-end">
+<div class="form-group mb-0 d-flex">
+<a class="btn btn-primary" id="apply-filters"><span data-i18n="common.apply">Apply</span></a>
+<a class="btn btn-secondary ms-2" id="reset-filters"><span data-i18n="common.reset">Reset</span></a>
+</div>
+</div>
+</div>
+</div>
+</div>
 <div class="table-responsive">
 <table class="table datanew">
 <thead>
@@ -78,7 +163,7 @@ ${filterPanel}
 <th data-i18n="table.action">Actions</th>
 </tr>
 </thead>
-<tbody>${rows}</tbody>
+<tbody>${renderRows(menus)}</tbody>
 </table>
 </div>
 ${renderPagination(res)}
@@ -87,10 +172,33 @@ ${renderPagination(res)}
 </div>
 </div>`;
 
-    const bindItemDelete = () => bindDelete(app, '.delete-item', { itemName: 'menu item', del, endpoint: '/menu/', successMsg: 'Menu item has been deleted.', listRoute: '#/menu-list' });
+    const bindItemDelete = () => bindDelete(app, '.delete-item', { itemName: window.t('delete.menu_item'), del, endpoint: '/menu/', successMsg: window.t('delete.menu_item_deleted'), listRoute: filterHash() });
 
     renderPage(app, 'menu-list', html);
     bindItemDelete();
-    setTimeout(() => bindFilterPanel(app, { data: menus, renderRows, onRendered: bindItemDelete }), 100);
+
+    const applyBtn = app.querySelector('#apply-filters');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', () => {
+        const category = app.querySelector('#filter-category').value;
+        const subCategory = app.querySelector('#filter-subCategory').value;
+        const availability = app.querySelector('#filter-availability').value;
+        const q = app.querySelector('#filter-q').value;
+        const params = new URLSearchParams();
+        if (category) params.set('category', category);
+        if (subCategory) params.set('subCategory', subCategory);
+        if (availability) params.set('availability', availability);
+        if (q) params.set('q', q);
+        const p = params.toString();
+        window.location.hash = '#/menu-list' + (p ? '?' + p : '');
+      });
+    }
+
+    const resetBtn = app.querySelector('#reset-filters');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        window.location.hash = '#/menu-list';
+      });
+    }
   } catch (err) { showError(app, err); }
 });

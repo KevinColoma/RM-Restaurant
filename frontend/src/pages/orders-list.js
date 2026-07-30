@@ -75,11 +75,11 @@ registerRoute('/orders-list', async (app) => {
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
 <label data-i18n="table.order_type">Order Type</label>
-<select class="form-control" id="filter-orderType">
-<option value="">All</option>
-<option value="dine-in"${f.orderType === 'dine-in' ? ' selected' : ''}>Dine-in</option>
-<option value="takeaway"${f.orderType === 'takeaway' ? ' selected' : ''}>Takeaway</option>
-<option value="delivery"${f.orderType === 'delivery' ? ' selected' : ''}>Delivery</option>
+      <select class="form-control" id="filter-orderType">
+<option value="" data-i18n="filter.all">All</option>
+<option value="dine-in" data-i18n="filter.dine_in"${f.orderType === 'dine-in' ? ' selected' : ''}>Dine-in</option>
+<option value="takeaway" data-i18n="filter.takeaway"${f.orderType === 'takeaway' ? ' selected' : ''}>Takeaway</option>
+<option value="delivery" data-i18n="filter.delivery"${f.orderType === 'delivery' ? ' selected' : ''}>Delivery</option>
 </select>
 </div>
 </div>
@@ -149,9 +149,9 @@ ${renderPagination(res)}
       });
     }
 
-    bindDelete(app, '.cancel-order', { itemName: 'order',
-      del, endpoint: '/orders/', successMsg: 'Order has been cancelled.', listRoute: '#/orders-list',
-      confirmTitle: 'Cancel Order?', confirmText: 'This action cannot be undone!', confirmBtn: 'Yes, cancel it!'
+    bindDelete(app, '.cancel-order', { itemName: window.t('delete.order'),
+      del, endpoint: '/orders/', successMsg: window.t('delete.order_cancelled'), listRoute: filterHash(),
+      confirmTitle: window.t('orders.cancel_title'), confirmText: window.t('orders.cannot_undo'), confirmBtn: window.t('orders.yes_cancel')
     });
   } catch (err) { showError(app, err); }
 });

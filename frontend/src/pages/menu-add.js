@@ -63,10 +63,10 @@ registerRoute('/menu-add', async (app) => {
 </div>
 <div class="col-lg-3 col-sm-6 col-12">
 <div class="form-group">
-<label data-i18n="menu.available">
-<input type="checkbox" name="available" id="available" checked>
-Available
-</label>
+                  <label>
+                    <input type="checkbox" name="available" id="available" checked>
+                    <span data-i18n="menu.available">Available</span>
+                  </label>
 </div>
 </div>
 <div class="col-lg-12">

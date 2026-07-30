@@ -120,4 +120,167 @@ function generatePdf(title, rows, columns, options = {}) {
   return doc;
 }
 
-module.exports = { generatePdf };
+/**
+ * Renders a multi-section sales report PDF (summary cards + several tables).
+ * Reuses the same branded header/footer styling as generatePdf.
+ */
+function generateSalesReportPdf(salesData, ordersData, title, subtitle, options = {}) {
+  const doc = new PDFDocument({ margin: MARGIN, size: 'A4', bufferPages: true });
+
+  const generatedAt = new Date().toLocaleString();
+  const fullSubtitle = [subtitle, options.restaurantName, 'Generated on ' + generatedAt].filter(Boolean).join('  •  ');
+
+  let y = drawHeader(doc, title, fullSubtitle);
+  const docW = doc.page.width - MARGIN * 2;
+
+  function checkPage(needed) {
+    if (y + needed > doc.page.height - 45) {
+      doc.addPage();
+      y = MARGIN;
+    }
+  }
+
+  function sectionTitle(text) {
+    checkPage(30);
+    doc.font('Helvetica-Bold').fontSize(12).fillColor(BRAND.dark)
+      .text(text, MARGIN, y);
+    y += 18;
+    doc.moveTo(MARGIN, y).lineTo(MARGIN + docW, y).strokeColor(BRAND.accent).lineWidth(1).stroke();
+    y += 10;
+  }
+
+  function drawSummaryCard(label, value, x, w) {
+    doc.rect(x, y, w - 6, 40).fill(BRAND.rowAlt);
+    doc.fillColor(BRAND.dark).font('Helvetica-Bold').fontSize(13)
+      .text(String(value), x + 8, y + 6, { width: w - 20 });
+    doc.font('Helvetica').fontSize(8).fillColor(BRAND.muted)
+      .text(label, x + 8, y + 24, { width: w - 20 });
+    doc.fillColor(BRAND.dark);
+  }
+
+  function drawTable(tableTitle, columns, rows) {
+    if (!rows || rows.length === 0) {
+      checkPage(30);
+      doc.font('Helvetica-Oblique').fontSize(9).fillColor(BRAND.muted)
+        .text('No data.', MARGIN, y, { width: docW, align: 'center' });
+      y += 20;
+      doc.fillColor(BRAND.dark);
+      return;
+    }
+
+    sectionTitle(tableTitle);
+
+    const colWidth = docW / columns.length;
+    const rowPadding = 5;
+
+    function drawTableHeader() {
+      checkPage(24);
+      doc.rect(MARGIN, y, docW, 22).fill(BRAND.accent);
+      doc.fillColor(BRAND.headerText).font('Helvetica-Bold').fontSize(9);
+      columns.forEach((c, i) => {
+        doc.text(c.label, MARGIN + i * colWidth + rowPadding, y + 6, { width: colWidth - rowPadding * 2, align: 'left' });
+      });
+      doc.fillColor(BRAND.dark);
+      y += 22;
+    }
+
+    drawTableHeader();
+    doc.font('Helvetica').fontSize(9);
+
+    rows.forEach((row, rowIndex) => {
+      let maxH = 0;
+      const cells = columns.map(c => {
+        const text = String(c.getValue(row));
+        const h = doc.heightOfString(text, { width: colWidth - rowPadding * 2 });
+        if (h > maxH) maxH = h;
+        return text;
+      });
+      const rowHeight = Math.max(18, maxH + rowPadding * 2);
+
+      checkPage(rowHeight + 5);
+
+      if (rowIndex % 2 === 1) {
+        doc.rect(MARGIN, y, docW, rowHeight).fill(BRAND.rowAlt);
+        doc.fillColor(BRAND.dark);
+      }
+
+      cells.forEach((text, i) => {
+        doc.text(text, MARGIN + i * colWidth + rowPadding, y + rowPadding, { width: colWidth - rowPadding * 2, align: 'left' });
+      });
+
+      doc.moveTo(MARGIN, y + rowHeight).lineTo(MARGIN + docW, y + rowHeight)
+        .strokeColor(BRAND.rowBorder).lineWidth(0.5).stroke();
+
+      y += rowHeight;
+    });
+  }
+
+  // ── Summary cards ──────────────────────────────────────────────
+  checkPage(50);
+  const summaryItems = [
+    { label: 'Total Sales', value: (salesData.totalSales || 0).toFixed(2) },
+    { label: 'Total Orders', value: ordersData.totalOrders || 0 },
+    { label: 'Avg Order Value', value: (ordersData.averageOrderValue || 0).toFixed(2) },
+  ];
+  const cardW = docW / summaryItems.length;
+  summaryItems.forEach((item, i) => {
+    drawSummaryCard(item.label, item.value, MARGIN + i * cardW, cardW);
+  });
+  y += 48;
+
+  // ── Tables ─────────────────────────────────────────────────────
+  const currency = (v) => (v || 0).toFixed(2);
+
+  // Sales by Category
+  const catEntries = Object.entries(salesData.salesByCategory || {});
+  drawTable('Sales by Category (Veg/Non-Veg)', [
+    { label: 'Category', getValue: r => r[0] },
+    { label: 'Sales', getValue: r => currency(r[1]) },
+  ], catEntries);
+
+  // Sales by Sub Category
+  const subEntries = Object.entries(salesData.salesBySubCategory || {});
+  drawTable('Sales by Sub Category', [
+    { label: 'Sub Category', getValue: r => r[0] },
+    { label: 'Sales', getValue: r => currency(r[1]) },
+  ], subEntries);
+
+  // Most Popular Items (top 10)
+  const topItems = (ordersData.mostPopularItems || []).slice(0, 10);
+  drawTable('Most Popular Items', [
+    { label: 'Item', getValue: r => r[0] },
+    { label: 'Orders', getValue: r => r[1] },
+  ], topItems);
+
+  // Revenue by Order Type
+  const rev = ordersData.revenueByOrderType || {};
+  const revRows = [
+    ['Dine In', rev.dineIn || 0],
+    ['Take Away', rev.takeAway || 0],
+    ['Online', rev.online || 0],
+  ];
+  drawTable('Revenue by Order Type', [
+    { label: 'Order Type', getValue: r => r[0] },
+    { label: 'Revenue', getValue: r => currency(r[1]) },
+  ], revRows);
+
+  // Order Type Distribution
+  const dist = ordersData.orderTypeCounts || {};
+  const distRows = Object.entries(dist);
+  drawTable('Order Type Distribution', [
+    { label: 'Order Type', getValue: r => r[0] },
+    { label: 'Count', getValue: r => r[1] },
+  ], distRows);
+
+  // ── Footer on all pages ────────────────────────────────────────
+  const pageRange = doc.bufferedPageRange();
+  for (let i = 0; i < pageRange.count; i++) {
+    doc.switchToPage(i);
+    drawFooter(doc, i + 1);
+  }
+
+  doc.end();
+  return doc;
+}
+
+module.exports = { generatePdf, generateSalesReportPdf };

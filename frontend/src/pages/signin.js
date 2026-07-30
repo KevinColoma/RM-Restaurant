@@ -2,6 +2,8 @@ import { registerRoute, navigate } from '../router.js';
 import { signin } from '../lib/auth.js';
 
 registerRoute('/signin', (app) => {
+  const lang = localStorage.getItem('rms-lang') || 'es';
+  const flag = lang === 'es' ? 'es' : 'us';
   app.innerHTML = `
 <div class="main-wrapper">
 <div class="account-content">
@@ -10,6 +12,19 @@ registerRoute('/signin', (app) => {
 <div class="login-userset">
 <div class="login-logo">
   <img src="assets/img/logo.png" alt="RMS">
+</div>
+<div class="dropdown" style="position:fixed;top:15px;right:15px;z-index:999">
+  <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="javascript:void(0);" role="button" style="padding:0;background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.15)">
+    <img src="assets/img/flags/${flag}.png" alt="" height="28" id="login-lang-flag" style="display:block;margin:4px 8px">
+  </a>
+  <div class="dropdown-menu dropdown-menu-right">
+    <a href="javascript:void(0);" class="dropdown-item" data-lang="en">
+      <img src="assets/img/flags/us.png" alt="" height="16"> <span data-i18n="lang.en">English</span>
+    </a>
+    <a href="javascript:void(0);" class="dropdown-item" data-lang="es">
+      <img src="assets/img/flags/es.png" alt="" height="16"> <span data-i18n="lang.es">Spanish</span>
+    </a>
+  </div>
 </div>
 <div class="login-userheading">
   <h3 data-i18n="signin.title">Sign In</h3>
@@ -53,6 +68,8 @@ registerRoute('/signin', (app) => {
 </div>
 </div>
   `;
+
+  if (typeof applyTranslations === 'function') applyTranslations();
 
   app.querySelector('#signin-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -103,4 +120,20 @@ registerRoute('/signin', (app) => {
       toggleBtn.classList.toggle('fa-eye');
     });
   }
+
+  // Language switcher
+  app.querySelectorAll('[data-lang]').forEach(item => {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      const lang = this.getAttribute('data-lang');
+      if (typeof setLanguage === 'function') {
+        setLanguage(lang);
+        const loginFlag = app.querySelector('#login-lang-flag');
+        if (loginFlag) {
+          const flags = { en: 'us', es: 'es' };
+          loginFlag.src = 'assets/img/flags/' + (flags[lang] || 'us') + '.png';
+        }
+      }
+    });
+  });
 });

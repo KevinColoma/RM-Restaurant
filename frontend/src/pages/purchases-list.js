@@ -2,16 +2,46 @@ import { registerRoute } from '../router.js';
 import { showLoading, showError, renderPage, bindDelete, extractList, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
 
+function filtersFromHash() {
+  const q = window.location.hash.split('?')[1] || '';
+  const params = new URLSearchParams(q);
+  return {
+    q: params.get('q') || '',
+    dateFrom: params.get('dateFrom') || '',
+    dateTo: params.get('dateTo') || ''
+  };
+}
+
+function buildApiUrl() {
+  const f = filtersFromHash();
+  const params = new URLSearchParams();
+  params.set('page', String(currentPage()));
+  if (f.q) params.set('q', f.q);
+  if (f.dateFrom) params.set('dateFrom', f.dateFrom);
+  if (f.dateTo) params.set('dateTo', f.dateTo);
+  return '/purchases?' + params.toString();
+}
+
+function filterHash() {
+  const f = filtersFromHash();
+  const params = new URLSearchParams();
+  if (f.q) params.set('q', f.q);
+  if (f.dateFrom) params.set('dateFrom', f.dateFrom);
+  if (f.dateTo) params.set('dateTo', f.dateTo);
+  const p = params.toString();
+  return '#/purchases-list' + (p ? '?' + p : '');
+}
+
 registerRoute('/purchases-list', async (app) => {
   showLoading(app);
   try {
-    const res = await get('/purchases?page=' + currentPage());
+    const res = await get(buildApiUrl());
     const purchases = extractList(res, 'purchases');
     const rows = purchases.length ? purchases.map(p => {
       const date = p.purchaseDate ? new Date(p.purchaseDate).toLocaleDateString() : (p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-');
       const total = typeof p.totalAmount === 'number' ? p.totalAmount.toFixed(2) : (p.totalAmount || '0.00');
       const itemsDetail = p.items ? p.items.map(i => i.itemName + ' x' + i.quantity).join(', ') : '-';
-      const supplierName = p.supplier?.name || 'N/A';
+      const supplierName = p.supplier?.name || (window.t ? window.t('common.na') : 'N/A');
       return `<tr>
         <td>${date}</td>
         <td>${supplierName}</td>
@@ -23,6 +53,8 @@ registerRoute('/purchases-list', async (app) => {
         </td>
       </tr>`;
     }).join('') : emptyState({ colspan: 6, title: 'No purchases recorded', i18nTitle: 'empty.no_purchases', hint: 'Record what you buy from suppliers to keep stock and costs up to date.', i18nHint: 'empty.purchases_hint', actionHref: '#/purchases-add', actionLabel: 'Record the first purchase', i18nAction: 'empty.purchases_action' });
+
+    const f = filtersFromHash();
 
     const html = `
 <div class="page-wrapper">
@@ -40,6 +72,49 @@ registerRoute('/purchases-list', async (app) => {
 </div>
 <div class="card">
 <div class="card-body">
+<div class="table-top">
+<div class="search-set">
+<div class="search-path">
+<a class="btn btn-filter" id="filter_search" title="Filter what this list shows" aria-label="Filter what this list shows">
+<img src="assets/img/icons/filter.svg" alt="">
+<span><img src="assets/img/icons/closes.svg" alt=""></span>
+</a>
+</div>
+<div class="search-input">
+<a class="btn btn-searchset"><img src="assets/img/icons/search-white.svg" alt=""></a>
+</div>
+</div>
+</div>
+<div class="card mb-0" id="filter_inputs" style="display:none">
+<div class="card-body pb-0">
+<div class="row">
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="filter.search_items">Search Items</label>
+<input type="text" class="form-control" id="filter-q" data-i18n-placeholder="filter.search_item_name_short" placeholder="Search by item name..." value="${f.q}">
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="common.from">From</label>
+<input type="date" class="form-control" id="filter-dateFrom" value="${f.dateFrom}">
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="common.to">To</label>
+<input type="date" class="form-control" id="filter-dateTo" value="${f.dateTo}">
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12 d-flex align-items-end">
+<div class="form-group mb-0 d-flex">
+<a class="btn btn-primary" id="apply-filters"><span data-i18n="common.apply">Apply</span></a>
+<a class="btn btn-secondary ms-2" id="reset-filters"><span data-i18n="common.reset">Reset</span></a>
+</div>
+</div>
+</div>
+</div>
+</div>
 <div class="table-responsive">
 <table class="table datanew">
 <thead>
@@ -62,6 +137,28 @@ ${renderPagination(res)}
 </div>`;
 
     renderPage(app, 'purchases-list', html);
-    bindDelete(app, '.delete-purchase', { del, endpoint: '/purchases/', successMsg: 'Purchase has been deleted.', listRoute: '#/purchases-list' });
+    bindDelete(app, '.delete-purchase', { itemName: window.t('delete.purchase'), del, endpoint: '/purchases/', successMsg: window.t('delete.purchase_deleted'), listRoute: filterHash() });
+
+    const applyBtn = app.querySelector('#apply-filters');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', () => {
+        const q = app.querySelector('#filter-q').value;
+        const dateFrom = app.querySelector('#filter-dateFrom').value;
+        const dateTo = app.querySelector('#filter-dateTo').value;
+        const params = new URLSearchParams();
+        if (q) params.set('q', q);
+        if (dateFrom) params.set('dateFrom', dateFrom);
+        if (dateTo) params.set('dateTo', dateTo);
+        const p = params.toString();
+        window.location.hash = '#/purchases-list' + (p ? '?' + p : '');
+      });
+    }
+
+    const resetBtn = app.querySelector('#reset-filters');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        window.location.hash = '#/purchases-list';
+      });
+    }
   } catch (err) { showError(app, err); }
 });

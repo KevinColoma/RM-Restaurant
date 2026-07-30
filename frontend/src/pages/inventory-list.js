@@ -1,20 +1,48 @@
 import { registerRoute } from '../router.js';
-import { showLoading, showError, renderPage, bindDelete, extractList, renderFilterPanel, bindFilterPanel, uniqueValues, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
+import { showLoading, showError, renderPage, bindDelete, extractList, currentPage, renderPagination, emptyState } from '../lib/listPage.js';
 import { get, del } from '../lib/api.js';
+
+function filtersFromHash() {
+  const q = window.location.hash.split('?')[1] || '';
+  const params = new URLSearchParams(q);
+  return {
+    q: params.get('q') || '',
+    lowStock: params.get('lowStock') || ''
+  };
+}
+
+function buildApiUrl() {
+  const f = filtersFromHash();
+  const params = new URLSearchParams();
+  params.set('page', String(currentPage()));
+  if (f.q) params.set('q', f.q);
+  if (f.lowStock) params.set('lowStock', f.lowStock);
+  return '/inventory?' + params.toString();
+}
+
+function filterHash() {
+  const f = filtersFromHash();
+  const params = new URLSearchParams();
+  if (f.q) params.set('q', f.q);
+  if (f.lowStock) params.set('lowStock', f.lowStock);
+  const p = params.toString();
+  return '#/inventory-list' + (p ? '?' + p : '');
+}
 
 registerRoute('/inventory-list', async (app) => {
   showLoading(app);
   try {
-    const res = await get('/inventory?page=' + currentPage());
+    const res = await get(buildApiUrl());
     const items = extractList(res, 'inventoryItems');
 
     const renderRows = (list) => list.length ? list.map(item => {
       const price = typeof item.price === 'number' ? item.price.toFixed(2) : (item.price || '0.00');
       const supplierName = item.supplier?.name || '-';
+      const lowStock = item.quantity <= 10 ? '<span class="badge bg-warning">' + (window.t ? window.t('filter.low_stock_badge') : 'Low Stock') + '</span>' : '';
       return `<tr>
         <td class="productimgname"><a href="javascript:void(0);">${item.name || ''}</a></td>
         <td>${supplierName}</td>
-        <td>${item.quantity || 0}</td>
+        <td>${item.quantity || 0} ${lowStock}</td>
         <td>${price}</td>
         <td>${supplierName}</td>
         <td>
@@ -24,11 +52,7 @@ registerRoute('/inventory-list', async (app) => {
       </tr>`;
     }).join('') : emptyState({ colspan: 6, title: 'No inventory items yet', i18nTitle: 'empty.no_inventory', hint: 'Add stock to keep track of what you have on hand.', i18nHint: 'empty.inventory_hint', actionHref: '#/inventory-add', actionLabel: 'Add the first item', i18nAction: 'empty.inventory_action' });
 
-    const filterableItems = items.map(item => ({ ...item, supplierName: item.supplier?.name || '' }));
-    const filterPanel = renderFilterPanel([
-      { key: 'supplierName', label: 'Supplier', options: uniqueValues(filterableItems, 'supplierName') }
-    ]);
-    const rows = renderRows(items);
+    const f = filtersFromHash();
 
     const html = `
 <div class="page-wrapper">
@@ -64,7 +88,33 @@ registerRoute('/inventory-list', async (app) => {
 </ul>
 </div>
 </div>
-${filterPanel}
+<div class="card mb-0" id="filter_inputs" style="display:none">
+<div class="card-body pb-0">
+<div class="row">
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="filter.search">Search</label>
+<input type="text" class="form-control" id="filter-q" data-i18n-placeholder="filter.search_item_name" placeholder="Search item name..." value="${f.q}">
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label data-i18n="filter.stock_level">Stock Level</label>
+<select class="form-control" id="filter-lowStock">
+<option value="" data-i18n="filter.all">All</option>
+<option value="true" data-i18n="filter.low_stock"${f.lowStock === 'true' ? ' selected' : ''}>Low Stock (≤10)</option>
+</select>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12 d-flex align-items-end">
+<div class="form-group mb-0 d-flex">
+<a class="btn btn-primary" id="apply-filters"><span data-i18n="common.apply">Apply</span></a>
+<a class="btn btn-secondary ms-2" id="reset-filters"><span data-i18n="common.reset">Reset</span></a>
+</div>
+</div>
+</div>
+</div>
+</div>
 <div class="table-responsive">
 <table class="table datanew">
 <thead>
@@ -77,7 +127,7 @@ ${filterPanel}
 <th data-i18n="table.action">Actions</th>
 </tr>
 </thead>
-<tbody>${rows}</tbody>
+<tbody>${renderRows(items)}</tbody>
 </table>
 </div>
 ${renderPagination(res)}
@@ -86,10 +136,29 @@ ${renderPagination(res)}
 </div>
 </div>`;
 
-    const bindItemDelete = () => bindDelete(app, '.delete-item', { itemName: 'inventory item', del, endpoint: '/inventory/', successMsg: 'Inventory item has been deleted.', listRoute: '#/inventory-list' });
+    const bindItemDelete = () => bindDelete(app, '.delete-item', { itemName: window.t('delete.inventory_item'), del, endpoint: '/inventory/', successMsg: window.t('delete.inventory_item_deleted'), listRoute: filterHash() });
 
     renderPage(app, 'inventory-list', html);
     bindItemDelete();
-    setTimeout(() => bindFilterPanel(app, { data: filterableItems, renderRows, onRendered: bindItemDelete }), 100);
+
+    const applyBtn = app.querySelector('#apply-filters');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', () => {
+        const q = app.querySelector('#filter-q').value;
+        const lowStock = app.querySelector('#filter-lowStock').value;
+        const params = new URLSearchParams();
+        if (q) params.set('q', q);
+        if (lowStock) params.set('lowStock', lowStock);
+        const p = params.toString();
+        window.location.hash = '#/inventory-list' + (p ? '?' + p : '');
+      });
+    }
+
+    const resetBtn = app.querySelector('#reset-filters');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        window.location.hash = '#/inventory-list';
+      });
+    }
   } catch (err) { showError(app, err); }
 });

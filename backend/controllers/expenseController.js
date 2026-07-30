@@ -55,12 +55,38 @@ exports.getExpense = async(req,res)=>{
 
 }
 
+const VALID_PAYMENT_METHODS = ['cash', 'credit card', 'bank transfer', 'other'];
+
+function parseDate(value) {
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 // JSON list for the SPA. getExpense above renders the EJS page instead, which
 // is why /api/expenses previously fell through to the catch-all and handed the
 // SPA an HTML document where it expected data.
 exports.listExpenses = async (req, res) => {
     try {
-        const result = await paginate(Expense, { personaId: req.personaId }, getPageParams(req), {
+        const filter = { personaId: req.personaId };
+        if (req.query.category) filter.category = req.query.category;
+        if (req.query.expenseType) filter.expenseType = { $regex: req.query.expenseType, $options: 'i' };
+        if (VALID_PAYMENT_METHODS.includes(req.query.paymentMethod)) filter.paymentMethod = req.query.paymentMethod;
+        if (req.query.q) filter.$or = [
+            { description: { $regex: req.query.q, $options: 'i' } },
+            { vendor: { $regex: req.query.q, $options: 'i' } },
+            { invoiceNumber: { $regex: req.query.q, $options: 'i' } }
+        ];
+        const fromDate = parseDate(req.query.dateFrom);
+        const toDate = parseDate(req.query.dateTo);
+        if (fromDate || toDate) {
+            filter.expenseDate = {};
+            if (fromDate) filter.expenseDate.$gte = fromDate;
+            if (toDate) {
+                toDate.setHours(23, 59, 59, 999);
+                filter.expenseDate.$lte = toDate;
+            }
+        }
+        const result = await paginate(Expense, filter, getPageParams(req), {
             sort: { expenseDate: -1 }
         });
         res.json({

@@ -34,8 +34,8 @@ registerRoute('/reports-dates', async (app) => {
 <button type="submit" class="btn btn-primary w-100" data-i18n="report.get_report">Get Report</button>
 </div>
 <div class="form-group col-md-3 d-flex align-items-end">
-<a href="/api/export/sales/pdf" class="btn btn-sm btn-primary me-2" data-i18n="common.pdf">PDF</a>
-<a href="/api/export/sales/csv" class="btn btn-sm btn-success" data-i18n="common.csv">CSV</a>
+<a href="/export/sales/pdf" class="btn btn-sm btn-primary me-2 export-link" data-export="pdf" data-i18n="common.pdf">PDF</a>
+<a href="/export/sales/csv" class="btn btn-sm btn-success export-link" data-export="csv" data-i18n="common.csv">CSV</a>
 </div>
 </form>
 </div>
@@ -220,5 +220,18 @@ registerRoute('/reports-dates', async (app) => {
     } catch (err) {
       Swal.fire(window.t('common.error'), window.t('report.fetch_failed') + err.message, 'error');
     }
+  });
+
+  document.querySelectorAll('.export-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      let url = link.getAttribute('href');
+      if (startDate && endDate) {
+        url += '?startDate=' + encodeURIComponent(startDate) + '&endDate=' + encodeURIComponent(endDate);
+      }
+      window.open(url, '_blank');
+    });
   });
 });
