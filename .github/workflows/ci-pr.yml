@@ -84,6 +84,15 @@ jobs:
           node-version: 20
       - run: cd backend && npm ci
       - run: cd backend && npm test -- --coverage 2>&1 | tee test-backend.log
+      # Copia el log DENTRO de coverage/ para poder subir un solo path. Con dos
+      # paths, upload-artifact anida bajo el ancestro común (coverage/lcov.info
+      # pasaría a coverage/coverage/lcov.info) y rompe la descarga que hace el
+      # job de sonarcloud más abajo, que espera backend/coverage/lcov.info tal cual.
+      - name: Copy backend log into coverage dir
+        if: always()
+        run: |
+          mkdir -p backend/coverage
+          cp backend/test-backend.log backend/coverage/ 2>/dev/null || true
       # Guarda reporte de cobertura + log como artefacto para SonarCloud y para
       # el job de resultados consolidados. if: always() para que quede
       # disponible incluso si "npm test" falló (con pipefail, un test roto
@@ -93,9 +102,7 @@ jobs:
         if: always()
         with:
           name: coverage-backend
-          path: |
-            backend/coverage/
-            backend/test-backend.log
+          path: backend/coverage/
           if-no-files-found: ignore
       - name: Notify backend test result
         uses: appleboy/telegram-action@v1.0.1
@@ -120,15 +127,20 @@ jobs:
           node-version: 20
       - run: cd frontend && npm ci
       - run: cd frontend && npm test 2>&1 | tee test-frontend.log
+      # Copia el log DENTRO de coverage/ - ver nota en test-backend sobre por
+      # qué dos paths en upload-artifact rompería la descarga de sonarcloud.
+      - name: Copy frontend log into coverage dir
+        if: always()
+        run: |
+          mkdir -p frontend/coverage
+          cp frontend/test-frontend.log frontend/coverage/ 2>/dev/null || true
       # Guarda reporte de cobertura + log como artefacto para SonarCloud y para
       # el job de resultados consolidados (if: always(), ver nota en test-backend).
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage-frontend
-          path: |
-            frontend/coverage/
-            frontend/test-frontend.log
+          path: frontend/coverage/
           if-no-files-found: ignore
       - name: Notify frontend test result
         uses: appleboy/telegram-action@v1.0.1
