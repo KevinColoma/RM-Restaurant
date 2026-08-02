@@ -37,6 +37,7 @@ registerRoute('/pos', async (app) => {
 .menu-card .item-name { font-weight: 600; font-size: 14px; color: #333; margin-bottom: 4px; }
 .menu-card .item-category { font-size: 11px; color: #999; margin-bottom: 4px; }
 .menu-card .item-price { font-weight: 700; color: #ff9f43; font-size: 16px; }
+.menu-card .item-thumb { width: 100%; height: 90px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; display: block; background: #f1f3f5; }
 .cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .cart-header h5 { margin: 0; font-weight: 700; }
 .cart-header a { color: #dc3545; cursor: pointer; font-size: 13px; text-decoration: none; }
@@ -100,6 +101,7 @@ registerRoute('/pos', async (app) => {
               <div class="menu-card-grid">
                 ${items.map(m => `
                   <div class="menu-card" data-id="${m._id}" data-item="${m.item}" data-price="${m.price}" data-category="${m.category}">
+                    ${m.image ? `<img class="item-thumb" src="${m.image}" alt="${m.item}" loading="lazy">` : `<div class="item-thumb"></div>`}
                     <div class="item-name">${m.item}</div>
                     <div class="item-category">${m.subCategory || ''}</div>
                     <div class="item-price">${currencySymbol}${Number(m.price).toFixed(2)}</div>
@@ -114,6 +116,7 @@ registerRoute('/pos', async (app) => {
               <div class="menu-card-grid">
                 ${menus.filter(m => !m.category).map(m => `
                   <div class="menu-card" data-id="${m._id}" data-item="${m.item}" data-price="${m.price}" data-category="">
+                    ${m.image ? `<img class="item-thumb" src="${m.image}" alt="${m.item}" loading="lazy">` : `<div class="item-thumb"></div>`}
                     <div class="item-name">${m.item}</div>
                     <div class="item-category"></div>
                     <div class="item-price">${currencySymbol}${Number(m.price).toFixed(2)}</div>
