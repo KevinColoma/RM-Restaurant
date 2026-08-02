@@ -1,6 +1,6 @@
 import { registerRoute } from '../router.js';
 import { renderLayout } from '../components/Header.js';
-import { post } from '../lib/api.js';
+import { upload } from '../lib/api.js';
 import { navigateTo } from '../lib/listPage.js';
 import { setBusy } from '../lib/formFeedback.js';
 
@@ -69,6 +69,12 @@ registerRoute('/menu-add', async (app) => {
                   </label>
 </div>
 </div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label for="menuImage" data-i18n="menu.image">Item Image</label>
+<input type="file" name="image" id="menuImage" class="form-control" accept="image/*">
+</div>
+</div>
 <div class="col-lg-12">
 <button type="submit" class="btn btn-submit me-2" data-i18n="form.submit">Submit</button>
 <a href="#/menu-list" class="btn btn-cancel" data-i18n="form.cancel">Cancel</a>
@@ -84,16 +90,20 @@ registerRoute('/menu-add', async (app) => {
 
   document.getElementById('add-item-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const data = {
-      item: document.getElementById('item').value,
-      category: document.getElementById('category').value,
-      subCategory: document.getElementById('subCategory').value,
-      price: document.getElementById('price').value,
-      available: document.getElementById('available').checked
-    };
+    const formData = new FormData();
+    formData.append('item', document.getElementById('item').value);
+    formData.append('category', document.getElementById('category').value);
+    formData.append('subCategory', document.getElementById('subCategory').value);
+    formData.append('price', document.getElementById('price').value);
+    formData.append('available', document.getElementById('available').checked ? 'true' : 'false');
+    const imageInput = document.getElementById('menuImage');
+    if (imageInput && imageInput.files && imageInput.files[0]) {
+      formData.append('image', imageInput.files[0]);
+    }
     const done = setBusy(e.submitter || e.target.querySelector('[type="submit"]'), window.t('menu.saving'));
     try {
-      await post('/menu', data);
+      const res = await upload('/menu', formData);
+      if (res.error) throw new Error(res.error);
       Swal.fire(window.t('common.success'), window.t('menu.added'), 'success')
         .then(() => navigateTo('#/menu-list'));
     } catch (err) {

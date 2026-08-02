@@ -12,8 +12,14 @@ const { isValidObjectId } = require('../utils/validate');
 // };
 
 const AddMenu = async (req,res)=>{
-    const {  item, category, subCategory, price, available } = req.body;
-   const  personaId= req.personaId
+    const {  item, category, subCategory } = req.body;
+    const  personaId= req.personaId
+    const price = Number(req.body.price);
+    // The SPA submits multipart/form-data, so booleans arrive as strings. Treat
+    // both JSON and form bodies the same: default to available unless explicitly false.
+    const availableRaw = req.body.available;
+    const availability = availableRaw === undefined || availableRaw === true || availableRaw === 'true';
+    const image = req.file ? '/uploads/' + req.file.filename : null;
     try {
         const newItem = new Menu({
             personaId,
@@ -21,7 +27,8 @@ const AddMenu = async (req,res)=>{
             category,
             subCategory,
             price,
-            availability: available !== undefined ? available : true
+            image,
+            availability
         });
 
         const savedItem = await newItem.save();

@@ -25,6 +25,22 @@ const storage = multer.diskStorage({
 const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 } });
 app.use((req, res, next) => { req.upload = upload; next(); });
 
+// Menu item images: separate store so the file is not named/overwritten like an
+// avatar. Only images are accepted and each upload gets a unique filename.
+const menuStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'public/uploads'),
+  filename: (req, file, cb) => cb(null, 'menu-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10) + path.extname(file.originalname))
+});
+const menuUpload = multer({
+  storage: menuStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (/^image\//.test(file.mimetype)) cb(null, true);
+    else cb(new Error('Only image files are allowed'));
+  }
+});
+app.use((req, res, next) => { req.menuUpload = menuUpload; next(); });
+
 
 app.use(cookieParser());
 

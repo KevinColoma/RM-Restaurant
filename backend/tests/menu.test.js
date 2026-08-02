@@ -53,6 +53,22 @@ describe('Menu CRUD', () => {
     menuId = res.body._id;
   });
 
+  it('should create a menu item with an image via multipart', async () => {
+    const res = await request(app)
+      .post('/api/menu')
+      .set('Cookie', [`jwt=${token}`])
+      .field('item', 'Burger Photo')
+      .field('category', 'Veg')
+      .field('subCategory', 'Main Course')
+      .field('price', '13.50')
+      .field('available', 'false')
+      .attach('image', Buffer.from([0x89, 0x50, 0x4e, 0x47]), 'test.png');
+
+    expect(res.status).toBe(201);
+    expect(res.body.image).toMatch(/^\/uploads\/menu-/);
+    expect(res.body.availability).toBe(false);
+  });
+
   it('should reject menu item without auth', async () => {
     const res = await request(app)
       .post('/api/addmenu')

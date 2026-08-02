@@ -155,7 +155,7 @@ router.delete('/api/expenses/:id', protect, expenseController.deleteExpense);
 
 // Menu
 router.get('/api/menu', protect, apiController.listMenu);
-router.post('/api/menu', protect, menuController.AddMenu);
+router.post('/api/menu', protect, (req, res, next) => { req.menuUpload.single('image')(req, res, next); }, menuController.AddMenu);
 
 // Inventory
 router.get('/api/inventory', protect, apiController.listInventory);
