@@ -24,7 +24,7 @@ describe('POST /api/signup', () => {
         city: 'Test City',
         address: '123 Test St',
         mobile: '1234567890',
-        password: 'password123'
+        password: 'Password123!'
       });
 
     expect(res.status).toBe(201);
@@ -53,7 +53,7 @@ describe('POST /api/signin', () => {
   it('should login with valid credentials', async () => {
     const res = await request(app)
       .post('/api/signin')
-      .send({ email: 'test@example.com', password: 'password123' });
+      .send({ email: 'test@example.com', password: 'Password123!' });
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
@@ -82,7 +82,7 @@ describe('POST /api/signin', () => {
 describe('Single-session policy', () => {
   const signIn = () => request(app)
     .post('/api/signin')
-    .send({ email: 'test@example.com', password: 'password123' });
+    .send({ email: 'test@example.com', password: 'Password123!' });
 
   // Earlier tests in this file leave test@example.com signed in, which would
   // make the "first" login below hit the block. Start each case signed out.

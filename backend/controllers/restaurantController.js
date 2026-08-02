@@ -20,6 +20,11 @@ exports.SignUp = async function (req, res) {
             return res.status(400).json({ success: false, message: 'Email is already in use.' });
         }
 
+        const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+        if (!strongPassword.test(password)) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character' });
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const persona = await Persona.create({

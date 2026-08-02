@@ -1,5 +1,6 @@
 import { registerRoute, navigate } from '../router.js';
 import { post } from '../lib/api.js';
+import { validate, clearErrorsOnInput } from '../lib/formFeedback.js';
 
 registerRoute('/signup', (app) => {
   app.innerHTML = `
@@ -63,7 +64,7 @@ registerRoute('/signup', (app) => {
   <div class="form-login">
     <label for="password" data-i18n="form.password">Password</label>
     <div class="pass-group">
-      <input type="password" name="password" id="password" class="pass-input" placeholder="Enter your password" required minlength="6" maxlength="18" data-i18n-placeholder="signup.password_placeholder">
+      <input type="password" name="password" id="password" class="pass-input" placeholder="Enter your password" required minlength="8" maxlength="18" data-i18n-placeholder="signup.password_placeholder">
       <span class="fas toggle-password fa-eye-slash"></span>
     </div>
   </div>
@@ -84,6 +85,9 @@ registerRoute('/signup', (app) => {
 </div>
   `;
 
+  const form = app.querySelector('#signup-form');
+  clearErrorsOnInput(form);
+
   app.querySelector('#signup-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = app.querySelector('#email').value.trim();
@@ -93,6 +97,12 @@ registerRoute('/signup', (app) => {
     const address = app.querySelector('#address').value.trim();
     const mobile = app.querySelector('#mobile').value.trim();
     const password = app.querySelector('#password').value;
+
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(password)) {
+      validate(form, [{ field: 'password', valid: false, message: window.t('profile.pw_weak') }]);
+      return;
+    }
+
     const errorEl = app.querySelector('#error-message');
     const successEl = app.querySelector('#success-message');
     const btn = app.querySelector('#submit-button');
