@@ -71,11 +71,11 @@ describe('Profile', () => {
     const res = await request(app)
       .put('/api/profile/password')
       .set('Cookie', [`jwt=${token}`])
-      .send({ currentPassword: 'password123', newPassword: 'newpass123' });
+      .send({ currentPassword: 'password123', newPassword: 'Newpass123!' });
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
 
-    token = await getToken('profile@test.com', 'newpass123');
+    token = await getToken('profile@test.com', 'Newpass123!');
     expect(token).toBeDefined();
   });
 
@@ -83,14 +83,14 @@ describe('Profile', () => {
     const res = await request(app)
       .put('/api/profile/password')
       .set('Cookie', [`jwt=${token}`])
-      .send({ currentPassword: 'wrongpass', newPassword: 'newpass456' });
+      .send({ currentPassword: 'wrongpass', newPassword: 'Newpass456!' });
     expect(res.status).toBe(400);
   });
 
   it('should reject password change without auth', async () => {
     const res = await request(app)
       .put('/api/profile/password')
-      .send({ currentPassword: 'password123', newPassword: 'newpass123' });
+      .send({ currentPassword: 'password123', newPassword: 'Newpass123!' });
     expect(res.status).toBe(401);
   });
 
@@ -98,7 +98,7 @@ describe('Profile', () => {
     const res = await request(app)
       .put('/api/profile/password')
       .set('Cookie', [`jwt=${token}`])
-      .send({ newPassword: 'newpass123' });
+      .send({ newPassword: 'Newpass123!' });
     expect(res.status).toBe(400);
   });
 
@@ -106,7 +106,15 @@ describe('Profile', () => {
     const res = await request(app)
       .put('/api/profile/password')
       .set('Cookie', [`jwt=${token}`])
-      .send({ currentPassword: 'newpass123', newPassword: 'ab' });
+      .send({ currentPassword: 'Newpass123!', newPassword: 'ab' });
+    expect(res.status).toBe(400);
+  });
+
+  it('should reject weak new password', async () => {
+    const res = await request(app)
+      .put('/api/profile/password')
+      .set('Cookie', [`jwt=${token}`])
+      .send({ currentPassword: 'Newpass123!', newPassword: 'newpass123' });
     expect(res.status).toBe(400);
   });
 });

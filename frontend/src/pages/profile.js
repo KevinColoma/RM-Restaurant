@@ -1,6 +1,11 @@
 import { registerRoute } from '../router.js';
 import { renderLayout } from '../components/Header.js';
 import { get, put, upload } from '../lib/api.js';
+import { setBusy, validate, clearErrorsOnInput } from '../lib/formFeedback.js';
+
+function isStrongPassword(pw) {
+  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(pw);
+}
 
 registerRoute('/profile', async (app) => {
   app.innerHTML = '<div class="main-wrapper"><div id="global-loader"><div class="whirly-loader"></div></div></div>';
@@ -84,13 +89,13 @@ Change Photo
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
 <label for="newPassword" data-i18n="profile.new_pw">New Password</label>
-<input type="password" name="newPassword" id="newPassword" class="form-control" minlength="6" required>
+<input type="password" name="newPassword" id="newPassword" class="form-control" minlength="8" required>
 </div>
 </div>
 <div class="col-lg-4 col-sm-6 col-12">
 <div class="form-group">
 <label for="confirmPassword" data-i18n="profile.confirm_pw">Confirm New Password</label>
-<input type="password" id="confirmPassword" class="form-control" minlength="6" required>
+<input type="password" id="confirmPassword" class="form-control" minlength="8" required>
 </div>
 </div>
 <div class="col-lg-12">
@@ -162,24 +167,32 @@ Change Photo
 
     const passwordForm = el('password-form');
     if (passwordForm) {
+      clearErrorsOnInput(passwordForm);
       passwordForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const currentPassword = ($('#currentPassword')).value;
         const newPassword = ($('#newPassword')).value;
         const confirmPassword = ($('#confirmPassword')).value;
-        if (newPassword !== confirmPassword) {
-          Swal.fire(window.t('common.error'), window.t('profile.pw_mismatch'), 'error');
-          return;
-        }
+
+        const ok = validate(passwordForm, [
+          { field: 'currentPassword', valid: !!currentPassword, message: window.t('profile.pw_current_required') },
+          { field: 'newPassword', valid: isStrongPassword(newPassword), message: window.t('profile.pw_weak') },
+          { field: 'confirmPassword', valid: newPassword === confirmPassword, message: window.t('profile.pw_mismatch') }
+        ]);
+        if (!ok) return;
+
+        const done = setBusy(e.submitter || passwordForm.querySelector('[type="submit"]'), window.t('profile.pw_changing'));
         try {
           const res = await put('/profile/password', { currentPassword, newPassword });
           if (res.success) {
             Swal.fire(window.t('common.success'), window.t('profile.pw_changed'), 'success');
             passwordForm.reset();
           } else {
+            done();
             Swal.fire(window.t('common.error'), res.error || window.t('profile.pw_change_failed'), 'error');
           }
         } catch (err) {
+          done();
           Swal.fire(window.t('common.error'), err.message || window.t('profile.pw_change_failed'), 'error');
         }
       });
