@@ -25,19 +25,17 @@ const storage = multer.diskStorage({
 const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 } });
 app.use((req, res, next) => { req.upload = upload; next(); });
 
-// Menu item images: separate store so the file is not named/overwritten like an
-// avatar. Only images are accepted and each upload gets a unique filename.
-const menuStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'public/uploads'),
-  filename: (req, file, cb) => cb(null, 'menu-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10) + path.extname(file.originalname))
-});
+// Menu item images: kept in memory as a buffer so they can be stored directly in
+// MongoDB. Render's filesystem is ephemeral - files written to disk disappear on
+// restart, so relying on public/uploads would make uploaded images vanish.
+// Accepts only images and each upload is limited in size.
 const menuUpload = multer({
-  storage: menuStorage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (/^image\//.test(file.mimetype)) cb(null, true);
-    else cb(new Error('Only image files are allowed'));
-  }
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        if (/^image\//.test(file.mimetype)) cb(null, true);
+        else cb(new Error('Only image files are allowed'));
+    }
 });
 app.use((req, res, next) => { req.menuUpload = menuUpload; next(); });
 

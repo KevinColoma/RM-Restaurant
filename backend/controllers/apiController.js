@@ -54,7 +54,9 @@ exports.listMenu = jsonRead(async (req, res) => {
     if (req.query.availability === 'true') filter.availability = true;
     else if (req.query.availability === 'false') filter.availability = false;
     if (req.query.q) filter.item = { $regex: escapeRegex(req.query.q), $options: 'i' };
-    const result = await paginate(Menu, filter, getPageParams(req));
+    const result = await paginate(Menu, filter, getPageParams(req), {
+        select: '-imageData -imageMime'
+    });
     sendPage(res, 'menus', result);
 });
 
@@ -154,7 +156,7 @@ exports.listOrders = jsonRead(async (req, res) => {
 // The point-of-sale screen loads its menu and customer pickers in one call.
 exports.getPos = jsonRead(async (req, res) => {
     const [menus, customers, persona] = await Promise.all([
-        Menu.find({ personaId: req.personaId }),
+        Menu.find({ personaId: req.personaId }).select('-imageData -imageMime'),
         Customer.find({ personaId: req.personaId }).sort({ name: 1 }),
         Persona.findById(req.personaId)
     ]);

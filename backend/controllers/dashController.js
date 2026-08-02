@@ -110,7 +110,7 @@ async function buildDashboard(personaId) {
             }
         ]);
 
-        const menus = await Menu.find({ personaId: new mongoose.Types.ObjectId(personaId) });
+        const menus = await Menu.find({ personaId: new mongoose.Types.ObjectId(personaId) }).select('-imageData -imageMime');
 
         const orders = await Order.find({
             createdAt: { $gte: startOfDay, $lte: endOfDay },

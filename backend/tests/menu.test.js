@@ -65,7 +65,7 @@ describe('Menu CRUD', () => {
       .attach('image', Buffer.from([0x89, 0x50, 0x4e, 0x47]), 'test.png');
 
     expect(res.status).toBe(201);
-    expect(res.body.image).toMatch(/^\/uploads\/menu-/);
+    expect(res.body.image).toMatch(/^\/api\/menu\/[a-f0-9]{24}\/image$/);
     expect(res.body.availability).toBe(false);
   });
 

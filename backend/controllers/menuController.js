@@ -19,7 +19,6 @@ const AddMenu = async (req,res)=>{
     // both JSON and form bodies the same: default to available unless explicitly false.
     const availableRaw = req.body.available;
     const availability = availableRaw === undefined || availableRaw === true || availableRaw === 'true';
-    const image = req.file ? '/uploads/' + req.file.filename : null;
     try {
         const newItem = new Menu({
             personaId,
@@ -27,9 +26,13 @@ const AddMenu = async (req,res)=>{
             category,
             subCategory,
             price,
-            image,
+            // Store the image as a MongoDB binary blob so it survives Render's
+            // ephemeral filesystem. The URL streams the stored bytes back.
+            imageData: req.file ? req.file.buffer : null,
+            imageMime: req.file ? req.file.mimetype : null,
             availability
         });
+        if (req.file) newItem.image = '/api/menu/' + newItem._id + '/image';
 
         const savedItem = await newItem.save();
         await logAudit(req, 'create', 'Menu', savedItem._id, 'Created menu item: ' + item);
@@ -44,7 +47,7 @@ const GetMenu = async(req,res)=>{
     const personaId = req.personaId;
 
     try {
-        const menus = await Menu.find({ personaId });
+        const menus = await Menu.find({ personaId }).select('-imageData -imageMime');
         res.render('item-list', { menus }); // Render 'menu.ejs' and pass 'menus' to it
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -54,7 +57,7 @@ const GetPos = async(req,res)=>{
     const personaId = req.personaId;
 
     try {
-        const menus = await Menu.find({ personaId });
+        const menus = await Menu.find({ personaId }).select('-imageData -imageMime');
         const customers = await Customer.find({ personaId }).sort({ name: 1 });
         const persona = await Persona.findById(personaId);
         // Same default PlaceOrder uses when actually charging the order, so

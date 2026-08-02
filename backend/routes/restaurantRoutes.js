@@ -156,6 +156,21 @@ router.delete('/api/expenses/:id', protect, expenseController.deleteExpense);
 // Menu
 router.get('/api/menu', protect, apiController.listMenu);
 router.post('/api/menu', protect, (req, res, next) => { req.menuUpload.single('image')(req, res, next); }, menuController.AddMenu);
+// Streams a menu item's image stored as a binary blob in MongoDB (the filesystem
+// on Render is ephemeral, so uploads can't live in public/uploads).
+router.get('/api/menu/:id/image', protect, async (req, res) => {
+  try {
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+    const Menu = require('../models/menu');
+    const menu = await Menu.findById(req.params.id).select('imageData imageMime').lean();
+    if (!menu || !menu.imageData) return res.status(404).json({ error: 'Image not found' });
+    res.set('Content-Type', menu.imageMime || 'image/png');
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.send(menu.imageData.buffer);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Inventory
 router.get('/api/inventory', protect, apiController.listInventory);
