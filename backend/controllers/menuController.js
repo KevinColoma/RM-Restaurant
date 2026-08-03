@@ -26,9 +26,9 @@ const AddMenu = async (req,res)=>{
             category,
             subCategory,
             price,
-            // Store the image as a MongoDB binary blob so it survives Render's
-            // ephemeral filesystem. The URL streams the stored bytes back.
-            imageData: req.file ? req.file.buffer : null,
+            // Store the image as a base64 string so Render's ephemeral filesystem
+            // never comes into play and it survives reloads/new containers.
+            imageData: req.file ? req.file.buffer.toString('base64') : null,
             imageMime: req.file ? req.file.mimetype : null,
             availability
         });

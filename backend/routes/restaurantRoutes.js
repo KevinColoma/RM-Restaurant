@@ -164,9 +164,10 @@ router.get('/api/menu/:id/image', protect, async (req, res) => {
     const Menu = require('../models/menu');
     const menu = await Menu.findById(req.params.id).select('imageData imageMime').lean();
     if (!menu || !menu.imageData) return res.status(404).json({ error: 'Image not found' });
-    res.set('Content-Type', menu.imageMime || 'image/png');
+    const buf = Buffer.from(menu.imageData, 'base64');
+    res.type(menu.imageMime || 'image/png');
     res.set('Cache-Control', 'public, max-age=3600');
-    res.send(menu.imageData.buffer);
+    res.send(buf);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

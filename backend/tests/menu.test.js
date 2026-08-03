@@ -62,11 +62,20 @@ describe('Menu CRUD', () => {
       .field('subCategory', 'Main Course')
       .field('price', '13.50')
       .field('available', 'false')
-      .attach('image', Buffer.from([0x89, 0x50, 0x4e, 0x47]), 'test.png');
+      .attach('image', Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), 'test.png');
 
     expect(res.status).toBe(201);
     expect(res.body.image).toMatch(/^\/api\/menu\/[a-f0-9]{24}\/image$/);
     expect(res.body.availability).toBe(false);
+
+    // The stored image must survive a fresh read (simulating a reload or a
+    // different browser hitting the same server).
+    const img = await request(app)
+      .get(res.body.image)
+      .set('Cookie', [`jwt=${token}`]);
+    expect(img.status).toBe(200);
+    expect(img.headers['content-type']).toContain('image/png');
+    expect(img.headers['content-length']).toBe('8');
   });
 
   it('should reject menu item without auth', async () => {
