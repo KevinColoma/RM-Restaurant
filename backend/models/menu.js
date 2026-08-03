@@ -46,4 +46,6 @@ const menuSchema = new mongoose.Schema({
     // }
 });
 
+menuSchema.index({ personaId: 1 });
+
 module.exports = mongoose.model("Menu", menuSchema);

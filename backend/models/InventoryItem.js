@@ -26,6 +26,8 @@ const inventoryItemSchema = new mongoose.Schema({
   }
 });
 
+inventoryItemSchema.index({ personaId: 1, name: 1 });
+
 const InventoryItem = mongoose.model('InventoryItem', inventoryItemSchema);
 
 module.exports = InventoryItem;

@@ -76,14 +76,22 @@ const PlaceOrder = async (req, res) => {
       const currencySymbol = (persona && persona.currencySymbol) ? persona.currencySymbol : '$';
       const printerConnection = (persona && persona.printerConnection) ? persona.printerConnection : '';
 
-      const orderItems = await Promise.all(items.map(async item => {
-          const menuItem = await Menu.findById(item.menuItem);
+      // Load all menus in a single query instead of one per item (removes N+1).
+      const menuIds = items.map(i => i.menuItem);
+      const menuDocs = await Menu.find({ _id: { $in: menuIds } });
+      const menuMap = new Map(menuDocs.map(m => [String(m._id), m]));
+
+      const orderItems = items.map(item => {
+          const menuItem = menuMap.get(String(item.menuItem));
+          if (!menuItem) {
+              throw new Error('Menu item not found: ' + item.menuItem);
+          }
           return {
               menuItem: menuItem._id,
               quantity: item.quantity,
               price: menuItem.price * item.quantity
           };
-      }));
+      });
 
       const subtotal = orderItems.reduce((sum, item) => sum + item.price, 0);
       const tax = subtotal * taxRate;
@@ -111,23 +119,37 @@ const PlaceOrder = async (req, res) => {
           await Customer.findByIdAndUpdate(req.body.customerId, { $push: { orders: newOrder._id } });
       }
 
-      for (const item of orderItems) {
-          const menuItem = await Menu.findById(item.menuItem);
+      // Deduct inventory with a single batch update instead of per-item lookups.
+      const qtyByName = {};
+      for (const oi of orderItems) {
+          const menuItem = menuMap.get(String(oi.menuItem));
           if (menuItem) {
-              const inventoryItem = await InventoryItem.findOne({ name: menuItem.item, personaId });
-              if (inventoryItem) {
-                  inventoryItem.quantity -= item.quantity;
-                  await inventoryItem.save();
-              } else {
-                  console.warn(`Inventory item not found for menu item: ${menuItem.item}`);
-              }
+              qtyByName[menuItem.item] = (qtyByName[menuItem.item] || 0) + oi.quantity;
+          }
+      }
+      const inventoryNames = Object.keys(qtyByName);
+      if (inventoryNames.length > 0) {
+          const inventoryItems = await InventoryItem.find({ personaId, name: { $in: inventoryNames } });
+          const bulkOps = inventoryItems
+              .filter(inv => (qtyByName[inv.name] || 0) > 0)
+              .map(inv => ({
+                  updateOne: {
+                      filter: { _id: inv._id },
+                      update: { $inc: { quantity: -(qtyByName[inv.name] || 0) } }
+                  }
+              }));
+          if (bulkOps.length > 0) {
+              await InventoryItem.bulkWrite(bulkOps);
           }
       }
 
-      await printOrder(newOrder, 'KOT', printerConnection);
-      await printOrder(newOrder, 'bill', printerConnection);
-
       res.status(201).send(newOrder);
+
+      // Print after responding so the confirmation is not blocked by printer I/O.
+      setImmediate(() => {
+          Promise.all([printOrder(newOrder, 'KOT', printerConnection), printOrder(newOrder, 'bill', printerConnection)])
+              .catch(err => console.error('Print failed:', err));
+      });
   } catch (error) {
       res.status(400).send(error.message);
   }

@@ -60,6 +60,9 @@ const orderSchema = new mongoose.Schema({
   }
 });
 
+orderSchema.index({ personaId: 1, createdAt: -1 });
+orderSchema.index({ usuarioId: 1, createdAt: -1 });
+
 const Order = mongoose.model('Order', orderSchema);
 
 module.exports = Order;
