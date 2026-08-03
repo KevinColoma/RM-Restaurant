@@ -95,6 +95,8 @@ const PlaceOrder = async (req, res) => {
       const newOrder = new Order({
           personaId,
           items: orderItems,
+          usuarioId: req.usuario ? req.usuario._id : null,
+          usuarioName: req.usuario ? req.usuario.username : '',
           totalAmount,
           taxAmount: tax,
           discount: discountAmount,
@@ -145,6 +147,10 @@ const GetOrders = async (req, res) => {
     try {
         const personaId = req.personaId;
         const filter = { personaId };
+        // Non-admin users only see the orders they created themselves.
+        if (!(req.usuario && req.usuario.isadmin)) {
+            filter.usuarioId = req.usuario ? req.usuario._id : null;
+        }
         const orderType = VALID_ORDER_TYPES.find(t => t === req.query.orderType);
         if (orderType) filter.orderType = orderType;
         const fromDate = parseDate(req.query.dateFrom);
@@ -170,7 +176,12 @@ exports.deleteOrder = async (req, res) => {
   try {
     const personaId = req.personaId;
     if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
-    const order = await Order.findOneAndDelete({ _id: req.params.id, personaId });
+    const delFilter = { _id: req.params.id, personaId };
+    // Non-admin users can only delete orders they created themselves.
+    if (!(req.usuario && req.usuario.isadmin)) {
+      delFilter.usuarioId = req.usuario ? req.usuario._id : null;
+    }
+    const order = await Order.findOneAndDelete(delFilter);
     if (!order) return res.status(404).json({ error: 'Order not found' });
     await logAudit(req, 'cancel', 'Order', order._id, 'Order cancelled: ' + order._id);
     res.json({ message: 'Order cancelled successfully' });

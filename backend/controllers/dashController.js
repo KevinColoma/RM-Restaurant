@@ -6,8 +6,9 @@ const Purchase = require('../models/Purchase');
 
 // Today's figures for one account. Shared by the EJS page and the SPA's JSON
 // endpoint so both always report the same numbers.
-async function buildDashboard(personaId) {
+async function buildDashboard(personaId, usuarioId) {
     {
+        const scopeMatch = usuarioId ? { usuarioId } : {};
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
 
@@ -45,6 +46,7 @@ async function buildDashboard(personaId) {
 
         const totalOrders = await Order.countDocuments({
             personaId: new mongoose.Types.ObjectId(personaId),
+            ...scopeMatch,
             createdAt: { $gte: startOfDay, $lte: endOfDay }
         });
 
@@ -52,6 +54,7 @@ async function buildDashboard(personaId) {
             {
                 $match: {
                     personaId: new mongoose.Types.ObjectId(personaId),
+                    ...scopeMatch,
                     createdAt: { $gte: startOfDay, $lte: endOfDay }
                 }
             },
@@ -82,6 +85,7 @@ async function buildDashboard(personaId) {
             {
                 $match: {
                     personaId: new mongoose.Types.ObjectId(personaId),
+                    ...scopeMatch,
                     createdAt: { $gte: startOfDay, $lte: endOfDay }
                 }
             },
@@ -114,7 +118,8 @@ async function buildDashboard(personaId) {
 
         const orders = await Order.find({
             createdAt: { $gte: startOfDay, $lte: endOfDay },
-            personaId
+            personaId,
+            ...scopeMatch
         }).populate('items.menuItem');
 
         let itemCounts = {};
@@ -153,7 +158,8 @@ async function buildDashboard(personaId) {
 
 exports.Dashboard = async (req, res) => {
     try {
-        res.render('index', await buildDashboard(req.personaId));
+        const usuarioId = (req.usuario && !req.usuario.isadmin) ? req.usuario._id : null;
+        res.render('index', await buildDashboard(req.personaId, usuarioId));
     } catch (error) {
         console.error(error);
         res.status(500).send('Server Error');
@@ -163,7 +169,8 @@ exports.Dashboard = async (req, res) => {
 // Same figures as JSON, for the SPA dashboard.
 exports.DashboardJson = async (req, res) => {
     try {
-        const data = await buildDashboard(req.personaId);
+        const usuarioId = (req.usuario && !req.usuario.isadmin) ? req.usuario._id : null;
+        const data = await buildDashboard(req.personaId, usuarioId);
         res.json({ success: true, ...data });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server Error' });

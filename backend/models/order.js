@@ -23,6 +23,15 @@ const orderSchema = new mongoose.Schema({
     ref: 'Persona',
     required: true
   },
+  usuarioId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Usuario',
+    default: null
+  },
+  usuarioName: {
+    type: String,
+    default: ''
+  },
   items: [orderItemSchema],
   taxAmount: {
     type: Number,

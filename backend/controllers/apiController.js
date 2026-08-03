@@ -134,6 +134,10 @@ function parseDate(value) {
 
 exports.listOrders = jsonRead(async (req, res) => {
     const filter = { personaId: req.personaId };
+    // Non-admin users only see the orders they created themselves.
+    if (!(req.usuario && req.usuario.isadmin)) {
+        filter.usuarioId = req.usuario ? req.usuario._id : null;
+    }
     const orderType = VALID_ORDER_TYPES.has(req.query.orderType) ? req.query.orderType : null;
     if (orderType) filter.orderType = orderType;
     const fromDate = parseDate(req.query.dateFrom);

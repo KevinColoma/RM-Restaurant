@@ -53,6 +53,7 @@
 <th data-i18n="table.order_id">Order ID</th>
 <th data-i18n="table.items">Items</th>
 <th data-i18n="table.order_type">Order Type</th>
+<th data-i18n="table.created_by">Created By</th>
 <th data-i18n="table.total">Total Amount</th>
 <th data-i18n="table.tax">Tax</th>
 <th data-i18n="table.comment">Comment</th>
@@ -67,6 +68,7 @@
         <td><%= order._id %></td>
         <td><%= order.items.map(i => i.menuItem ? i.menuItem.item : 'Unknown').join(', ') %></td>
         <td><%= order.orderType %></td>
+        <td><%= order.usuarioName || '-' %></td>
         <td><%= order.totalAmount.toFixed(2) %></td>
         <td><%= order.taxAmount.toFixed(2) %></td>
         <td><%= order.comment || '' %></td>
