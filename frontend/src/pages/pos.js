@@ -441,7 +441,7 @@ registerRoute('/pos', async (app) => {
       discountToggle.classList.toggle('active', discountType === 'amount');
       updateCartDisplay();
     });
-    discountToggle.classList.add(discountType === 'amount' ? 'active' : '');
+    discountToggle.classList.toggle('active', discountType === 'amount');
     discountToggle.textContent = discountType === 'percent' ? '%' : currencySymbol;
 
     searchInput.addEventListener('input', applyFilters);
