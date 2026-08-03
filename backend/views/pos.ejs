@@ -37,8 +37,23 @@
                 <!-- Menu Table -->
                 <div class="card">
                     <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <input type="text" id="item-search" class="form-control" placeholder="Search menu items..." autocomplete="off">
+                            </div>
+                            <div class="col-md-4">
+                                <select id="filter-category" class="form-control">
+                                    <option value="">All Categories</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select id="filter-subcategory" class="form-control">
+                                    <option value="">All Sub Categories</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="table-responsive">
-                            <table class="table datanew">
+                            <table class="table datanew" id="menu-table">
                                 <thead>
                                     <tr>
                                         <th>
@@ -236,6 +251,43 @@
     // preview matches what gets billed.
     const taxRate = (<%= typeof taxRate !== 'undefined' && taxRate != null ? taxRate : 10 %>) / 100;
     let selectedOrderType = '';
+
+    const itemSearch = document.getElementById('item-search');
+    const filterCategory = document.getElementById('filter-category');
+    const filterSubcategory = document.getElementById('filter-subcategory');
+    const menuRows = Array.from(document.querySelectorAll('#menu-table tbody tr'));
+
+    const cSet = new Set();
+    const sSet = new Set();
+    menuRows.forEach(row => {
+        const cb = row.querySelector('.product-checkbox');
+        if (!cb) return;
+        if (cb.dataset.category) cSet.add(cb.dataset.category);
+        if (cb.dataset.subcategory) sSet.add(cb.dataset.subcategory);
+    });
+    cSet.forEach(c => filterCategory.appendChild(new Option(c, c)));
+    sSet.forEach(s => filterSubcategory.appendChild(new Option(s, s)));
+
+    function applyFilters() {
+        const q = itemSearch.value.toLowerCase().trim();
+        const cat = filterCategory.value.toLowerCase();
+        const sub = filterSubcategory.value;
+        menuRows.forEach(row => {
+            const cb = row.querySelector('.product-checkbox');
+            if (!cb) return;
+            const name = cb.dataset.item.toLowerCase();
+            const rowCat = (cb.dataset.category || '').toLowerCase();
+            const rowSub = cb.dataset.subcategory || '';
+            const catMatch = !cat || rowCat === cat;
+            const subMatch = !sub || rowSub === sub;
+            const qMatch = !q || name.includes(q) || rowCat.includes(q);
+            row.style.display = (catMatch && subMatch && qMatch) ? '' : 'none';
+        });
+    }
+
+    itemSearch.addEventListener('input', applyFilters);
+    filterCategory.addEventListener('change', applyFilters);
+    filterSubcategory.addEventListener('change', applyFilters);
 
 
     checkboxes.forEach(checkbox => {

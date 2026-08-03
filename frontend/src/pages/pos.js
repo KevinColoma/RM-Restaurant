@@ -17,6 +17,7 @@ registerRoute('/pos', async (app) => {
     const currencySymbol = data?.currencySymbol || '$';
 
     const categories = [...new Set(menus.map(m => m.category).filter(Boolean))];
+    const subcategories = [...new Set(menus.map(m => m.subCategory).filter(Boolean))];
 
     const html = `
 <div class="page-wrapper">
@@ -28,6 +29,9 @@ registerRoute('/pos', async (app) => {
 .pos-search { margin-bottom: 15px; }
 .pos-search input { width: 100%; padding: 10px 14px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s; }
 .pos-search input:focus { border-color: #ff9f43; }
+.pos-filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+.pos-filters select { flex: 1; min-width: 150px; padding: 8px 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 13px; background: #fff; outline: none; transition: border-color 0.2s; }
+.pos-filters select:focus { border-color: #ff9f43; }
 .category-section { margin-bottom: 20px; }
 .category-title { font-size: 16px; font-weight: 700; color: #333; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid #ff9f43; display: inline-block; }
 .menu-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
@@ -92,6 +96,16 @@ registerRoute('/pos', async (app) => {
         <div class="pos-search">
           <input type="text" id="menu-search" placeholder="Search menu items..." data-i18n-placeholder="pos.search" autocomplete="off">
         </div>
+        <div class="pos-filters">
+          <select id="filter-category">
+            <option value="">All Categories</option>
+            ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
+          </select>
+          <select id="filter-subcategory">
+            <option value="">All Sub Categories</option>
+            ${subcategories.map(s => `<option value="${s}">${s}</option>`).join('')}
+          </select>
+        </div>
         <div id="menu-items-container">
           ${categories.map(cat => {
             const items = menus.filter(m => m.category === cat);
@@ -100,7 +114,7 @@ registerRoute('/pos', async (app) => {
               <div class="category-title">${cat}</div>
               <div class="menu-card-grid">
                 ${items.map(m => `
-                  <div class="menu-card" data-id="${m._id}" data-item="${m.item}" data-price="${m.price}" data-category="${m.category}">
+                  <div class="menu-card" data-id="${m._id}" data-item="${m.item}" data-price="${m.price}" data-category="${m.category}" data-subcategory="${m.subCategory || ''}">
                     ${m.image ? `<img class="item-thumb" src="${m.image}" alt="${m.item}" loading="lazy">` : `<div class="item-thumb"></div>`}
                     <div class="item-name">${m.item}</div>
                     <div class="item-category">${m.subCategory || ''}</div>
@@ -115,7 +129,7 @@ registerRoute('/pos', async (app) => {
               <div class="category-title" data-i18n="pos.uncategorized">Uncategorized</div>
               <div class="menu-card-grid">
                 ${menus.filter(m => !m.category).map(m => `
-                  <div class="menu-card" data-id="${m._id}" data-item="${m.item}" data-price="${m.price}" data-category="">
+                  <div class="menu-card" data-id="${m._id}" data-item="${m.item}" data-price="${m.price}" data-category="" data-subcategory="${m.subCategory || ''}">
                     ${m.image ? `<img class="item-thumb" src="${m.image}" alt="${m.item}" loading="lazy">` : `<div class="item-thumb"></div>`}
                     <div class="item-name">${m.item}</div>
                     <div class="item-category"></div>
@@ -360,20 +374,34 @@ registerRoute('/pos', async (app) => {
       }
     });
 
-    searchInput.addEventListener('input', () => {
+    const filterCategory = document.getElementById('filter-category');
+    const filterSubcategory = document.getElementById('filter-subcategory');
+
+    function applyFilters() {
       const q = searchInput.value.toLowerCase().trim();
+      const cat = filterCategory.value;
+      const sub = filterSubcategory.value;
       document.querySelectorAll('.category-section').forEach(section => {
         let hasVisible = false;
+        const sectionCat = section.dataset.category || 'Uncategorized';
         section.querySelectorAll('.menu-card').forEach(card => {
           const name = card.dataset.item.toLowerCase();
-          const cat = (card.dataset.category || '').toLowerCase();
-          const match = !q || name.includes(q) || cat.includes(q);
+          const cardCat = (card.dataset.category || '').toLowerCase();
+          const cardSub = card.dataset.subcategory || '';
+          const catMatch = !cat || (cat === 'Uncategorized' ? cardCat === '' : cardCat === cat.toLowerCase());
+          const subMatch = !sub || cardSub === sub;
+          const qMatch = !q || name.includes(q) || cardCat.includes(q);
+          const match = catMatch && subMatch && qMatch;
           card.style.display = match ? '' : 'none';
           if (match) hasVisible = true;
         });
-        section.style.display = hasVisible ? '' : 'none';
+        section.style.display = (!cat || sectionCat === cat) && hasVisible ? '' : 'none';
       });
-    });
+    }
+
+    searchInput.addEventListener('input', applyFilters);
+    filterCategory.addEventListener('change', applyFilters);
+    filterSubcategory.addEventListener('change', applyFilters);
 
     document.getElementById('btn-add-customer').addEventListener('click', () => {
       document.getElementById('customer-modal').classList.add('open');
