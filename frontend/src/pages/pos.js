@@ -62,6 +62,12 @@ registerRoute('/pos', async (app) => {
 .cart-summary ul { list-style: none; padding: 0; margin: 0; }
 .cart-summary ul li { display: flex; justify-content: space-between; padding: 4px 0; font-size: 14px; }
 .cart-summary ul li.total-value { font-weight: 700; font-size: 16px; border-top: 2px solid #333; margin-top: 4px; padding-top: 8px; color: #ff9f43; }
+.cart-summary ul li.discount-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.discount-control { display: inline-flex; align-items: center; gap: 4px; }
+.discount-control input { width: 70px; padding: 4px 6px; border: 1px solid #dee2e6; border-radius: 6px; text-align: right; font-size: 13px; }
+.discount-control button { padding: 4px 8px; border: 1px solid #ff9f43; background: #fff; color: #ff9f43; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 12px; }
+.discount-control button.active { background: #ff9f43; color: #fff; }
+#discount-amount { min-width: 74px; text-align: right; color: #dc3545; font-weight: 600; }
 #order-comment { width: 100%; padding: 8px 10px; border: 2px solid #dee2e6; border-radius: 6px; resize: vertical; font-size: 13px; margin-top: 10px; }
 #order-comment:focus { border-color: #ff9f43; outline: none; }
 .checkout-row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
@@ -175,7 +181,15 @@ registerRoute('/pos', async (app) => {
         <div class="cart-summary">
           <ul>
             <li><span data-i18n="pos.subtotal">Subtotal</span><span id="subtotal">${currencySymbol}0.00</span></li>
-            <li><span id="tax-label">${(window.t ? window.t('pos.tax_label') : 'Tax') + ' (' + taxRate + '%)'}</span><span id="tax">${currencySymbol}0.00</span></li>
+            <li id="tax-li"><span id="tax-label">${(window.t ? window.t('pos.tax_label') : 'Tax') + ' (' + taxRate + '%)'}</span><span id="tax">${currencySymbol}0.00</span></li>
+            <li class="discount-row">
+              <span data-i18n="pos.discount">Discount</span>
+              <span class="discount-control">
+                <input type="number" id="discount-input" min="0" step="any" value="0">
+                <button type="button" id="discount-toggle" data-i18n="pos.percent">%</button>
+              </span>
+              <span id="discount-amount">-${currencySymbol}0.00</span>
+            </li>
             <li class="total-value"><span data-i18n="pos.total">Total</span><span id="total">${currencySymbol}0.00</span></li>
           </ul>
         </div>
@@ -231,6 +245,10 @@ registerRoute('/pos', async (app) => {
     const checkoutTotalEl = document.getElementById('checkout-total');
     const totalItemsEl = document.getElementById('total-items');
     const checkoutButton = document.getElementById('checkout-button');
+    const discountInput = document.getElementById('discount-input');
+    const discountToggle = document.getElementById('discount-toggle');
+    const discountAmountEl = document.getElementById('discount-amount');
+    let discountType = 'percent';
     const customerSelect = document.getElementById('customer-select');
     const orderComment = document.getElementById('order-comment');
     const clearAll = document.getElementById('clear-all');
@@ -238,12 +256,26 @@ registerRoute('/pos', async (app) => {
     const orderTypeBtns = document.querySelectorAll('.ordermethod');
     const menuCards = document.querySelectorAll('.menu-card');
 
+    function computeDiscount(subtotal) {
+      const raw = parseFloat(discountInput.value) || 0;
+      let amount = 0;
+      if (raw > 0) {
+        amount = discountType === 'percent'
+          ? Math.min(100, raw) / 100 * subtotal
+          : Math.min(raw, subtotal);
+      }
+      discountAmountEl.textContent = '-' + currencySymbol + amount.toFixed(2);
+      return amount;
+    }
+
     function updateCartDisplay() {
       const entries = Object.entries(cart);
       if (entries.length === 0) {
         cartBody.innerHTML = '<tr><td colspan="4" class="no-items-msg">No items in cart</td></tr>';
         subtotalEl.textContent = currencySymbol + '0.00';
         taxEl.textContent = currencySymbol + '0.00';
+        discountInput.value = '0';
+        discountAmountEl.textContent = '-' + currencySymbol + '0.00';
         totalEl.textContent = currencySymbol + '0.00';
         checkoutTotalEl.textContent = currencySymbol + '0.00';
         return;
@@ -271,7 +303,8 @@ registerRoute('/pos', async (app) => {
 
       cartBody.innerHTML = rowsHtml;
       const tax = subtotal * (taxRate / 100);
-      const total = subtotal + tax;
+      const discountAmount = computeDiscount(subtotal);
+      const total = Math.max(0, subtotal + tax - discountAmount);
       subtotalEl.textContent = currencySymbol + subtotal.toFixed(2);
       taxEl.textContent = currencySymbol + tax.toFixed(2);
       totalEl.textContent = currencySymbol + total.toFixed(2);
@@ -356,7 +389,9 @@ registerRoute('/pos', async (app) => {
       const payload = {
         items: orderData,
         orderType: selectedOrderType,
-        comment: orderComment.value
+        comment: orderComment.value,
+        discount: parseFloat(discountInput.value) || 0,
+        discountType
       };
       if (customerSelect.value) payload.customerId = customerSelect.value;
 
@@ -398,6 +433,16 @@ registerRoute('/pos', async (app) => {
         section.style.display = (!cat || sectionCat === cat) && hasVisible ? '' : 'none';
       });
     }
+
+    discountInput.addEventListener('input', updateCartDisplay);
+    discountToggle.addEventListener('click', () => {
+      discountType = discountType === 'percent' ? 'amount' : 'percent';
+      discountToggle.textContent = discountType === 'percent' ? '%' : currencySymbol;
+      discountToggle.classList.toggle('active', discountType === 'amount');
+      updateCartDisplay();
+    });
+    discountToggle.classList.add(discountType === 'amount' ? 'active' : '');
+    discountToggle.textContent = discountType === 'percent' ? '%' : currencySymbol;
 
     searchInput.addEventListener('input', applyFilters);
     filterCategory.addEventListener('change', applyFilters);

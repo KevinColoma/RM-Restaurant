@@ -30,6 +30,9 @@ async function printOrder(order, type, printerConnection) {
 
   if (type === 'bill') {
     printer.println('-----------------------------');
+    if (order.discount > 0) {
+      printer.println(`Discount: -$${order.discount.toFixed(2)}`);
+    }
     printer.println(`Total: $${order.totalAmount}`);
   }
 
@@ -46,6 +49,15 @@ const PlaceOrder = async (req, res) => {
   try {
       const personaId = req.personaId;
       const { items, orderType, comment } = req.body;
+      const discountValue = Number(req.body.discount) || 0;
+      const discountType = req.body.discountType === 'amount' ? 'amount' : 'percent';
+
+      if (discountValue < 0) {
+        return res.status(400).json({ error: 'Discount cannot be negative' });
+      }
+      if (discountType === 'percent' && discountValue > 100) {
+        return res.status(400).json({ error: 'Discount percent cannot exceed 100' });
+      }
 
       if (!Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ error: 'Items must be a non-empty array' });
@@ -75,13 +87,17 @@ const PlaceOrder = async (req, res) => {
 
       const subtotal = orderItems.reduce((sum, item) => sum + item.price, 0);
       const tax = subtotal * taxRate;
-      const totalAmount = subtotal + tax;
+      const discountAmount = discountValue > 0
+        ? (discountType === 'percent' ? subtotal * (Math.min(100, discountValue) / 100) : Math.min(discountValue, subtotal))
+        : 0;
+      const totalAmount = Math.max(0, subtotal + tax - discountAmount);
 
       const newOrder = new Order({
           personaId,
           items: orderItems,
           totalAmount,
           taxAmount: tax,
+          discount: discountAmount,
           orderType,
           comment
       });
